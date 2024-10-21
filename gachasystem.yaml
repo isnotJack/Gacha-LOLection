@@ -1,0 +1,199 @@
+openapi: 3.0.0
+info:
+  title: Gacha System API
+  version: 1.0.0
+  description: API per la gestione delle collezioni di gacha del sistema. Consente ai giocatori di vedere la collezione globale di gacha e di ottenere informazioni sui gacha mancanti.
+
+servers:
+  - url: http://.../gatchasystem
+
+paths:
+  /systemgachacollection:
+    get:
+      summary: Get the system-wide gacha collection
+      description: Retrieve the complete list of gacha available in the system so that players can see which gacha are available.
+      responses:
+        '200':
+          description: Complete system gacha collection retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  system_gacha:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        gacha_id:
+                          type: string
+                        gacha_name:
+                          type: string
+        '401':
+          description: User not authorized
+
+  /systemgachacollection/{gacha_id}:
+    get:
+      summary: Get the details of a specific system gacha
+      description: Retrieve the detailed information of a specific gacha from the system collection.
+      parameters:
+        - name: gacha_id
+          in: path
+          required: true
+          description: ID of the specific gacha from the system collection to get its details.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Gacha details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gacha_id:
+                    type: string
+                  gacha_name:
+                    type: string
+                  description:
+                    type: string
+                  rarity:
+                    type: string
+        '401':
+          description: User not authorized
+        '404':
+          description: Gacha not found
+
+  /admin/modify_gachacollection:
+    patch:
+      summary: Modification of the gacha collection (Administrator only)
+      description: >
+        Allows an administrator to modify the system's gacha collection. The administrator can update the details of an existing gacha or remove it from the collection.
+      parameters:
+        - name: gacha_id
+          in: query
+          required: true
+          description: Gacha ID of the gacha to modify or remove
+          schema:
+            type: string
+        - name: action
+          in: query
+          required: true
+          description: Specify 'update' to modify an existing gacha, or 'remove' to remove a gacha from the collection
+          schema:
+            type: string
+            enum: [update, remove]
+        - name: gacha_name
+          in: query
+          required: false
+          description: Gacha name (required only when updating an existing gacha)
+          schema:
+            type: string
+        - name: description
+          in: query
+          required: false
+          description: Gacha description (required only when updating an existing gacha)
+          schema:
+            type: string
+        - name: rarity
+          in: query
+          required: false
+          description: Gacha rarity (required only when updating an existing gacha)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Gacha collection modified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Gacha updated successfully."
+        '400':
+          description: Invalid request (missing or incorrect fields)
+        '403':
+          description: Access forbidden for non-administrators
+        '404':
+          description: Gacha not found (for removal requests)
+          
+  /admin/gacha/{gacha_id}:
+    get:
+      summary: Check a specific gacha (Administrator only)
+      description: >
+        Allows an administrator to check the status of a specific gacha by its ID, retrieving details such as name, description, and rarity.
+      parameters:
+        - name: gacha_id
+          in: path
+          required: true
+          description: ID of the specific gacha to check
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Gacha details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gacha_id:
+                    type: string
+                  gacha_name:
+                    type: string
+                  description:
+                    type: string
+                  rarity:
+                    type: string
+        '404':
+          description: Gacha not found
+  
+  /admin/modify_gacha/{gacha_id}:
+    patch:
+      summary: Modify a specific gacha information (Administrator only)
+      description: >
+        Allows an administrator to modify the information of a specific gacha by its ID, including name, description, and rarity.
+      parameters:
+        - name: gacha_id
+          in: path
+          required: true
+          description: ID of the specific gacha to modify
+          schema:
+            type: string
+        - name: gacha_name
+          in: query
+          required: false
+          description: New name for the gacha (optional)
+          schema:
+            type: string
+        - name: description
+          in: query
+          required: false
+          description: New description for the gacha (optional)
+          schema:
+            type: string
+        - name: rarity
+          in: query
+          required: false
+          description: New rarity for the gacha (optional)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Gacha information modified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Gacha information updated successfully."
+        '400':
+          description: Invalid request (missing or incorrect fields)
+        '404':
+          description: Gacha not found
+        '403':
+          description: Access forbidden for non-administrators

@@ -1,0 +1,84 @@
+openapi: 3.0.0
+info:
+  title: Payment API
+  version: 1.0.0
+  description: API per la gestione dei pagamenti in-game. Consente ai giocatori di utilizzare la valuta in-game per fare roll sui gacha e acquistare più valuta per avere più possibilità nelle aste.
+
+servers:
+  - url: http://.../payment
+
+paths:
+  /gacharoll:
+    post:
+      summary: Use in-game currency to roll a gacha
+      description: Allows a player to spend in-game currency to roll a gacha, potentially adding a new gacha to their collection.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: The player's username who wants to roll the gacha.
+                currency_used:
+                  type: integer
+                  description: The amount of in-game currency used for the roll.
+      responses:
+        '200':
+          description: Gacha rolled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gacha_id:
+                    type: string
+                  gacha_name:
+                    type: string
+                  message:
+                    type: string
+                    example: "You successfully rolled a new gacha!"
+        '400':
+          description: Insufficient in-game currency or invalid request
+
+  /buycurrency:
+    post:
+      summary: Buy in-game currency
+      description: Allows a player to purchase in-game currency, increasing their balance for future rolls or auctions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: The player's username making the purchase.
+                amount:
+                  type: integer
+                  description: The amount of in-game currency to purchase.
+                payment_method:
+                  type: string
+                  description: The payment method used for the transaction (e.g., credit card, PayPal).
+      responses:
+        '200':
+          description: Currency purchased successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                  new_balance:
+                    type: integer
+                  message:
+                    type: string
+                    example: "In-game currency purchased successfully."
+        '400':
+          description: Invalid request or payment method
+        '500':
+          description: Internal server error or payment processing issue

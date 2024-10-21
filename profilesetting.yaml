@@ -1,0 +1,184 @@
+openapi: 3.0.0
+info:
+  title: Profile Setting API
+  version: 1.0.0
+  description: API for the managing of the profile. It allows a player to modify its account and it allows an admin to check/modify users profile, check currency transaction history of a player and check market history of a player
+
+servers:
+  - url: http://.../profsetting
+paths:
+  /player/modify:
+    patch:
+      summary: Modification of account
+      description: Modification of the account is valid for both player and admin. Of course, a player can modify only its own credentials.
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: Username of the player to modify its information
+          schema:
+            type: string
+        - name: info
+          in: query
+          required: true
+          description: Information of the player to be modified
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Information modified successfully
+        '400':
+          description: Error in the modification of the information
+
+  /player/checkprofile:
+    get:
+      summary: Check user profile
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: Username of the player to see its profile
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: User not existing
+
+  /player/checktransactions:
+    get:
+      summary: Check currency transaction history of a player
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: Username of the player to see its transaction history
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: User not existing
+          
+  /player/checkmarket:
+    get:
+      summary: Check market history of a player
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: Username of the player to see its market history
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: User not existing
+          
+  /player/retrieve_gachacollection:
+    get:
+      summary: Get the gacha collection of a player
+      description: Retrieve the gacha collection of the logged-in player to see how many gacha items they have and need to complete the collection.
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: Username of the player to retrieve their gacha collection.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The collection of gacha is returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                  gacha_collected:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        gacha_id:
+                          type: string
+                        gacha_name:
+                          type: string
+                        collected_date:
+                          type: string
+                  total_gacha:
+                    type: integer
+                  remaining_to_complete:
+                    type: integer
+        '401':
+          description: User not found or not authorized
+  /player/info_gachacollection/{gacha_id}:
+    get:
+      summary: Get the details of a specific gacha in the player's collection
+      description: Retrieve detailed information about a specific gacha item from the player's collection using the gacha ID.
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: Username of the player who owns the gacha.
+          schema:
+            type: string
+        - name: gacha_id
+          in: path
+          required: true
+          description: ID of the specific gacha to get its details.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Gacha details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gacha_id:
+                    type: string
+                  gacha_name:
+                    type: string
+                  description:
+                    type: string
+                  rarity:
+                    type: string
+                  collected_date:
+                    type: string
+        '401':
+          description: User not found or not authorized
+        '404':
+          description: Gacha not found in the player's collection
+  
+  /admin/all_gachacollection:
+    get:
+      summary: Check all the gacha collection (Administrator only)
+      description: >
+        Allows an administrator to view the entire gacha collection in the system, with details about each gacha available.
+      responses:
+        '200':
+          description: Complete gacha collection retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    gacha_id:
+                      type: string
+                    gacha_name:
+                      type: string
+                    description:
+                      type: string
+                    rarity:
+                      type: string
+        '403':
+          description: Access forbidden for non-administrators
+
