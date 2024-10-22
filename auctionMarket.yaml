@@ -1,0 +1,365 @@
+openapi : 3.0.0
+info:
+    title: Auction Market API
+    description: An API to interact with the auction market 
+    version: 1.0.0
+paths:
+    /see:
+        get:
+            summary: See the active auctions, the old auctions or just one auction
+            parameters:
+              name: auction_id
+              in: query
+              required: false
+              description: id of the auction that the user (admin) want to see ( shows all if not present)
+              schema:
+                type: integer
+
+              name: status
+              in: query
+              required: false
+              description: Parameter to select old auctions or active auctions. (active by default)
+              schema:
+                type: string
+                enum: [active, old]
+            responses:
+              '200':
+                description: List of active auctions
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        auctions:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              auct_id:
+                                type: integer
+                                description: Auction ID
+                              gatcha_id:
+                                type: integer
+                                description: Gatcha ID
+                              Winner:
+                                type: integer
+                                description: Current Winner ID
+                              currentBid:
+                                type: number
+                                format: float
+                                description: Current bid of the auction
+                              endDate:
+                                type: string
+                                format: date-time
+                                description: Auction end date and time
+                                                
+              '400':
+                    description: Invalid Input
+              '404':
+                    description: Service down or invalid operation
+    /create:
+        push:
+            summary: create a new auction
+            parameters: 
+              name: seller_id
+              in: query
+              required: true
+              description: id of the seller (the user that create a new auction) 
+              schema:
+              type: integer
+
+              name: gatcha_id
+              in: query
+              required: true
+              description: id of gatcha which will be auctioned off 
+              schema:
+              type: integer
+
+              name: endDate
+              in: query
+              required: true
+              description: end date of the auction
+              schema:
+                type: string
+                format: date-time
+              
+              name: basePrice
+              in: query
+              required: true
+              description: base price for the auction
+              schema:
+                type: number
+                format: float
+              
+            responses:
+              '200':
+                description: Auction created successfully
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: The ID of the newly created auction
+                        message:
+                          type: string
+                          example: Auction created successfully                            
+              '400':
+                    description: Invalid Input
+              '404':
+                    description: Service down or invalid operation
+        /modify:
+          push:
+              summary: modify an existent auction (admin)
+              parameters: 
+                name: auction_id
+                in: query
+                required: true
+                description: id of the auction
+                schema:
+                  type: integer
+
+                name: seller_id
+                in: query
+                required: false
+                description: id of the seller (the user that created that auction) (if not present, remains the same)
+                schema:
+                  type: integer
+
+                name: gatcha_id
+                in: query
+                required: false
+                description: id of gatcha which will be auctioned off (if not present, remains the same)
+                schema:
+                  type: integer
+
+                name: endDate
+                in: query
+                required: false
+                description: end date of the auction (if not present, remains the same)
+                schema:
+                  type: string
+                  format: date-time
+                
+                name: basePrice
+                in: query
+                required: false
+                description: base price for the auction (if not present, remains the same)
+                schema:
+                  type: number
+                  format: float
+                
+              responses:
+                '200':
+                  description: Auction updated successfully
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            description: The ID of the updated auction
+                          message:
+                            type: string
+                            example: Auction updated successfully                            
+                '400':
+                      description: Invalid Input
+                '404':
+                      description: Service down or invalid operation
+        /bid:
+          push:
+            summary: bid for an auction
+            parameters: 
+              name: bidder_id
+              in: query
+              required: true
+              description: id of the bidder (the user that bid for the auction) 
+              schema:
+              type: integer
+
+              name: auction_id
+              in: query
+              required: true
+              description: id of the auction 
+              schema:
+              type: integer
+              
+              name: newBid
+              in: query
+              required: true
+              description: the bid to participate to the auction
+              schema:
+                type: number
+                format: float
+            responses:
+              '200':
+                description: Bid updated successfully
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        message:
+                          type: string
+                          example: New bid sets                           
+              '400':
+                    description: Invalid Input
+              '404':
+                    description: Service down or invalid operation          
+        /viewTrans:
+          get:
+            summary: view the transactions history
+            parameters: 
+              name: user_id
+              in: query
+              required: true
+              description: User ID
+              schema:
+              type: integer
+
+            responses:
+              '200':
+                description: Transactions History
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        transactions:
+                          type: array
+                          transaction:
+                            type: object
+                            properties:
+                              amount:
+                                type: number
+                                format: float
+                                description: Amount of money transferred, can be positive (e.g., +10) or negative (e.g., -100)
+                              date:
+                                type: string
+                                format: date-time
+                                description: Date of the transaction   
+                              currency:
+                                type: string
+                                enum: [euro, memecoin]
+                                description: Currency type of the transaction                      
+              '400':
+                    description: Invalid Input
+              '404':
+                    description: Service down or invalid operation
+        /gatcha_receive:
+          push:
+            summary: Receive a gactha after winning it (talks with profile APIs)
+            parameters: 
+              name: user_id
+              in: query
+              required: true
+              description: id of the user that will receive the gatcha 
+              schema:
+              type: integer
+
+              name: gactha_id
+              in: query
+              required: true
+              description: id of the gatcha
+              schema:
+              type: integer
+            responses:
+              '200':
+                description: Gatcha correctly received
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        message:
+                          type: string
+                          example: Gatcha correctly received                           
+              '400':
+                    description: Invalid Input
+              '404':
+                    description: Service down or invalid operation
+
+        /auction_lost:
+          push:
+            summary: receive currency for losing an auction (invoke receive API on payment without the payer_id)
+            parameters:
+              name: user_id
+              in: query
+              required: true
+              description: id of the user that has lost, he will receive back the money
+              schema:
+              type: integer
+
+              name: amount
+              in: query
+              required: true
+              description: amount of money returned back
+              schema:
+                type: number
+                format: float
+            responses:
+              '200':
+                description: Money correctly returned
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        id:
+                            type: integer
+                            description: The ID of the transaction
+                        message:
+                          type: string
+                          example: Money correctly returned                       
+              '400':
+                    description: Invalid Input
+              '404':
+                    description: Service down or invalid operation
+        /auction_terminated:
+          push:
+            summary: receive currency because one of the auction has terminated with a winner
+            parameters:
+              name: payer_id
+              in: query
+              required: true
+              description: id of the auction winner
+              schema:
+              type: integer
+
+              name: receiver_id
+              in: query
+              required: true
+              description: id of the creator of the auction
+              schema:
+              type: integer
+
+              name: amount
+              in: query
+              required: true
+              description: amount of money payed to win the auction
+              schema:
+                type: number
+                format: float
+            responses:
+              '200':
+                description: Money correctly received
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        id:
+                            type: integer
+                            description: The ID of the transaction
+                        message:
+                          type: string
+                          example: Money correctly received                       
+              '400':
+                    description: Invalid Input
+              '404':
+                    description: Service down or invalid operation
+        
+  
+
