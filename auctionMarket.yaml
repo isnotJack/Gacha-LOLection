@@ -1,8 +1,11 @@
-openapi : 3.0.0
+openapi: 3.0.0
 info:
-    title: Auction Market API
-    description: An API to interact with the auction market 
-    version: 1.0.0
+  title: Gacha System API
+  version: 1.0.0
+  description: da modificare
+
+servers:
+  - url: http://.../auctionMarket
 paths:
     /see:
         get:
@@ -208,7 +211,7 @@ paths:
                     description: Invalid Input
               '404':
                     description: Service down or invalid operation          
-        /viewTrans:
+        /viewTrans: (da portare di la)
           get:
             summary: view the transactions history
             parameters: 
@@ -248,7 +251,7 @@ paths:
                     description: Invalid Input
               '404':
                     description: Service down or invalid operation
-        /gatcha_receive:
+        /gatcha_receive: (simile a gatcha roll)
           push:
             summary: Receive a gactha after winning it (talks with profile APIs)
             parameters: 

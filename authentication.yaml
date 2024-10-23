@@ -9,7 +9,7 @@ servers:
 paths:
   /signup:
     post:
-      summary: Creazione account
+      summary: Creation of an account
       parameters:
         - name: username
           in: query
@@ -62,6 +62,13 @@ paths:
   /logout:
     put:
       summary: Logout of player/admin
+      parameters:
+        - name: ID
+          in: query
+          required: true
+          description: Username of the player/admin
+          schema:
+            type: string
       responses:
         '200':
           description: Logout success
@@ -70,7 +77,7 @@ paths:
     delete:
       summary: Elimination of an existing account
       parameters:
-        - name: username
+        - name: ID
           in: query
           required: true
           description: Username of the player to be deleted

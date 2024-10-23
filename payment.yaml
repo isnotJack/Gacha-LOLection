@@ -1,8 +1,12 @@
-openapi : 3.0.0
+openapi: 3.0.0
 info:
-    title: Payments API
-    description: An API to manage payments
-    version: 1.0.0
+  title: Gacha System API
+  version: 1.0.0
+  description: API per la gestione del pagamento
+
+servers:
+  - url: http://.../payment
+  
 paths:
     /pay:
         push:
@@ -18,7 +22,7 @@ paths:
               name: receiver_id
               in: query
               required: true
-              description: id of the receiver 
+              description: id of the receiver (aggiungere opzionale)
               schema:
               type: integer
               
@@ -55,7 +59,7 @@ paths:
             parameters: 
               name: payer_id
               in: query
-              required: false
+              required: true
               description: id of the payer (if not present means that there's a temporary payments e.g. a bid for an auction)
               schema:
               type: integer
@@ -93,42 +97,7 @@ paths:
                     description: Invalid Input
               '404':
                     description: Service down or invalid operation
-        /deposit:
-          push:
-            summary: Puts euro and receive memecoins
-            parameters: 
-              name: user_id
-              in: query
-              required: true
-              description: id of the user 
-              schema:
-              type: integer
-              
-              name: amount
-              in: query
-              required: true
-              description: amount of euro's depositated
-              schema:
-                type: number
-                format: float
-            responses:
-              '200':
-                description: Succesfull Deposit
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          description: The ID of the transaction
-                        message:
-                          type: string
-                          example: Deposit successfully completed                          
-              '400':
-                    description: Invalid Input
-              '404':
-                    description: Service down or invalid operation          
+           
         /withdraw:
           push:
             summary: Convert memecoins in euro
@@ -165,3 +134,43 @@ paths:
                     description: Invalid Input
               '404':
                     description: Service down or invalid operation   
+
+    /buycurrency:
+      post:
+        summary: Buy in-game currency
+        description: Allows a player to purchase in-game currency, increasing their balance for future rolls or auctions.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                    description: The player's username making the purchase.
+                  amount:
+                    type: integer
+                    description: The amount of in-game currency to purchase.
+                  payment_method:
+                    type: string
+                    description: The payment method used for the transaction (e.g., credit card, PayPal, apple pay).
+        responses:
+          '200':
+            description: Currency purchased successfully
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    username:
+                      type: string
+                    new_balance:
+                      type: integer
+                    message:
+                      type: string
+                      example: "In-game currency purchased successfully."
+          '400':
+            description: Invalid request or payment method
+          '500':
+            description: Internal server error or payment processing issue

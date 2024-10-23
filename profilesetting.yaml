@@ -7,7 +7,7 @@ info:
 servers:
   - url: http://.../profsetting
 paths:
-  /player/modify:
+  /modify:
     patch:
       summary: Modification of account
       description: Modification of the account is valid for both player and admin. Of course, a player can modify only its own credentials.
@@ -20,7 +20,7 @@ paths:
             type: string
         - name: info
           in: query
-          required: true
+          required: false
           description: Information of the player to be modified
           schema:
             type: string
@@ -30,7 +30,7 @@ paths:
         '400':
           description: Error in the modification of the information
 
-  /player/checkprofile:
+  /checkprofile:
     get:
       summary: Check user profile
       parameters:
@@ -46,7 +46,7 @@ paths:
         '401':
           description: User not existing
 
-  /player/checktransactions:
+  /checktransactions:
     get:
       summary: Check currency transaction history of a player
       parameters:
@@ -57,12 +57,34 @@ paths:
           schema:
             type: string
       responses:
-        '200':
-          description: OK
-        '401':
-          description: User not existing
+              '200':
+                description: Transactions History
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        transactions:
+                          type: array
+                          transaction:
+                            type: object
+                            properties:
+                              amount:
+                                type: number
+                                format: float
+                                description: Amount of money transferred, can be positive (e.g., +10) or negative (e.g., -100)
+                              date:
+                                type: string
+                                format: date-time
+                                description: Date of the transaction   
+                              currency:
+                                type: string
+                                enum: [euro, memecoin]
+                                description: Currency type of the transaction
+              '401':
+                  description: User not existing
           
-  /player/checkmarket:
+  /checkmarket:
     get:
       summary: Check market history of a player
       parameters:
@@ -78,7 +100,7 @@ paths:
         '401':
           description: User not existing
           
-  /player/retrieve_gachacollection:
+  /retrieve_gachacollection:
     get:
       summary: Get the gacha collection of a player
       description: Retrieve the gacha collection of the logged-in player to see how many gacha items they have and need to complete the collection.
@@ -108,15 +130,23 @@ paths:
                           type: string
                         gacha_name:
                           type: string
+                        description:
+                          type: string
+                        rarity:
+                          type: string
                         collected_date:
                           type: string
+                        img:
+                          type: string
+                          format: uri 
                   total_gacha:
                     type: integer
                   remaining_to_complete:
                     type: integer
         '401':
           description: User not found or not authorized
-  /player/info_gachacollection/{gacha_id}:
+          
+  /info_gachacollection:
     get:
       summary: Get the details of a specific gacha in the player's collection
       description: Retrieve detailed information about a specific gacha item from the player's collection using the gacha ID.
@@ -128,7 +158,7 @@ paths:
           schema:
             type: string
         - name: gacha_id
-          in: path
+          in: query
           required: true
           description: ID of the specific gacha to get its details.
           schema:
@@ -151,34 +181,13 @@ paths:
                     type: string
                   collected_date:
                     type: string
+                  img:
+                    type: string
+                    format: uri 
         '401':
           description: User not found or not authorized
         '404':
           description: Gacha not found in the player's collection
   
-  /admin/all_gachacollection:
-    get:
-      summary: Check all the gacha collection (Administrator only)
-      description: >
-        Allows an administrator to view the entire gacha collection in the system, with details about each gacha available.
-      responses:
-        '200':
-          description: Complete gacha collection retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    gacha_id:
-                      type: string
-                    gacha_name:
-                      type: string
-                    description:
-                      type: string
-                    rarity:
-                      type: string
-        '403':
-          description: Access forbidden for non-administrators
+
 
