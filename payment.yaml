@@ -8,139 +8,140 @@ servers:
   - url: http://.../payment
   
 paths:
-    /pay:
-        push:
-            summary: Pays a specific amount of memecoins
-            parameters:  
-              name: payer_id
-              in: query
-              required: true
-              description: id of the payer 
+  /pay:
+    post:
+      summary: Pays a specific amount of memecoins
+      description: Api to pay a specific amount of memecoin to someone, or to the system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payer_id:
+                  type: integer
+                  description: Id of the payer or system ID.
+                receiver_id:
+                  type: integer
+                  description: The receiver ID or system ID.
+                amount:
+                  type: integer
+                  description: The amount of memecoins payed.
+      responses:
+        '200':
+          description: Succesfull Payment
+          content:
+            application/json:
               schema:
-              type: integer
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: The ID of the transaction
+                  message:
+                    type: string
+                    example: Payment successfully executed            
+        '400':
+              description: Invalid Input
+        '404':
+              description: Service down or invalid operation
+  /receive:
+    post:
+      summary: receive a specified amount of memecoins
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payer_id:
+                  type: integer
+                  description: Id of the payer or system ID.
+                receiver_id:
+                  type: integer
+                  description: The receiver ID or system ID.
+                amount:
+                  type: integer
+                  description: The amount of memecoins received.
+      responses:
+        '200':
+          description: Memecoin Received
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: The ID of the transaction
+                  message:
+                    type: string
+                    example: Money succesfully received                            
+        '400':
+              description: Invalid Input
+        '404':
+              description: Service down or invalid operation
+          
+  /withdraw:
+    post:
+      summary: Convert memecoins in euro
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  description: Id of the user that is converting memecoins in euro.
+                amount:
+                  type: integer
+                  description: The amount of memecoins to be received.
+      responses:
+        '200':
+          description: Succesfull Withdraw
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: The ID of the transaction
+                  message:
+                    type: string
+                    example: Withdraw successfully completed                          
+        '400':
+              description: Invalid Input
+        '404':
+              description: Service down or invalid operation   
 
-              name: receiver_id
-              in: query
-              required: true
-              description: id of the receiver (aggiungere opzionale)
-              schema:
-              type: integer
-              
-              name: amount
-              in: query
-              required: true
-              description: amount of money payed
-              schema:
-                type: number
-                format: float
-              
-            responses:
-              '200':
-                description: Succesful Payment
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          description: The ID of the transaction
-                        message:
-                          type: string
-                          example: Payment successfully executed       
-                           
-              '400':
-                    description: Invalid Input
-              '404':
-                    description: Service down or invalid operation
-    /receive:
-        push:
-            summary: receive a specified amount of memecoins
-            parameters: 
-              name: payer_id
-              in: query
-              required: true
-              description: id of the payer (if not present means that there's a temporary payments e.g. a bid for an auction)
-              schema:
-              type: integer
-
-              name: receiver_id
-              in: query
-              required: true
-              description: id of the receiver 
-              schema:
-              type: integer
-              
-              name: amount
-              in: query
-              required: true
-              description: amount of money received
-              schema:
-                type: number
-                format: float
-              
-            responses:
-              '200':
-                description: Memecoin Received
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          description: The ID of the transaction
-                        message:
-                          type: string
-                          example: Money succesfully received                            
-              '400':
-                    description: Invalid Input
-              '404':
-                    description: Service down or invalid operation
-           
-        /withdraw:
-          push:
-            summary: Convert memecoins in euro
-            parameters: 
-              name: user_id
-              in: query
-              required: true
-              description: id of the user 
-              schema:
-              type: integer
-              
-              name: amount
-              in: query
-              required: true
-              description: amount of euro's withdrawn
-              schema:
-                type: number
-                format: float
-            responses:
-              '200':
-                description: Succesfull Withdraw
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                          description: The ID of the transaction
-                        message:
-                          type: string
-                          example: Withdraw successfully completed                          
-              '400':
-                    description: Invalid Input
-              '404':
-                    description: Service down or invalid operation   
-
-    /buycurrency:
-      post:
-        summary: Buy in-game currency
-        description: Allows a player to purchase in-game currency, increasing their balance for future rolls or auctions.
-        requestBody:
-          required: true
+  /buycurrency:
+    post:
+      summary: Buy in-game currency
+      description: Allows a player to purchase in-game currency, increasing their balance for future rolls or auctions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: The player's username making the purchase.
+                amount:
+                  type: integer
+                  description: The amount of in-game currency to purchase.
+                payment_method:
+                  type: string
+                  description: The payment method used for the transaction (e.g., credit card, PayPal, apple pay).
+      responses:
+        '200':
+          description: Currency purchased successfully
           content:
             application/json:
               schema:
@@ -148,29 +149,51 @@ paths:
                 properties:
                   username:
                     type: string
-                    description: The player's username making the purchase.
-                  amount:
+                  new_balance:
                     type: integer
-                    description: The amount of in-game currency to purchase.
-                  payment_method:
+                  message:
                     type: string
-                    description: The payment method used for the transaction (e.g., credit card, PayPal, apple pay).
-        responses:
-          '200':
-            description: Currency purchased successfully
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    username:
-                      type: string
-                    new_balance:
-                      type: integer
-                    message:
-                      type: string
-                      example: "In-game currency purchased successfully."
-          '400':
-            description: Invalid request or payment method
-          '500':
-            description: Internal server error or payment processing issue
+                    example: "In-game currency purchased successfully."
+        '400':
+          description: Invalid request or payment method
+        '500':
+          description: Internal server error or payment processing issue
+  /viewTrans:
+    get:
+      summary: View the transaction history
+      parameters: 
+        - name: user_id
+          in: query
+          required: true
+          description: User ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Transaction history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        amount:
+                          type: number
+                          format: float
+                          description: Amount of money transferred, can be positive (e.g., +10) or negative (e.g., -100)
+                        date:
+                          type: string
+                          format: date-time
+                          description: Date of the transaction
+                        currency:
+                          type: string
+                          enum: [euro, memecoin]
+                          description: Currency type of the transaction
+        '400':
+          description: Invalid input
+        '404':
+          description: Service unavailable or invalid operation
