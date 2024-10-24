@@ -172,7 +172,7 @@ paths:
         '404':
               description: Service down or invalid operation
   /bid:
-    post:
+    patch:
       summary: bid for an auction
       parameters: 
         - name: bidder_id
@@ -247,22 +247,21 @@ paths:
 
   /auction_lost:
     post:
-      summary: receive currency for losing an auction (invoke receive API on payment without the payer_id)
-      parameters:
-        - name: user_id
-          in: query
-          required: true
-          description: id of the user that has lost, he will receive back the money
-          schema:
-            type: integer
-
-        - name: amount
-          in: query
-          required: true
-          description: amount of money returned back
-          schema:
-            type: number
-            format: float
+      summary: receive currency for losing an auction (invoke receive API on payment with system_id as payer)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  description: id of the user that has lost, he will receive back the money.
+                amount:
+                  type: number
+                  format: float
+                  description: The amount of memecoins returned back.
       responses:
         '200':
           description: Money correctly returned
@@ -283,29 +282,24 @@ paths:
               description: Service down or invalid operation
   /auction_terminated:
     post:
-      summary: receive currency because one of the auction has terminated with a winner
-      parameters:
-        - name: payer_id
-          in: query
-          required: true
-          description: id of the auction winner
-          schema:
-            type: integer
-
-        - name: receiver_id
-          in: query
-          required: true
-          description: id of the creator of the auction
-          schema:
-            type: integer
-
-        - name: amount
-          in: query
-          required: true
-          description: amount of money payed to win the auction
-          schema:
-            type: number
-            format: float
+      summary: receive currency because one auction has terminated with a winner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payer_id:
+                  type: integer
+                  description: id of the auction winner
+                receiver_id:
+                  type: integer
+                  description: id of the creator of the auction
+                amount:
+                  type: number
+                  format: float
+                  description: amount of money payed to win the auction      
       responses:
         '200':
           description: Money correctly received
