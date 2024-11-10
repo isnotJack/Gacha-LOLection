@@ -36,7 +36,7 @@ paths:
           description: Bad request. All parameters must be strings
 
   /login:
-    put:
+    post:
       summary: Login of a player/admin
       parameters:
         - name: username
@@ -60,7 +60,7 @@ paths:
           description: Invalid credentials
 
   /logout:
-    put:
+    delete:
       summary: Logout of player/admin
       parameters:
         - name: ID
