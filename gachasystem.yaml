@@ -8,16 +8,15 @@ servers:
   - url: http://.../gatchasystem
 
 paths:
-
-  /systemgachacollection:
+  /get_gacha_collection:
     get:
       summary: Get the details of a specific system gacha
       description: Retrieve the detailed information of a specific gacha from the system collection or if the gacha_id is not set, retrieve all the entire gatcha collection.
       parameters:
-        - name: gacha_id
+        - name: gacha_name
           in: query
           required: false
-          description: ID of the specific gacha from the system collection to get its details.
+          description: Name of the meme to get its details
           schema:
             type: string
       responses:
@@ -46,53 +45,109 @@ paths:
         '404':
           description: Gacha not found
 
-  /modify_gachacollection:
-    patch:
-      summary: Modification of the gacha collection (Administrator only)
-      description: >
-        Allows an administrator to modify the system's gacha collection. The administrator can update the details of an existing gacha or remove it from the collection.
+  /add_gacha:
+    post:
+      summary: Add a gacha to the system (administrator only)
+      description: Allows an administrator to add a gacha the collection.
       parameters:
-        - name: gacha_id
+        - name: image
           in: query
           required: true
-          description: Gacha ID of the gacha to modify or remove
+          description: immage
           schema:
             type: string
-        - name: action
-          in: query
-          required: true
-          description: Specify 'update' to modify an existing gacha, or 'remove' to remove a gacha from the collection and 'add' to add a new gatcha
-          schema:
-            type: string
-            enum: [update, remove, add]
+            format: uri 
         - name: gacha_name
           in: query
-          required: false
-          description: Gacha name (required only when updating an existing gacha)
+          required: true
+          description: Name for the meme
+          schema:
+            type: string
+        - name: rarity
+          in: query
+          required: true
+          description: Gacha rarity 
           schema:
             type: string
         - name: description
           in: query
           required: false
-          description: Gacha description (required only when updating an existing gacha)
+          description: Description of the meme
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Gacha collection updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Gacha added successfully."
+        '400':
+          description: Invalid request (missing or incorrect fields) or meme already exists
+        '403':
+          description: Access forbidden for non-administrators
+
+  /delete_gacha:
+    delete:
+      summary: Remove a gacha from the collection  (administrator only)
+      description: Allows an administratore to remove a gacha from the collection.
+      parameters:
+        - name: gacha_name
+          in: query
+          required: true
+          description: Name of the meme
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Gacha removed successfully 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Gacha removed successfully."
+        '400':
+          description: Invalid request (missing or incorrect fields)
+        '403':
+          description: Access forbidden for non-administrators
+        '404':
+          description: Gacha not found
+        '500':
+          description: Faild elaborating the request
+
+  /update_gacha:
+    put:
+      summary: Update a gacha (Administrator only)
+      description: The administrator can update the details of an existing gacha.
+      parameters:
+        - name: gacha_name
+          in: query
+          required: true
+          description: Name of the meme
           schema:
             type: string
         - name: rarity
           in: query
           required: false
-          description: Gacha rarity (required only when updating an existing gacha)
+          description: New rarity of the gacha
           schema:
             type: string
-        - name: img
+        - name: description
           in: query
           required: false
-          description: immage
+          description: New description of the gacha
           schema:
             type: string
-            format: uri 
       responses:
         '200':
-          description: Gacha collection modified successfully
+          description: Gacha updated successfully
           content:
             application/json:
               schema:
@@ -106,7 +161,7 @@ paths:
         '403':
           description: Access forbidden for non-administrators
         '404':
-          description: Gacha not found (for removal requests)
+          description: Gacha not found
           
 
   
