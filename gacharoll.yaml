@@ -22,7 +22,10 @@ paths:
                 username:
                   type: string
                   description: The player's username who wants to roll the gacha.
-                currency_used:
+                rarity:
+                  type: string
+                  description: The rarity of the roll.
+                currency_amount:
                   type: integer
                   description: The amount of in-game currency used for the roll.
       responses:
