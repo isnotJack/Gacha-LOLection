@@ -10,25 +10,36 @@ paths:
   /modify:
     patch:
       summary: Modification of account
-      description: Modification of the account is valid for both player and admin. Of course, a player can modify only its own credentials.
+      description: Modification of the account is valid for both player and admin. A player can modify only their own credentials, specifying the field to modify and the new value.
       parameters:
         - name: username
           in: query
           required: true
-          description: Username of the player to modify its information
+          description: Username of the player whose information is being modified
           schema:
             type: string
-        - name: info
+        - name: field
           in: query
-          required: false
-          description: Information of the player to be modified
+          required: true
+          description: The profile field to be modified (e.g., 'profile_image', 'currency_balance')
+          schema:
+            type: string
+        - name: value
+          in: query
+          required: true
+          description: The new value for the specified field
           schema:
             type: string
       responses:
         '200':
           description: Information modified successfully
         '400':
-          description: Error in the modification of the information
+          description: Error in the modification of the information, such as invalid field or missing parameters
+        '401':
+          description: Unauthorized to modify this profile
+        '404':
+          description: Profile not found
+
 
   /checkprofile:
     get:

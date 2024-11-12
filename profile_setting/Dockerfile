@@ -1,0 +1,23 @@
+# Usa un'immagine Python come base
+FROM python:3.9
+
+# Imposta la directory di lavoro
+WORKDIR /app
+
+# Copia i file necessari
+COPY . /app
+
+# Installa le dipendenze
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Imposta le variabili d'ambiente
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+ENV FLASK_RUN_PORT=5002
+ENV FLASK_ENV=development  
+
+# Espone la porta dell'applicazione
+EXPOSE 5002
+
+# Comando per avviare il servizio
+CMD ["flask", "run"]
