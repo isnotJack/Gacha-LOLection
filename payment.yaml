@@ -19,11 +19,11 @@ paths:
             schema:
               type: object
               properties:
-                payer_id:
-                  type: integer
+                payer_us:
+                  type: string
                   description: Id of the payer or system ID.
-                receiver_id:
-                  type: integer
+                receiver_us:
+                  type: string
                   description: The receiver ID or system ID.
                 amount:
                   type: integer
@@ -46,78 +46,78 @@ paths:
               description: Invalid Input
         '404':
               description: Service down or invalid operation
-  /receive:
-    post:
-      summary: receive a specified amount of memecoins
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                payer_id:
-                  type: integer
-                  description: Id of the payer or system ID.
-                receiver_id:
-                  type: integer
-                  description: The receiver ID or system ID.
-                amount:
-                  type: integer
-                  description: The amount of memecoins received.
-      responses:
-        '200':
-          description: Memecoin Received
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    description: The ID of the transaction
-                  message:
-                    type: string
-                    example: Money succesfully received                            
-        '400':
-              description: Invalid Input
-        '404':
-              description: Service down or invalid operation
+  # /receive:
+  #   post:
+  #     summary: receive a specified amount of memecoins
+  #     requestBody:
+  #       required: true
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               payer_id:
+  #                 type: integer
+  #                 description: Id of the payer or system ID.
+  #               receiver_id:
+  #                 type: integer
+  #                 description: The receiver ID or system ID.
+  #               amount:
+  #                 type: integer
+  #                 description: The amount of memecoins received.
+  #     responses:
+  #       '200':
+  #         description: Memecoin Received
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 id:
+  #                   type: integer
+  #                   description: The ID of the transaction
+  #                 message:
+  #                   type: string
+  #                   example: Money succesfully received                            
+  #       '400':
+  #             description: Invalid Input
+  #       '404':
+  #             description: Service down or invalid operation
           
-  /withdraw:
-    post:
-      summary: Convert memecoins in euro
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                user_id:
-                  type: integer
-                  description: Id of the user that is converting memecoins in euro.
-                amount:
-                  type: integer
-                  description: The amount of memecoins to be received.
-      responses:
-        '200':
-          description: Succesfull Withdraw
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    description: The ID of the transaction
-                  message:
-                    type: string
-                    example: Withdraw successfully completed                          
-        '400':
-              description: Invalid Input
-        '404':
-              description: Service down or invalid operation   
+  # /withdraw:
+  #   post:
+  #     summary: Convert memecoins in euro
+  #     requestBody:
+  #       required: true
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               user_id:
+  #                 type: integer
+  #                 description: Id of the user that is converting memecoins in euro.
+  #               amount:
+  #                 type: integer
+  #                 description: The amount of memecoins to be received.
+  #     responses:
+  #       '200':
+  #         description: Succesfull Withdraw
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 id:
+  #                   type: integer
+  #                   description: The ID of the transaction
+  #                 message:
+  #                   type: string
+  #                   example: Withdraw successfully completed                          
+  #       '400':
+  #             description: Invalid Input
+  #       '404':
+  #             description: Service down or invalid operation   
 
   /buycurrency:
     post:
