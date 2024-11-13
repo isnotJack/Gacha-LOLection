@@ -1,0 +1,38 @@
+#version: '3.8'
+
+services:   # specification of the containers of the application
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user           # username to access the database
+      POSTGRES_PASSWORD: password   # password of the user
+      POSTGRES_DB: memes_db          # name of the database
+    volumes:
+      - memes_data:/var/lib/postgresql/data   # monta spazio persistente per salvare i dati del database
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql  # monta uno spazio di inizializzazione nel percorso predefinito di Docker per eseguire script all'avvio del database
+    ports:
+      - "5432:5432"   # mappa la porta del container 5432 (a destra), porta predefinita di PostgreSQL, sulla stessa porta dell'host (a sinistra)
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user", "-d", "memes_db"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 5s
+
+  gachasystem:
+    build: .      # folder of the dockerfile
+    container_name: gachasystem
+    restart: always   # policy on failure
+    volumes:
+      - meme_images:/app/static/uploads  # Monta il volume nella cartella del server per contenere le immagini dei memes
+    ports:
+      - "5001:5001" # mappa la porta del container 5001 (destra) sulla stessa porta dell'host
+    environment:
+      - DATABASE_URI=postgresql://user:password@db:5432/memes_db   # variabile d'ambiente che specifica l'uri per connettersi al db
+      #- JWT_SECRET_KEY=super-secret-key
+    depends_on:
+      - db
+
+volumes:
+  memes_data:  # definisce il volume Docker meme_data per salvare in modo persistente i dati del database
+  meme_images:
