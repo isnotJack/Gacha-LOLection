@@ -40,12 +40,12 @@ def signup():
 # Endpoint per il login
 @app.route('/login', methods=['POST'])
 def login():
-    username = request.args.get('username')
-    password = request.args.get('password')
+    username = request.form.get('username')
+    password = request.form.get('password')
 
     user = User.query.filter_by(username=username).first()
     if user and bcrypt.check_password_hash(user.password, password):
-        access_token = create_access_token(identity={'username': username})
+        access_token = create_access_token(identity={'username': username, 'role': 'user'})
         return jsonify(access_token=access_token), 200
     return jsonify({"error": "Invalid credentials"}), 404
 

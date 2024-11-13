@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS profiles (
     currency_balance INTEGER DEFAULT 0
 );
 
-
+-- lasciare in questa tabela solo gatcha id collect date (metterlo come data) e infine il numero di quanti ne hai
+--
 CREATE TABLE IF NOT EXISTS gacha_items (
     id SERIAL PRIMARY KEY,
     gacha_id VARCHAR(50) NOT NULL,
