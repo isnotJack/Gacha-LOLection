@@ -4,7 +4,7 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@db:5432/auth_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@auth_db:5432/auth_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 
@@ -19,19 +19,22 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    role = db.Column(db.String(50), nullable=False)
 
 # Endpoint per la creazione di un account
 @app.route('/signup', methods=['POST'])
 def signup():
-    username = request.args.get('username')
-    password = request.args.get('password')
-    email = request.args.get('email')
+    #Dati arrivano in formato JSON dal gateway
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    email = data.get('email')
 
     if not username or not password or not email:
         return jsonify({"error": "Missing parameters"}), 400
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    new_user = User(username=username, password=hashed_password, email=email)
+    new_user = User(username=username, password=hashed_password, email=email, role= 'user')
 
     db.session.add(new_user)
     db.session.commit()
@@ -40,8 +43,10 @@ def signup():
 # Endpoint per il login
 @app.route('/login', methods=['POST'])
 def login():
-    username = request.form.get('username')
-    password = request.form.get('password')
+      #Dati arrivano in formato JSON dal gateway
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
 
     user = User.query.filter_by(username=username).first()
     if user and bcrypt.check_password_hash(user.password, password):
@@ -58,8 +63,10 @@ def logout():
 # Endpoint per l'eliminazione di un account
 @app.route('/delete', methods=['DELETE'])
 def delete_account():
-    username = request.args.get('ID')
-    password = request.args.get('password')
+    #Dati arrivano in formato JSON dal gateway
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
 
     user = User.query.filter_by(username=username).first()
     if user and bcrypt.check_password_hash(user.password, password):
