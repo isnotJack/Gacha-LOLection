@@ -29,5 +29,28 @@ services:
     depends_on:
       - auth_db
 
+  profile_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: profile_db
+    volumes:
+      - profile_data:/var/lib/postgresql/data
+      - ./profile_setting/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5433"
+
+  profile_service:
+    build: ./profile_setting
+    ports:
+      - "5003:5003"
+    environment:
+      - DATABASE_URI=postgresql://user:password@profile_db:5433/profile_db
+      - JWT_SECRET_KEY=super-secret-key
+    depends_on:
+      - profile_db
+
 volumes:
+  profile_data:
   auth_data:
