@@ -12,10 +12,10 @@ LOGOUT_URL = 'http://auth_service:5002/logout'
 DELETE_URL = 'http://auth_service:5002/delete'
 
 ALLOWED_PROF_OP ={'modify','checkprofile', 'retrieve_gachacollection', 'info_gachacollection'}
-MODIFY_URL = 'http://profile_service:5003/modify'
-CHECK_URL = 'http://profile_service:5003/checkprofile'
-RETRIEVE_URL = 'http://profile_service:5003/retrieve_gachacollection'
-INFO_URL = 'http://profile_service:5003/info_gachacollection'
+MODIFY_URL = 'http://profile_setting:5003/modify'
+CHECK_URL = 'http://profile_setting:5003/checkprofile'
+RETRIEVE_URL = 'http://profile_setting:5003/retrieve_gachacollection'
+INFO_URL = 'http://profile_setting:5003/info_gachacollection'
 
 app = Flask(__name__, instance_relative_config=True)
 def create_app():
@@ -88,8 +88,8 @@ def auth(op):
     except HTTPError:
         return make_response(x.content, x.status_code)
 
-@app.route('/profile_service/<op>', methods=['GET', 'PATCH'])
-def profile_serv(op):
+@app.route('/profile_setting/<op>', methods=['GET', 'PATCH'])
+def profile_setting(op):
     if op not in ALLOWED_PROF_OP:
         return make_response(f'Invalid operation {op}'),400
     if op == 'modify':

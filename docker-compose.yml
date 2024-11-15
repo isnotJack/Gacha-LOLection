@@ -6,6 +6,8 @@ services:
     depends_on:
       - auth_service
       - auth_db
+      - profile_setting
+      - profile_db
 
   auth_db:
     image: postgres:13
@@ -41,7 +43,7 @@ services:
     ports:
       - "5433:5433"
 
-  profile_service:
+  profile_setting:
     build: ./profile_setting
     ports:
       - "5003:5003"

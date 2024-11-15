@@ -7,21 +7,21 @@ url = 'http://localhost:5001/auth_service/signup'
 
 data = {
     'username' : 'user1',
-    'password' : '1234'
-    ,'email' : 'user1@gmail.com'
+    'password' : '1234',
+    'email':'coglione@gmail.com'
 }
-# # Invia la richiesta POST
+# Invia la richiesta POST
 response = requests.post(url, data)
 
-# # # Supponiamo che tu abbia il token JWT salvato dopo il login
-# jwt_token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMTU5OTkwNSwianRpIjoiMjFlZGJmYzMtMjcyMy00OWU3LTg4NjEtNzAzYmRlNjVhYzQ1IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJ1c2VybmFtZSI6InVzZXIxIiwicm9sZSI6InVzZXIifSwibmJmIjoxNzMxNTk5OTA1LCJleHAiOjE3MzE2MDA4MDV9.xbCdTwLdW3G32a-INa-t_tuN5ywOjvMpzc43MyNB_A8"
-# # # Header con il token JWT
+# # Supponiamo che tu abbia il token JWT salvato dopo il login
+# jwt_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMTY4MTYzNCwianRpIjoiZDE5OTU3NzYtZTkzZi00OWQ5LWI1N2QtZWIyMjRjNWI0NmNhIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJ1c2VybmFtZSI6InVzZXIxIiwicm9sZSI6InVzZXIifSwibmJmIjoxNzMxNjgxNjM0LCJleHAiOjE3MzE2ODI1MzR9.kCAlZs4RRt7bio5hOHH0MDU5KziJ4hZs3iN9I_Zg6l8"
+#  # Header con il token JWT
 # headers = {
 #     'Authorization': f'Bearer {jwt_token}'
 # }
 
-# # # Invia la richiesta DELETE per effettuare il logout
-# response = requests.delete(url, headers=headers)
+#  # Invia la richiesta DELETE per effettuare il logout
+# response = requests.get(url, data,headers=headers)
 
 # Verifica la risposta
 if response.status_code == 200:
