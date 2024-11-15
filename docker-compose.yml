@@ -8,6 +8,13 @@ services:
       - auth_db
       - profile_setting
       - profile_db
+      - db_gachasystem
+      - gachasystem
+      - db_payment
+      - payment_service
+      - gacha_roll
+      - auction_db
+      - auction_service
 
   auth_db:
     image: postgres:13
@@ -52,7 +59,92 @@ services:
       - JWT_SECRET_KEY=super-secret-key
     depends_on:
       - profile_db
+  
+  db_gachasystem:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user           # username to access the database
+      POSTGRES_PASSWORD: password   # password of the user
+      POSTGRES_DB: memes_db          # name of the database
+    volumes:
+      - memes_data:/var/lib/postgresql/data   # monta spazio persistente per salvare i dati del database
+      - ./gachasystem_service/db/init.sql:/docker-entrypoint-initdb.d/init.sql  # monta uno spazio di inizializzazione nel percorso predefinito di Docker per eseguire script all'avvio del database
+    ports:
+      - "5434:5434"   # mappa la porta del container 5432 (a destra), porta predefinita di PostgreSQL, sulla stessa porta dell'host (a sinistra)
+  
+  gachasystem:
+    build: ./gachasystem_service
+    container_name: gachasystem
+    restart: always   # policy on failure
+    volumes:
+      - meme_images:/app/static/uploads  # Monta il volume nella cartella del server per contenere le immagini dei memes
+    ports:
+      - "5004:5004" # mappa la porta del container 5001 (destra) sulla stessa porta dell'host
+    environment:
+      - DATABASE_URI=postgresql://user:password@db_gachasystem:5434/memes_db   # variabile d'ambiente che specifica l'uri per connettersi al db
+      #- JWT_SECRET_KEY=super-secret-key
+    depends_on:
+      - db_gachasystem
+  # Database per Payment Service
+  db_payment:
+    image: postgres:13
+    container_name: db_payment
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: trans_db
+    volumes:
+      - payment_data:/var/lib/postgresql/data
+      - ./payment_service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5435:5435"
+  # Payment Service
+  payment_service:
+    build: ./payment_service
+    container_name: payment_service
+    ports:
+      - "5006:5006"
+    environment:
+      - DATABASE_URI=postgresql://user:password@db_payment:5435/trans_db
+      - JWT_SECRET_KEY=super-secret-key
+    depends_on:
+      - db_payment
 
+  gacharoll:
+      build: ./gacharoll_service
+      container_name: gacharoll
+      restart: always
+      ports:
+        - "5007:5007"
+      depends_on:
+        - gachasystem
+        - payment_service
+
+  auction_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: auction_db
+    volumes:
+      - auction_data:/var/lib/postgresql/data
+      - ./auction_market_service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5436:5436"
+
+  auction_service:
+    build: ./auction_market_service
+    ports:
+      - "5008:5008"
+    environment:
+      - DATABASE_URI=postgresql://user:password@auction_db:5436/auction_db
+      - JWT_SECRET_KEY=super-secret-key
+    depends_on:
+      - auction_db
 volumes:
   profile_data:
   auth_data:
+  memes_data:  # definisce il volume Docker meme_data per salvare in modo persistente i dati del database
+  meme_images:
+  payment_data:
+  auction_data:

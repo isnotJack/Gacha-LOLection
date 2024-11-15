@@ -15,7 +15,7 @@ response = requests.post(url, data)
 
 # # Supponiamo che tu abbia il token JWT salvato dopo il login
 # jwt_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMTY4MTYzNCwianRpIjoiZDE5OTU3NzYtZTkzZi00OWQ5LWI1N2QtZWIyMjRjNWI0NmNhIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJ1c2VybmFtZSI6InVzZXIxIiwicm9sZSI6InVzZXIifSwibmJmIjoxNzMxNjgxNjM0LCJleHAiOjE3MzE2ODI1MzR9.kCAlZs4RRt7bio5hOHH0MDU5KziJ4hZs3iN9I_Zg6l8"
-#  # Header con il token JWT
+#  Header con il token JWT
 # headers = {
 #     'Authorization': f'Bearer {jwt_token}'
 # }
