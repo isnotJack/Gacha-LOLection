@@ -37,9 +37,10 @@ class GachaItem(db.Model):
 @app.route('/modify', methods=['PATCH'])
 #@jwt_required()
 def modify_profile():
-    username = request.args.get('username')
-    field = request.args.get('field')
-    value = request.args.get('value')
+    updated_data= request.get_json()
+    username = updated_data.get('username')
+    field = updated_data.get('field')
+    value = updated_data.get('value')
     #current_user = get_jwt_identity()
 
     # Controllo se l'utente è autorizzato a modificare il profilo
@@ -130,6 +131,30 @@ def info_gacha_collection():
         "img": gacha_item.img
     }
     return jsonify(gacha_data), 200
+
+# Endpoint per creare un nuovo profilo
+@app.route('/create_profile', methods=['POST'])
+def create_profile():
+# Recupera i dati inviati nella richiesta
+    data=request.get_json()
+    username = data.get('username')
+    profile_image =  'default_image_url'  # Immagine di profilo predefinita
+    currency_balance = 0  # Bilancio predefinito
+
+    # Controlla se il profilo esiste già
+    if Profile.query.filter_by(username=username).first():
+        return jsonify({"error": "Profile already exists"}), 400
+
+    # Crea un nuovo profilo
+    new_profile = Profile(
+        username=username,
+        profile_image=profile_image,
+        currency_balance=currency_balance
+    )
+    db.session.add(new_profile)
+    db.session.commit()
+
+    return jsonify({"message": f"Profile for username '{username}' created successfully"}),200
 
 if __name__ == '__main__':
     db.create_all()

@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+import requests
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@auth_db:5432/auth_db'
@@ -38,6 +39,16 @@ def signup():
 
     db.session.add(new_user)
     db.session.commit()
+    params ={
+        'username':username
+    }
+    url= 'http://profile_service:5003/create_profile'
+    try:
+        x=requests.post(url,json=params)
+        x.raise_for_status()
+        res = x.json()
+    except ConnectionError:
+        return jsonify({'Error':'Authentication Service is down\n'}), 404
     return jsonify({"message": "Account created successfully"}), 200
 
 # Endpoint per il login
