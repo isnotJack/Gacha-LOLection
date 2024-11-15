@@ -1,0 +1,33 @@
+services:
+  gateway:
+    build: ./gateway
+    ports:
+      - 5001:5001
+    depends_on:
+      - auth_service
+      - auth_db
+
+  auth_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: auth_db
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+      - ./authentication_service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  auth_service:
+    build: ./authentication_service
+    ports:
+      - "5002:5002"
+    environment:
+      - DATABASE_URI=postgresql://user:password@auth_db:5432/auth_db
+      - JWT_SECRET_KEY=super-secret-key
+    depends_on:
+      - auth_db
+
+volumes:
+  auth_data:
