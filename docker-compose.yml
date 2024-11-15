@@ -46,7 +46,7 @@ services:
     ports:
       - "5003:5003"
     environment:
-      - DATABASE_URI=postgresql://user:password@profile_db:5433/profile_db
+      - DATABASE_URI=postgresql://user:password@profile_db:5432/profile_db
       - JWT_SECRET_KEY=super-secret-key
     depends_on:
       - profile_db

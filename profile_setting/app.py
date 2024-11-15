@@ -4,7 +4,7 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@db:5432/profile_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@profile_db:5432/profile_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 
@@ -132,29 +132,35 @@ def info_gacha_collection():
     }
     return jsonify(gacha_data), 200
 
-# Endpoint per creare un nuovo profilo
 @app.route('/create_profile', methods=['POST'])
 def create_profile():
-# Recupera i dati inviati nella richiesta
-    data=request.get_json()
+    data = request.get_json()
     username = data.get('username')
-    profile_image =  'default_image_url'  # Immagine di profilo predefinita
-    currency_balance = 0  # Bilancio predefinito
+    profile_image = data.get('profile_image', 'default_image_url')
+    currency_balance = data.get('currency_balance', 0)
 
-    # Controlla se il profilo esiste già
-    if Profile.query.filter_by(username=username).first():
-        return jsonify({"error": "Profile already exists"}), 400
+    if not username:
+        return jsonify({"error": "Missing 'username' parameter"}), 400
 
-    # Crea un nuovo profilo
-    new_profile = Profile(
-        username=username,
-        profile_image=profile_image,
-        currency_balance=currency_balance
-    )
-    db.session.add(new_profile)
-    db.session.commit()
+    try:
+        # Controlla se il profilo esiste già
+        existing_profile = Profile.query.filter_by(username=username).first()
+        if existing_profile:
+            return jsonify({"error": "Profile already exists"}), 400
 
-    return jsonify({"message": f"Profile for username '{username}' created successfully"}),200
+        # Crea un nuovo profilo
+        new_profile = Profile(
+            username=username,
+            profile_image=profile_image,
+            currency_balance=currency_balance
+        )
+        db.session.add(new_profile)
+        db.session.commit()
+
+        return jsonify({"message": f"Profile for username '{username}' created successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     db.create_all()

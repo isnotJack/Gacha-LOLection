@@ -39,17 +39,23 @@ def signup():
 
     db.session.add(new_user)
     db.session.commit()
-    params ={
-        'username':username
+    # Chiamata al servizio `profile_service` per creare il profilo
+    params = {
+        'username': username,
+        'profile_image': 'default_image_url',
+        'currency_balance': 0
     }
-    url= 'http://profile_service:5003/create_profile'
+    url = 'http://profile_service:5003/create_profile'
     try:
-        x=requests.post(url,json=params)
+        x = requests.post(url, json=params)
         x.raise_for_status()
         res = x.json()
-    except ConnectionError:
-        return jsonify({'Error':'Authentication Service is down\n'}), 404
-    return jsonify({"message": "Account created successfully"}), 200
+    except requests.exceptions.RequestException as e:
+        # Ritorna un errore se la chiamata al `profile_service` fallisce
+        return jsonify({'error': f'Failed to create profile: {str(e)}'}), 500
+
+    return jsonify({"message": "Account created successfully", "profile_message": res.get("message")}), 200
+
 
 # Endpoint per il login
 @app.route('/login', methods=['POST'])
