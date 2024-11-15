@@ -39,19 +39,19 @@ def signup():
 
     db.session.add(new_user)
     db.session.commit()
-    # Chiamata al servizio `profile_service` per creare il profilo
+    # Chiamata al servizio `profile_setting` per creare il profilo
     params = {
         'username': username,
         'profile_image': 'default_image_url',
         'currency_balance': 0
     }
-    url = 'http://profile_service:5003/create_profile'
+    url = 'http://profile_setting:5003/create_profile'
     try:
         x = requests.post(url, json=params)
         x.raise_for_status()
         res = x.json()
     except requests.exceptions.RequestException as e:
-        # Ritorna un errore se la chiamata al `profile_service` fallisce
+        # Ritorna un errore se la chiamata al `profile_setting` fallisce
         return jsonify({'error': f'Failed to create profile: {str(e)}'}), 500
 
     return jsonify({"message": "Account created successfully", "profile_message": res.get("message")}), 200
@@ -90,6 +90,18 @@ def delete_account():
         db.session.delete(user)
         db.session.commit()
         return jsonify({"message": "Account deleted successfully"}), 200
+    # Chiamata al servizio `profile_setting` per eliminare il profilo
+    params = {
+        'username': username,
+    }
+    url = 'http://profile_setting:5003/delete_profile'
+    try:
+        x = requests.delete(url, json=params)
+        x.raise_for_status()
+        res = x.json()
+    except requests.exceptions.RequestException as e:
+        # Ritorna un errore se la chiamata al `profile_setting` fallisce
+        return jsonify({'error': f'Failed to create profile: {str(e)}'}), 500
     return jsonify({"error": "User not found or incorrect password"}), 404
 
 if __name__ == '__main__':

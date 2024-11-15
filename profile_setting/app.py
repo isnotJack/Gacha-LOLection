@@ -2,7 +2,8 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
-
+import requests
+from requests.exceptions import ConnectionError, HTTPError
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@profile_db:5432/profile_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -15,23 +16,21 @@ jwt = JWTManager(app)
 # Modello per il profilo utente
 class Profile(db.Model):
     __tablename__ = 'profiles'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
+    username = db.Column(db.String(50), primary_key=True)
     profile_image = db.Column(db.String(200), nullable=True)
     currency_balance = db.Column(db.Integer, default=0)
-    gacha_collection = db.relationship('GachaItem', backref='profile', lazy=True)
+    gacha_collection = db.relationship('GachaItem', backref='profile' , lazy=True)
 
 # Modello per gli oggetti gacha
 class GachaItem(db.Model):
     __tablename__ = 'gacha_items'
-    id = db.Column(db.Integer, primary_key=True)
-    gacha_id = db.Column(db.String(50), nullable=False)
     gacha_name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(255), nullable=True)
-    rarity = db.Column(db.String(50), nullable=True)
-    collected_date = db.Column(db.String(50), nullable=True)
-    img = db.Column(db.String(255), nullable=True)
-    profile_id = db.Column(db.Integer, db.ForeignKey('profiles.id'), nullable=False)
+    collected_date = db.Column(db.DateTime(50), nullable=False)  
+    username = db.Column(db.String(50), db.ForeignKey('profiles.username', ondelete='CASCADE'), nullable=False)
+    # Definizione della chiave primaria composta
+    __table_args__ = (
+        db.PrimaryKeyConstraint('gacha_name', 'collected_date'),
+    )
 
 # Endpoint per modificare il profilo
 @app.route('/modify', methods=['PATCH'])
@@ -81,7 +80,7 @@ def check_profile():
     return jsonify(profile_data), 200
 
 # Endpoint per visualizzare la collezione gacha di un utente
-@app.route('/retrieve_gachacollection', methods=['GET'])
+@app.route('/retrieve_gachacollection', methods=['GET']) #--> Sistemare GACHA SYSTEM PER RICEVERE COLLEZIONI
 @jwt_required()
 def retrieve_gacha_collection():
     username = request.args.get('username')
@@ -91,46 +90,46 @@ def retrieve_gacha_collection():
         return jsonify({"error": "User not found"}), 401
 
     gacha_collection = [{
-        "gacha_id": item.gacha_id,
         "gacha_name": item.gacha_name,
-        "description": item.description,
-        "rarity": item.rarity,
         "collected_date": item.collected_date,
-        "img": item.img
     } for item in profile.gacha_collection]
 
-    response_data = {
-        "username": username,
-        "gacha_collected": gacha_collection,
-        "total_gacha": len(gacha_collection),
-        "remaining_to_complete": 100 - len(gacha_collection)  # DA MODIFICARE: Supponendo che la collezione completa sia di 100 elementi
-    }
-    return jsonify(response_data), 200
+    url="http://gatchasystem_service:5005/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
+    try:
+        x=requests.get(url,gacha_collection)
+        x.raise_for_status()
+        response_data = x.json()
+        return jsonify(response_data), 200
+    except ConnectionError:
+            return jsonify({'Error':'Gacha service is down'}),404
+    except HTTPError:
+            return jsonify(x.content, x.status_code)
 
 # Endpoint per visualizzare i dettagli di un oggetto gacha specifico
 @app.route('/info_gachacollection', methods=['GET'])
 @jwt_required()
 def info_gacha_collection():
     username = request.args.get('username')
-    gacha_id = request.args.get('gacha_id')
+    gacha_name = request.args.get('gacha_name')
     profile = Profile.query.filter_by(username=username).first()
 
     if not profile:
         return jsonify({"error": "User not found"}), 401
 
-    gacha_item = GachaItem.query.filter_by(profile_id=profile.id, gacha_id=gacha_id).first()
-    if not gacha_item:
-        return jsonify({"error": "Gacha item not found"}), 404
+    gacha ={
+        "gacha_name": gacha_name
+        }
 
-    gacha_data = {
-        "gacha_id": gacha_item.gacha_id,
-        "gacha_name": gacha_item.gacha_name,
-        "description": gacha_item.description,
-        "rarity": gacha_item.rarity,
-        "collected_date": gacha_item.collected_date,
-        "img": gacha_item.img
-    }
-    return jsonify(gacha_data), 200
+    url="http://gatchasystem_service:5005/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
+    try:
+        x=requests.get(url,gacha)
+        x.raise_for_status()
+        response_data = x.json()
+        return jsonify(response_data), 200
+    except ConnectionError:
+            return jsonify({'Error':'Gacha service is down'}),404
+    except HTTPError:
+            return jsonify(x.content, x.status_code)
 
 @app.route('/create_profile', methods=['POST'])
 def create_profile():
@@ -161,6 +160,56 @@ def create_profile():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/delete_profile', methods=['DELETE'])
+def delete_profile():
+    data= request.get_json()
+    username = data.get('username')
+    user = Profile.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'Error': 'User not found'}), 400
+    db.session.delete(user)
+    db.session.commit
+    return jsonify({"message": f"Profile for username '{username}' deleted successfully"}), 200
+
+@app.route('/insertGacha', methods=['POST'])
+def insertGacha():
+    data = request.get_json()
+    username = data.get('username')
+    gacha_name=data.get('gacha_name')
+    collected_date=data.get('collected_date')
+    newGacha = GachaItem(gacha_name=gacha_name, collected_date=collected_date, username=username)
+    db.session.add(newGacha)
+    db.session.commit()
+    return jsonify({"message": f"Gacha '{gacha_name}' added to collection"}), 200
+
+@app.route('/deleteGacha', methods=['DELETE'])
+def deleteGacha():
+    data = request.get_json()
+    username = data.get('username')
+    gacha_name = data.get('gacha_name')
+    collected_date = data.get('collected_date')
+
+    # Recupera l'utente
+    profile = Profile.query.filter_by(username=username).first()
+    if not profile:
+        return jsonify({"error": "User not found"}), 400
+
+    # Trova il GachaItem corrispondente
+    gacha = GachaItem.query.filter_by(
+        gacha_name=gacha_name,
+        collected_date=collected_date,
+        username=profile.username
+    ).first()
+
+    if not gacha:
+        return jsonify({"error": "Gacha not found"}), 404
+
+    # Elimina il GachaItem
+    db.session.delete(gacha)
+    db.session.commit()
+    return jsonify({"message": f"Gacha '{gacha_name}' deleted from collection"}), 200
+
 
 if __name__ == '__main__':
     db.create_all()
