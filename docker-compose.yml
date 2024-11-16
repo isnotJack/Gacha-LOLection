@@ -4,119 +4,119 @@ services:
     ports:
       - 5001:5001
     depends_on:
-      # - auth_service
-      # - auth_db
-      # - profile_setting
-      # - profile_db
-      # - db_gachasystem
-      # - gachasystem
-      # - db_payment
-      # - payment_service
-      # - gacha_roll
+      - auth_service
+      - auth_db
+      - profile_setting
+      - profile_db
+      - db_gachasystem
+      - gachasystem
+      - db_payment
+      - payment_service
+      - gacha_roll
       - auction_db
       - auction_service
 
-  # auth_db:
-  #   image: postgres:13
-  #   environment:
-  #     POSTGRES_USER: user
-  #     POSTGRES_PASSWORD: password
-  #     POSTGRES_DB: auth_db
-  #   volumes:
-  #     - auth_data:/var/lib/postgresql/data
-  #     - ./authentication_service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-  #   ports:
-  #     - "5432:5432"
+  auth_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: auth_db
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+      - ./authentication_service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
 
-  # auth_service:
-  #   build: ./authentication_service
-  #   ports:
-  #     - "5002:5002"
-  #   environment:
-  #     - DATABASE_URI=postgresql://user:password@auth_db:5432/auth_db
-  #     - JWT_SECRET_KEY=super-secret-key
-  #   depends_on:
-  #     - auth_db
+  auth_service:
+    build: ./authentication_service
+    ports:
+      - "5002:5002"
+    environment:
+      - DATABASE_URI=postgresql://user:password@auth_db:5432/auth_db
+      - JWT_SECRET_KEY=super-secret-key
+    depends_on:
+      - auth_db
 
-  # profile_db:
-  #   image: postgres:13
-  #   environment:
-  #     POSTGRES_USER: user
-  #     POSTGRES_PASSWORD: password
-  #     POSTGRES_DB: profile_db
-  #   volumes:
-  #     - profile_data:/var/lib/postgresql/data
-  #     - ./profile_setting/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-  #   ports:
-  #     - "5433:5432"
+  profile_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: profile_db
+    volumes:
+      - profile_data:/var/lib/postgresql/data
+      - ./profile_setting/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"
 
-  # profile_setting:
-  #   build: ./profile_setting
-  #   ports:
-  #     - "5003:5003"
-  #   environment:
-  #     - DATABASE_URI=postgresql://user:password@profile_db:5432/profile_db
-  #     - JWT_SECRET_KEY=super-secret-key
-  #   depends_on:
-  #     - profile_db
+  profile_setting:
+    build: ./profile_setting
+    ports:
+      - "5003:5003"
+    environment:
+      - DATABASE_URI=postgresql://user:password@profile_db:5432/profile_db
+      - JWT_SECRET_KEY=super-secret-key
+    depends_on:
+      - profile_db
   
-  # db_gachasystem:
-  #   image: postgres:13
-  #   environment:
-  #     POSTGRES_USER: user           # username to access the database
-  #     POSTGRES_PASSWORD: password   # password of the user
-  #     POSTGRES_DB: memes_db          # name of the database
-  #   volumes:
-  #     - memes_data:/var/lib/postgresql/data   # monta spazio persistente per salvare i dati del database
-  #     - ./gachasystem_service/db/init.sql:/docker-entrypoint-initdb.d/init.sql  # monta uno spazio di inizializzazione nel percorso predefinito di Docker per eseguire script all'avvio del database
-  #   ports:
-  #     - "5434:5432"   # mappa la porta del container 5432 (a destra), porta predefinita di PostgreSQL, sulla stessa porta dell'host (a sinistra)
+  db_gachasystem:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user           # username to access the database
+      POSTGRES_PASSWORD: password   # password of the user
+      POSTGRES_DB: memes_db          # name of the database
+    volumes:
+      - memes_data:/var/lib/postgresql/data   # monta spazio persistente per salvare i dati del database
+      - ./gachasystem_service/db/init.sql:/docker-entrypoint-initdb.d/init.sql  # monta uno spazio di inizializzazione nel percorso predefinito di Docker per eseguire script all'avvio del database
+    ports:
+      - "5434:5432"   # mappa la porta del container 5432 (a destra), porta predefinita di PostgreSQL, sulla stessa porta dell'host (a sinistra)
   
-  # gachasystem:
-  #   build: ./gachasystem_service
-  #   container_name: gachasystem
-  #   restart: always   # policy on failure
-  #   volumes:
-  #     - meme_images:/app/static/uploads  # Monta il volume nella cartella del server per contenere le immagini dei memes
-  #   ports:
-  #     - "5004:5004" # mappa la porta del container 5001 (destra) sulla stessa porta dell'host
-  #   environment:
-  #     - DATABASE_URI=postgresql://user:password@db_gachasystem:5432/memes_db   # variabile d'ambiente che specifica l'uri per connettersi al db
-  #     #- JWT_SECRET_KEY=super-secret-key
-  #   depends_on:
-  #     - db_gachasystem
-  # # Database per Payment Service
-  # db_payment:
-  #   image: postgres:13
-  #   environment:
-  #     POSTGRES_USER: user
-  #     POSTGRES_PASSWORD: password
-  #     POSTGRES_DB: trans_db
-  #   volumes:
-  #     - payment_data:/var/lib/postgresql/data
-  #     - ./payment_service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-  #   ports:
-  #     - "5435:5432"
-  # # Payment Service
-  # payment_service:
-  #   build: ./payment_service
-  #   ports:
-  #     - "5006:5006"
-  #   environment:
-  #     - DATABASE_URI=postgresql://user:password@db_payment:5432/trans_db
-  #     - JWT_SECRET_KEY=super-secret-key
-  #   depends_on:
-  #     - db_payment
+  gachasystem:
+    build: ./gachasystem_service
+    container_name: gachasystem
+    restart: always   # policy on failure
+    volumes:
+      - meme_images:/app/static/uploads  # Monta il volume nella cartella del server per contenere le immagini dei memes
+    ports:
+      - "5004:5004" # mappa la porta del container 5001 (destra) sulla stessa porta dell'host
+    environment:
+      - DATABASE_URI=postgresql://user:password@db_gachasystem:5432/memes_db   # variabile d'ambiente che specifica l'uri per connettersi al db
+      #- JWT_SECRET_KEY=super-secret-key
+    depends_on:
+      - db_gachasystem
+  # Database per Payment Service
+  db_payment:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: trans_db
+    volumes:
+      - payment_data:/var/lib/postgresql/data
+      - ./payment_service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5435:5432"
+  # Payment Service
+  payment_service:
+    build: ./payment_service
+    ports:
+      - "5006:5006"
+    environment:
+      - DATABASE_URI=postgresql://user:password@db_payment:5432/trans_db
+      - JWT_SECRET_KEY=super-secret-key
+    depends_on:
+      - db_payment
 
-  # gacha_roll:
-  #     build: ./gacharoll_service
-  #     container_name: gacharoll
-  #     restart: always
-  #     ports:
-  #       - "5007:5007"
-  #     depends_on:
-  #       - gachasystem
-  #       - payment_service
+  gacha_roll:
+      build: ./gacharoll_service
+      container_name: gacharoll
+      restart: always
+      ports:
+        - "5007:5007"
+      depends_on:
+        - gachasystem
+        - payment_service
 
   auction_db:
     image: postgres:13
@@ -140,9 +140,9 @@ services:
     depends_on:
       - auction_db
 volumes:
-  # profile_data:
-  # auth_data:
-  # memes_data:  # definisce il volume Docker meme_data per salvare in modo persistente i dati del database
-  # meme_images:
-  # payment_data:
+  profile_data:
+  auth_data:
+  memes_data:  # definisce il volume Docker meme_data per salvare in modo persistente i dati del database
+  meme_images:
+  payment_data:
   auction_data:
