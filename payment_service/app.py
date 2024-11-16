@@ -6,8 +6,9 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 import datetime
 import time
 
+
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@db:5432/trans_db' #numero porta
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@db_payment:5432/trans_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 
@@ -152,7 +153,8 @@ def viewTrans():
 
 @app.route('/newBalance', methods=['POST'])
 def newBalance():
-    username = request.form.get('username')
+    data = request.get_json()
+    username = data.get('username')
     res = Balance.query.filter_by(username=username).all()
     if not res:
         new_balance = Balance(username=username, balance=0)
@@ -174,4 +176,19 @@ def getBalance():
         return jsonify({'username': res.username, 'balance': res.balance}), 200
     else:
         return jsonify({'Error': 'Not found balance for that user'}), 404
-
+    
+@app.route('/deleteBalance', methods=['DELETE'])
+def deleteBalance():
+    data = request.get_json()
+    username = data.get('username')
+    res = Balance.query.filter_by(username=username).first()
+    if res:
+        db.session.delete(res)
+        try:
+            db.session.commit()
+            return jsonify({'msg': f'Corretcly deleted balance for {username}'}), 200
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            return jsonify({'Error': 'Committing error', 'details': str(e)}), 500
+    else:
+        return jsonify({'Error': 'Balance not found'}), 400

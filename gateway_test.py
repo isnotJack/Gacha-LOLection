@@ -2,16 +2,15 @@ import requests
 
 # # URL a cui inviare la richiesta POST
 # url = 'http://172.19.0.3:5001/newBalance'
-url = 'http://localhost:5001/auth_service/signup'
+url = 'http://localhost:5001/auth_service/delete'
 # Dati da inviare nella richiesta POST (puoi passare dei dati come un dizionario)
 
 data = {
     'username' : 'user1',
     'password' : '1234',
-    'email':'coglione@gmail.com'
 }
 # Invia la richiesta POST
-response = requests.post(url, data)
+response = requests.delete(url, data=data)
 
 # # Supponiamo che tu abbia il token JWT salvato dopo il login
 # jwt_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMTY4MTYzNCwianRpIjoiZDE5OTU3NzYtZTkzZi00OWQ5LWI1N2QtZWIyMjRjNWI0NmNhIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJ1c2VybmFtZSI6InVzZXIxIiwicm9sZSI6InVzZXIifSwibmJmIjoxNzMxNjgxNjM0LCJleHAiOjE3MzE2ODI1MzR9.kCAlZs4RRt7bio5hOHH0MDU5KziJ4hZs3iN9I_Zg6l8"
