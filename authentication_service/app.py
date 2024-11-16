@@ -33,7 +33,9 @@ def signup():
 
     if not username or not password or not email:
         return jsonify({"error": "Missing parameters"}), 400
-
+    user = User.query.filter_by(username=username).first()
+    if user:
+        return jsonify({'Error': f'User {username} already present'}), 500    
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
     new_user = User(username=username, password=hashed_password, email=email, role= 'user')
 
@@ -53,7 +55,17 @@ def signup():
     except requests.exceptions.RequestException as e:
         # Ritorna un errore se la chiamata al `profile_setting` fallisce
         return jsonify({'error': f'Failed to create profile: {str(e)}'}), 500
-
+    params = {
+        'username': username,
+    }
+    url = 'http://payment_service:5006/newBalance'
+    try:
+        y = requests.post(url, json=params)
+        y.raise_for_status()
+        res = x.json()
+    except requests.exceptions.RequestException as e:
+        # Ritorna un errore se la chiamata al `profile_setting` fallisce
+        return jsonify({'error': f'Failed to create profile: {str(e)}'}), 500 
     return jsonify({"message": "Account created successfully", "profile_message": res.get("message")}), 200
 
 
@@ -89,20 +101,28 @@ def delete_account():
     if user and bcrypt.check_password_hash(user.password, password):
         db.session.delete(user)
         db.session.commit()
+        # Chiamata al servizio `profile_setting` per eliminare il profilo
+        params = {
+            'username': username,
+        }
+        url = 'http://profile_setting:5003/delete_profile'
+        try:
+            x = requests.delete(url, json=params)
+            x.raise_for_status()
+            res = x.json()
+        except requests.exceptions.RequestException as e:
+            # Ritorna un errore se la chiamata al `profile_setting` fallisce
+            return jsonify({'error': f'Failed to delete profile: {str(e)}'}), 500
+        url = 'http://payment_service:5006/deleteBalance'
+        try:
+            x = requests.delete(url, json=params)
+            x.raise_for_status()
+            res = x.json()
+        except requests.exceptions.RequestException as e:
+            return jsonify({'error': f'Failed to delete the balance: {str(e)}'}), 500
         return jsonify({"message": "Account deleted successfully"}), 200
-    # Chiamata al servizio `profile_setting` per eliminare il profilo
-    params = {
-        'username': username,
-    }
-    url = 'http://profile_setting:5003/delete_profile'
-    try:
-        x = requests.delete(url, json=params)
-        x.raise_for_status()
-        res = x.json()
-    except requests.exceptions.RequestException as e:
-        # Ritorna un errore se la chiamata al `profile_setting` fallisce
-        return jsonify({'error': f'Failed to create profile: {str(e)}'}), 500
-    return jsonify({"error": "User not found or incorrect password"}), 404
+    else:
+        return jsonify({"error": "User not found or incorrect password"}), 404
 
 if __name__ == '__main__':
     db.create_all()
