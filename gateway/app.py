@@ -17,7 +17,7 @@ CHECK_URL = 'http://profile_setting:5003/checkprofile'
 RETRIEVE_URL = 'http://profile_setting:5003/retrieve_gachacollection'
 INFO_URL = 'http://profile_setting:5003/info_gachacollection'
 
-ALLOWED_AUCTION_OP = {'see', 'create', 'modify', 'bid'} 
+ALLOWED_AUCTION_OP = {'see', 'create', 'modify', 'bid','gatcha_receive'} 
 AUCTION_BASE_URL = 'http://auction_service:5008'
 SEE_AUCTION_URL = f'{AUCTION_BASE_URL}/see'
 CREATE_AUCTION_URL = f'{AUCTION_BASE_URL}/create'
@@ -265,6 +265,30 @@ def auction_service(op):
             return jsonify({"error": str(e)}), response.status_code
         except Exception as e:
             return jsonify({"error": str(e)}), 500
+        
+    elif op == 'gatcha_receive':
+        # Recupera i parametri dal JSON del client
+        data = request.get_json()
+        user_id = data.get('user_id')
+        gatcha_id = data.get('gatcha_id')
 
+        # Controlla che tutti i parametri siano presenti
+        if not all([user_id, gatcha_id]):
+            return jsonify({"error": "Missing required parameters"}), 400
+
+        # Costruisce l'URL per il servizio auction
+        url = f'{AUCTION_BASE_URL}/gatcha_receive'
+
+        try:
+            # Invio della richiesta POST al servizio auction
+            response = requests.post(url, json=data)
+            response.raise_for_status()
+            return jsonify(response.json())  # Wrappa la risposta in jsonify
+        except ConnectionError:
+            return jsonify({"error": "Auction Service is down"}), 404
+        except HTTPError as e:
+            return jsonify({"error": str(e)}), response.status_code
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
     # Caso non gestito
     return jsonify({"error": "Unhandled operation"}), 500
