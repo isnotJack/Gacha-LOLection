@@ -17,11 +17,12 @@ CHECK_URL = 'http://profile_setting:5003/checkprofile'
 RETRIEVE_URL = 'http://profile_setting:5003/retrieve_gachacollection'
 INFO_URL = 'http://profile_setting:5003/info_gachacollection'
 
-ALLOWED_AUCTION_OP = {'see', 'create', 'modify'}
+ALLOWED_AUCTION_OP = {'see', 'create', 'modify', 'bid'} 
 AUCTION_BASE_URL = 'http://auction_service:5008'
 SEE_AUCTION_URL = f'{AUCTION_BASE_URL}/see'
 CREATE_AUCTION_URL = f'{AUCTION_BASE_URL}/create'
 MODIFY_AUCTION_URL = f'{AUCTION_BASE_URL}/modify'
+BID_AUCTION_URL = f'{AUCTION_BASE_URL}/bid'
 
 
 app = Flask(__name__, instance_relative_config=True)
@@ -231,6 +232,31 @@ def auction_service(op):
 
         try:
             response = requests.patch(url)  # Nessun JSON, tutto passa come query string
+            response.raise_for_status()
+            return jsonify(response.json())  # Wrappa la risposta in jsonify
+        except ConnectionError:
+            return jsonify({"error": "Auction Service is down"}), 404
+        except HTTPError as e:
+            return jsonify({"error": str(e)}), response.status_code
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    elif op == 'bid':
+        # Recupera i parametri dal JSON del client
+        data = request.get_json()
+        bidder_id = data.get('bidder_id')
+        auction_id = data.get('auction_id')
+        new_bid = data.get('newBid')
+
+        # Controlla che tutti i parametri siano presenti
+        if not all([bidder_id, auction_id, new_bid]):
+            return jsonify({"error": "Missing required parameters"}), 400
+
+        # Costruisce l'URL
+        url = f'{AUCTION_BASE_URL}/bid'
+
+        try:
+            response = requests.patch(url, json=data)
             response.raise_for_status()
             return jsonify(response.json())  # Wrappa la risposta in jsonify
         except ConnectionError:

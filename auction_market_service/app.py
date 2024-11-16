@@ -124,6 +124,34 @@ def modify_auction():
     db.session.commit()
     return jsonify({"id": auction.id, "message": "Auction updated successfully"}), 200
 
+@app.route('/bid', methods=['PATCH'])
+def bid_for_auction():
+    # Recupera i parametri dal JSON del corpo della richiesta
+    data = request.get_json()
+    bidder_id = data.get('bidder_id')
+    auction_id = data.get('auction_id')
+    new_bid = data.get('newBid')
+
+    # Controlla che tutti i parametri siano presenti
+    if not all([bidder_id, auction_id, new_bid]):
+        return jsonify({"error": "Missing required parameters"}), 400
+
+    # Trova l'asta da modificare
+    auction = Auction.query.get(auction_id)
+    if not auction:
+        return jsonify({"error": "Auction not found"}), 404
+
+    # Controlla se l'offerta è valida
+    if new_bid <= auction.current_bid:
+        return jsonify({"error": "Bid must be higher than the current bid"}), 400
+
+    # Aggiorna l'offerta e il vincitore
+    auction.current_bid = new_bid
+    auction.winner_id = bidder_id
+
+    db.session.commit()
+    return jsonify({"message": "New bid sets"}), 200
+
 if __name__ == '__main__':
     db.create_all()
     app.run(host='0.0.0.0', port=5008)
