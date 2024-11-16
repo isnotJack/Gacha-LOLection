@@ -1,6 +1,6 @@
 import requests, time
 
-from flask import Flask, request, make_response 
+from flask import Flask, request, make_response, jsonify
 from requests.exceptions import ConnectionError, HTTPError
 from werkzeug.exceptions import NotFound
 
@@ -16,6 +16,13 @@ MODIFY_URL = 'http://profile_setting:5003/modify'
 CHECK_URL = 'http://profile_setting:5003/checkprofile'
 RETRIEVE_URL = 'http://profile_setting:5003/retrieve_gachacollection'
 INFO_URL = 'http://profile_setting:5003/info_gachacollection'
+
+ALLOWED_AUCTION_OP = {'see', 'create', 'modify'}
+AUCTION_BASE_URL = 'http://auction_service:5008'
+SEE_AUCTION_URL = f'{AUCTION_BASE_URL}/see'
+CREATE_AUCTION_URL = f'{AUCTION_BASE_URL}/create'
+MODIFY_AUCTION_URL = f'{AUCTION_BASE_URL}/modify'
+
 
 app = Flask(__name__, instance_relative_config=True)
 def create_app():
@@ -149,3 +156,89 @@ def profile_setting(op):
         return res
     except HTTPError:
         return make_response(x.content, x.status_code)
+
+@app.route('/auction_service/<op>', methods=['GET', 'POST', 'PATCH'])
+def auction_service(op):
+    if op not in ALLOWED_AUCTION_OP:
+        return jsonify({"error": f"Invalid operation '{op}'"}), 400
+
+    # Operazione "see"
+    if op == 'see':
+        auction_id = request.args.get('auction_id')  # Recupera auction_id dai parametri della query
+        status = request.args.get('status', 'active')  # Status predefinito a 'active'
+
+        # Costruisce l'URL con i parametri corretti
+        url = f'{SEE_AUCTION_URL}?status={status}'
+        if auction_id:
+            url += f'&auction_id={auction_id}'
+
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            return jsonify(response.json())  # Wrappa la lista in jsonify
+        except ConnectionError:
+            return jsonify({"error": "Auction Service is down"}), 404
+        except HTTPError as e:
+            return jsonify({"error": str(e)}), response.status_code
+
+    # Operazione "create"
+    elif op == 'create':
+        try:
+            data = request.get_json()  # Recupera i parametri dal corpo JSON
+            seller_id = data.get('seller_id')
+            gatcha_id = data.get('gatcha_id')
+            base_price = data.get('basePrice')
+            end_date = data.get('endDate')
+
+            # Verifica che tutti i parametri richiesti siano presenti
+            if not all([seller_id, gatcha_id, base_price, end_date]):
+                return jsonify({"error": "Missing required parameters"}), 400
+
+            url = CREATE_AUCTION_URL
+            response = requests.post(url, json=data)
+            response.raise_for_status()
+            return jsonify(response.json())  # Wrappa la risposta in jsonify
+        except ConnectionError:
+            return jsonify({"error": "Auction Service is down"}), 404
+        except HTTPError as e:
+            return jsonify({"error": str(e)}), response.status_code
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    elif op == 'modify':
+        # Recupera i parametri dal JSON del client
+        data = request.get_json()  
+        auction_id = data.get('auction_id')
+        seller_id = data.get('seller_id')
+        gatcha_id = data.get('gatcha_id')
+        base_price = data.get('basePrice')
+        end_date = data.get('endDate')
+
+        # Controlla che auction_id sia presente
+        if not auction_id:
+            return jsonify({"error": "Auction ID is required"}), 400
+
+        # Costruisce l'URL con i parametri come query string
+        url = f'{MODIFY_AUCTION_URL}?auction_id={auction_id}'
+        if seller_id:
+            url += f'&seller_id={seller_id}'
+        if gatcha_id:
+            url += f'&gatcha_id={gatcha_id}'
+        if base_price:
+            url += f'&basePrice={base_price}'
+        if end_date:
+            url += f'&endDate={end_date}'
+
+        try:
+            response = requests.patch(url)  # Nessun JSON, tutto passa come query string
+            response.raise_for_status()
+            return jsonify(response.json())  # Wrappa la risposta in jsonify
+        except ConnectionError:
+            return jsonify({"error": "Auction Service is down"}), 404
+        except HTTPError as e:
+            return jsonify({"error": str(e)}), response.status_code
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    # Caso non gestito
+    return jsonify({"error": "Unhandled operation"}), 500

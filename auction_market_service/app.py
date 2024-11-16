@@ -9,7 +9,7 @@ from werkzeug.utils import secure_filename
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@db:5432/auction_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@auction_db:5432/auction_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 
@@ -56,17 +56,24 @@ def see_auctions():
     auctions = Auction.query.filter_by(status=status).all()
     return jsonify([auction.to_dict() for auction in auctions]), 200
 
+
 @app.route('/create', methods=['POST'])
 #@jwt_required()
 def create_auction():
-    # Recupera l'identità dell'utente dal JWT, senza controllo del ruolo
+        # Recupera l'identità dell'utente dal JWT, senza controllo del ruolo
  #   current_user = get_jwt_identity()
+    # Legge i dati dalla richiesta JSON
+    data = request.get_json()
+    
+    # Recupera i parametri dall'oggetto JSON
+    seller_id = data.get('seller_id')
+    gatcha_id = data.get('gatcha_id')
+    base_price = data.get('basePrice')
+    end_date = data.get('endDate')
 
-    # Parametri dell'asta
-    seller_id = request.form.get('seller_id')
-    gatcha_id = request.form.get('gatcha_id')
-    base_price = request.form.get('basePrice')
-    end_date = request.form.get('endDate')
+    # Controlla che tutti i parametri siano forniti
+    if not all([seller_id, gatcha_id, base_price, end_date]):
+        return jsonify({"error": "Missing required parameters"}), 400
 
     # Creazione della nuova asta
     new_auction = Auction(
@@ -79,6 +86,7 @@ def create_auction():
     db.session.commit()
     
     return jsonify({"id": new_auction.id, "message": "Auction created successfully"}), 200
+
 
 
 # Rotta per modificare un'asta esistente (solo admin)
@@ -118,4 +126,4 @@ def modify_auction():
 
 if __name__ == '__main__':
     db.create_all()
-    app.run(host='0.0.0.0', port=5003)
+    app.run(host='0.0.0.0', port=5008)
