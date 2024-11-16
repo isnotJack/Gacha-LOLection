@@ -108,7 +108,7 @@ services:
     depends_on:
       - db_payment
 
-  gacharoll:
+  gacha_roll:
       build: ./gacharoll_service
       container_name: gacharoll
       restart: always
