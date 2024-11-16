@@ -81,7 +81,7 @@ def check_profile():
 
 # Endpoint per visualizzare la collezione gacha di un utente
 @app.route('/retrieve_gachacollection', methods=['GET']) #--> Sistemare GACHA SYSTEM PER RICEVERE COLLEZIONI
-@jwt_required()
+#@jwt_required()
 def retrieve_gacha_collection():
     username = request.args.get('username')
     profile = Profile.query.filter_by(username=username).first()
@@ -89,21 +89,26 @@ def retrieve_gacha_collection():
     if not profile:
         return jsonify({"error": "User not found"}), 401
 
-    gacha_collection = [{
-        "gacha_name": item.gacha_name,
-        "collected_date": item.collected_date,
-    } for item in profile.gacha_collection]
+    # Estrai la collezione di gachas dell'utente
+    gacha_collection = [item.gacha_name for item in profile.gacha_collection]
 
-    url="http://gatchasystem_service:5005/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
+    if not gacha_collection:
+        return jsonify({"error": "User has no gachas"}), 404
+
+    url="http://gachasystem:5004/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
+     # Se l'utente ha dei gachas nella collezione, li inviamo al servizio come parametro
     try:
-        x=requests.get(url,gacha_collection)
-        x.raise_for_status()
-        response_data = x.json()
+        # Invia la lista di gacha_name come query string
+        response = requests.get(url, params={'gacha_name': ','.join(gacha_collection)})
+
+        # Verifica se la risposta è andata a buon fine
+        response.raise_for_status()
+
+        # Estrai i dati dal servizio e restituisci la risposta
+        response_data = response.json()
         return jsonify(response_data), 200
-    except ConnectionError:
-            return jsonify({'Error':'Gacha service is down'}),404
-    except HTTPError:
-            return jsonify(x.content, x.status_code)
+    except requests.exceptions.RequestException as e:
+        return jsonify({'Error': 'Gacha service is down', 'details': str(e)}), 500
 
 # Endpoint per visualizzare i dettagli di un oggetto gacha specifico
 @app.route('/info_gachacollection', methods=['GET'])
@@ -177,7 +182,8 @@ def insertGacha():
     data = request.get_json()
     username = data.get('username')
     gacha_name=data.get('gacha_name')
-    collected_date=data.get('collected_date')
+    collected_date_str=data.get('collected_date')
+    collected_date = datetime.fromisoformat(collected_date_str)
     newGacha = GachaItem(gacha_name=gacha_name, collected_date=collected_date, username=username)
     db.session.add(newGacha)
     db.session.commit()

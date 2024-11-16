@@ -1,4 +1,5 @@
 import os
+import random
 from flask import Flask, request, jsonify , url_for, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
@@ -7,7 +8,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)   # crea un'applicazione Flask
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@db:5432/memes_db'    # URL di connessione al database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@db_gachasystem:5432/memes_db'    # URL di connessione al database
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False    # disabilita il tracciamento delle modifiche per migliorare le prestazioni
 #app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 
@@ -49,9 +50,9 @@ def add_gacha():
     #if role != 'admin':
     #    return jsonify({"error": "You are not authorized to perform this action"}), 403 # forbidden
 
-    name = request.args.get('gacha_name')
-    rarity = request.args.get('rarity')
-    description = request.args.get('description')
+    name = request.form.get('gacha_name')
+    rarity = request.form.get('rarity')
+    description = request.form.get('description')
 
     # Controlla che tutti i campi siano forniti
     if not name or not rarity or 'image' not in request.files:
@@ -153,9 +154,9 @@ def update_gacha():
     #    return jsonify({"error": "You are not authorized to perform this action"}), 403 # forbidden
 
     # Estrai i parametri dalla query string
-    name = request.args.get('gacha_name')
-    rarity = request.args.get('rarity')
-    description = request.args.get('description')
+    name = request.form.get('gacha_name')
+    rarity = request.form.get('rarity')
+    description = request.form.get('description')
 
     # Verifica che il parametro 'name' sia presente
     if not name:
@@ -204,33 +205,24 @@ def uploaded_file(filename):
 
 @app.route('/get_gacha_collection', methods=['GET'])
 def get_gacha_collection():
-    # Estrai il parametro 'gacha_name' dalla query string (facoltativo)
-    gacha_name = request.args.get('gacha_name')
-
-    if gacha_name:
-        # Cerca il gacha con il nome specificato
-        gacha = Gacha.query.filter_by(meme_name=gacha_name).first()
-
-        if not gacha:
-            return jsonify({"error": "Gacha not found"}), 404  # Se nessun gacha trovato con quel nome
-
-        # Dettagli del gacha trovato
-        gacha_details = {
-            "gacha_id": gacha.gacha_id,
-            "gacha_name": gacha.meme_name,
-            "description": gacha.description or "",
-            "rarity": gacha.rarity,
-            "collected_date": gacha.collected_date.isoformat(),  # Aggiungi la data di raccolta
-            "img": url_for('uploaded_file', filename=os.path.basename(gacha.image_path), _external=True)  # URL completo immagine
-        }
+    # Estrai il parametro 'gacha_name' dalla query string (facoltativo), supporta una lista separata da virgola
+    gacha_names = request.args.get('gacha_name')
+    
+    if gacha_names:
+        # Suddividi i nomi in una lista
+        gacha_names = gacha_names.split(',')
         
-        return jsonify(gacha_details), 200
-
-    # Se non viene passato 'gacha_name', restituiamo tutta la collezione di gachas
-    gachas = Gacha.query.all()
-    if not gachas:
-        return jsonify({"error": "No gachas found"}), 404  # Se non ci sono gachas nella collezione
-
+        # Cerca i gachas con i nomi specificati
+        gachas = Gacha.query.filter(Gacha.meme_name.in_(gacha_names)).all()
+        
+        if not gachas:
+            return jsonify({"error": "No gachas found with the specified names"}), 404  # Se nessun gacha trovato con i nomi specificati
+    else:
+        # Se non viene passato 'gacha_name', restituiamo tutta la collezione di gachas
+        gachas = Gacha.query.all()
+        if not gachas:
+            return jsonify({"error": "No gachas found"}), 404  # Se non ci sono gachas nella collezione
+    
     # Dettagli della collezione di gachas
     gacha_list = []
     for gacha in gachas:
@@ -246,6 +238,54 @@ def get_gacha_collection():
 
     return jsonify(gacha_list), 200
 
+
+@app.route('/get_gacha_roll', methods=['GET'])
+def get_gacha_roll():
+    # Estrai il parametro 'level' dalla query string
+    level = request.args.get('level')
+    
+    # Definizione delle probabilità per ogni livello
+    probabilities = {
+        "standard": {"common": 70, "rare": 25, "legendary": 5},
+        "medium": {"common": 50, "rare": 25, "legendary": 25},
+        "premium": {"common": 30, "rare": 40, "legendary": 30},
+    }
+
+    # Controlla che il livello sia valido
+    if level not in probabilities:
+        return jsonify({"error": "Invalid level. Valid levels are 'standard', 'medium', and 'premium'."}), 400
+
+    # Determina la rarità in base alle probabilità
+    rarity_to_extract = random.choices(
+        population=["common", "rare", "legendary"],
+        weights=[
+            probabilities[level]["common"],
+            probabilities[level]["rare"],
+            probabilities[level]["legendary"],
+        ],
+        k=1
+    )[0]
+
+    # Cerca casualmente un gacha dal database in base alla rarità
+    gacha = Gacha.query.filter_by(rarity=rarity_to_extract).order_by(func.random()).first()
+
+    # Controlla se un gacha è stato trovato
+    if not gacha:
+        return jsonify({"error": f"No gacha found for a roll of level '{level}'."}), 404
+
+    # Prepara i dettagli del gacha per la risposta
+    gacha_details = {
+        "gacha_id": gacha.gacha_id,
+        "gacha_name": gacha.meme_name,
+        "description": gacha.description or "",
+        "rarity": gacha.rarity,
+        "collected_date": gacha.collected_date.isoformat(),
+        "img": url_for('uploaded_file', filename=os.path.basename(gacha.image_path), _external=True)
+    }
+
+    return jsonify(gacha_details), 200
+
+
 if __name__ == '__main__':
     db.create_all()
-    app.run(host='0.0.0.0', port=5001)
+    app.run(host='0.0.0.0', port=5004)

@@ -13,11 +13,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Imposta le variabili d'ambiente
 ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
-ENV FLASK_RUN_PORT=5001
+ENV FLASK_RUN_PORT=5004
 ENV FLASK_ENV=development  
 
 # Espone la porta dell'applicazione
-EXPOSE 5001
+EXPOSE 5004
 
 # Comando per avviare il servizio
 CMD ["flask", "run"]
