@@ -66,7 +66,7 @@ def modify_profile():
 
 # Endpoint per visualizzare il profilo
 @app.route('/checkprofile', methods=['GET'])
-@jwt_required()
+#@jwt_required()
 def check_profile():
     username = request.args.get('username')
     profile = Profile.query.filter_by(username=username).first()

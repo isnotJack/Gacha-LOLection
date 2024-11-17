@@ -1,5 +1,6 @@
 import os
 import random
+import requests
 from flask import Flask, request, jsonify , url_for, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
@@ -14,6 +15,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False    # disabilita il tracciam
 
 UPLOAD_FOLDER = '/app/static/uploads'  # Percorso dove Docker monta il volume
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}  # Estensioni permesse
+PROFILE_SETTING_URL = "http://profile_setting:5003/deleteGacha"  # Nome del container nel docker-compose
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -33,7 +35,7 @@ class Gacha(db.Model):
     image_path = db.Column(db.String(200), nullable=False)  # Percorso dell'immagine
     rarity = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String(100), nullable=True)
-    collected_date = db.Column(db.DateTime, default=func.now(), nullable=False)  # Data di raccolta
+    #collected_date = db.Column(db.DateTime, default=func.now(), nullable=False)  # Data di raccolta
 
 # Funzione per controllare il tipo di file
 def allowed_file(filename):
@@ -101,8 +103,8 @@ def add_gacha():
                         "name": name,
                         "image_path": save_path,
                         "rarity": rarity,
-                        "description": description,
-                        "collected_date": new_gacha.collected_date  # Restituisci anche la data di raccolta
+                        "description": description
+                        #,"collected_date": new_gacha.collected_date  # Restituisci anche la data di raccolta
                     }}), 200
 
 @app.route('/delete_gacha', methods=['DELETE'])
@@ -136,6 +138,21 @@ def delete_gacha():
         # Rimuove il record dal database
         db.session.delete(gacha)
         db.session.commit()
+
+        # Chiamata al servizio profile_setting per rimuovere il gacha
+        payload = {
+            "username": "null",
+            "gacha_name": gacha_name,
+            "all": True
+        }
+        response = requests.delete(PROFILE_SETTING_URL, json=payload)
+        # Verifica se la richiesta è andata a buon fine
+        if response.status_code != 200:
+            return jsonify({
+                "error": "Gacha deleted locally, but failed to delete from user profiles.",
+                "details": response.text
+            }), response.status_code
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Failed to delete gacha: {str(e)}"}), 500
@@ -231,7 +248,7 @@ def get_gacha_collection():
             "gacha_name": gacha.meme_name,
             "description": gacha.description or "",
             "rarity": gacha.rarity,
-            "collected_date": gacha.collected_date.isoformat(),  # Aggiungi la data di raccolta
+            #"collected_date": gacha.collected_date.isoformat(),  # Aggiungi la data di raccolta
             "img": f"http://localhost:5001/images_gacha/uploads/{os.path.basename(gacha.image_path)}"  # URL completo immagine
         }
         
@@ -281,7 +298,7 @@ def get_gacha_roll():
         "gacha_name": gacha.meme_name,
         "description": gacha.description or "",
         "rarity": gacha.rarity,
-        "collected_date": gacha.collected_date.isoformat(),
+        #"collected_date": gacha.collected_date.isoformat(),
         "img": f"http://localhost:5001/images_gacha/uploads/{os.path.basename(gacha.image_path)}"
     }
 

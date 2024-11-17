@@ -13,4 +13,4 @@ CREATE TABLE IF NOT EXISTS gacha_items (
     PRIMARY KEY (gacha_name,collected_date)
 );
 
--- INSERT INTO profiles (username, profile_image, currency_balance) VALUES ('player1', 'default_image_url', 100);
+INSERT INTO profiles (username, profile_image, currency_balance) VALUES ('player1', 'default_image_url', 100);
