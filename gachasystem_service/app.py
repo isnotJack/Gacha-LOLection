@@ -232,8 +232,10 @@ def get_gacha_collection():
             "description": gacha.description or "",
             "rarity": gacha.rarity,
             "collected_date": gacha.collected_date.isoformat(),  # Aggiungi la data di raccolta
-            "img": url_for('uploaded_file', filename=os.path.basename(gacha.image_path), _external=True)  # URL completo immagine
+            "img": f"http://localhost:5001/images_gacha/uploads/{os.path.basename(gacha.image_path)}"  # URL completo immagine
         }
+        
+
         gacha_list.append(gacha_details)
 
     return jsonify(gacha_list), 200
@@ -280,7 +282,7 @@ def get_gacha_roll():
         "description": gacha.description or "",
         "rarity": gacha.rarity,
         "collected_date": gacha.collected_date.isoformat(),
-        "img": url_for('uploaded_file', filename=os.path.basename(gacha.image_path), _external=True)
+        "img": f"http://localhost:5001/images_gacha/uploads/{os.path.basename(gacha.image_path)}"
     }
 
     return jsonify(gacha_details), 200

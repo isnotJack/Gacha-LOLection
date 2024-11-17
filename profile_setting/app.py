@@ -4,6 +4,8 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 import requests
 from requests.exceptions import ConnectionError, HTTPError
+from datetime import datetime
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@profile_db:5432/profile_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

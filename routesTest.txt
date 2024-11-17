@@ -1,0 +1,68 @@
+//// GACHASYSTEM SERVICE /////
+// add gacha
+curl -X POST http://localhost:5004/add_gacha \
+-H "Content-Type: multipart/form-data" \
+-F "gacha_name=Trial gacha" \
+-F "rarity=rare" \
+-F "description=This is a rare gacha." \
+-F "image=@/Users/giacomo/Downloads/meme.jpg"
+
+// delete gacha
+curl -X DELETE "http://localhost:5004/delete_gacha?gacha_name=Trial Gacha"
+
+// update gacha
+curl -X PUT http://localhost:5004/update_gacha \
+-H "Content-Type: multipart/form-data" \
+-F "gacha_name=Trial gacha" \
+-F "description=This is the first gacha!!!"
+
+// get gacha collection
+curl -X GET http://localhost:5004/get_gacha_collection
+// oppure
+curl -X GET "http://localhost:5004/get_gacha_collection?gacha_name=Trial Gacha"
+curl -X GET "http://localhost:5004/get_gacha_collection?gacha_name=Examplegacha"
+curl -X GET "http://localhost:5004/get_gacha_collection?gacha_name=Examplegacha,SuperGacha"
+
+
+// get gacha roll (livelli: standard, medium, premium)
+curl -X GET "http://localhost:5004/get_gacha_roll?level=standard"
+
+//// PAYMENT SERVICE /////
+// new balance
+curl -X POST http://localhost:5006/newBalance \
+  -F "username=user1"
+
+// buy currency
+curl -X POST http://localhost:5006/buycurrency \
+  -F "username=user1" \
+  -F "amount=10.0" \
+  -F "payment_method=credit_card"
+
+// get balance
+curl -X GET "http://localhost:5006/getBalance?username=user1"
+
+//// PROFILE SETTING //////
+// create profile
+curl -X POST http://localhost:5003/create_profile \
+  -H "Content-Type: application/json" \
+  -d '{"username": "user1", "profile_image": "default_image_url", "currency_balance": 60}'
+
+// retrieve gacha collection
+curl -X GET "http://localhost:5003/retrieve_gachacollection?username=user1"
+
+
+// insert gacha
+curl -X POST http://localhost:5003/insertGacha \
+  -H "Content-Type: application/json" \
+  -d '{"username": "user1", "gacha_name": "gacha_1", "collected_date": "2024-11-16"}'
+
+////// GACHAROLL SERVICE /////
+// gacharoll
+curl -X POST http://localhost:5007/gacharoll \
+  -H "Content-Type: application/json" \
+  -d '{"username": "user1", "level": "standard"}'
+
+
+
+
+
