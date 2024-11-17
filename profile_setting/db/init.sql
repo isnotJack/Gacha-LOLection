@@ -13,4 +13,5 @@ CREATE TABLE IF NOT EXISTS gacha_items (
     PRIMARY KEY (gacha_name,collected_date)
 );
 
--- INSERT INTO profiles (username, profile_image, currency_balance) VALUES ('player1', 'default_image_url', 100);
+INSERT INTO profiles (username, profile_image, currency_balance) VALUES ('player1', 'default_image_url', 100);
+INSERT INTO gacha_items (gacha_name, collected_date, username) VALUES ('doge', 2024-12-31T23:59:59, 'player1');
