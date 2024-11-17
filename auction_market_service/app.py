@@ -194,7 +194,7 @@ def bid_for_auction():
         "payer_us": bidder_username,
         "receiver_us": "auction_system",
         "amount": bid_difference
-    }git 
+    }
 
     try:
         payment_response = requests.post(payment_service_url, data=payload)
