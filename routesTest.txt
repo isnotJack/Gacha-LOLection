@@ -64,5 +64,29 @@ curl -X POST http://localhost:5007/gacharoll \
 
 
 
+////// AUCTION MARKET/////
+// see
+curl -X GET "http://localhost:5008/see"
+
+// create
+curl -X POST "http://localhost:5008/create" \
+-H "Content-Type: application/json" \
+-d '{
+    "seller_username": "player1",
+    "gatcha_name": "doge",
+    "basePrice": 10.0,
+    "endDate": "2024-12-31T23:59:59"
+}'
+
+// modify
+curl -X PATCH "http://localhost:5008/modify?auction_id=1&seller_username=new_seller&gatcha_name=new_gacha&endDate=2024-12-31T23:59:59&basePrice=15.0" \
+-H "Content-Type: application/json"
+
+// bid
+
+curl -X PATCH "http://localhost:5008/bid?username=player1&auction_id=1&newBid=70.0" \
+-H "Content-Type: application/json"
+
+
 
 

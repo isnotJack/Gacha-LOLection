@@ -23,9 +23,9 @@ jwt = JWTManager(app)
 class Auction(db.Model):
     __tablename__ = 'auctions'
     id = db.Column(db.Integer, primary_key=True)
-    gatcha_id = db.Column(db.String(50))
-    seller_id = db.Column(db.String(50))
-    winner_id = db.Column(db.String(50))
+    gatcha_name = db.Column(db.String(50))
+    seller_username = db.Column(db.String(50))
+    winner_username = db.Column(db.String(50))
     current_bid = db.Column(db.Float, default=0.0)
     base_price = db.Column(db.Float, nullable=False)
     end_date = db.Column(db.DateTime, nullable=False)
@@ -34,9 +34,9 @@ class Auction(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
-            "gatcha_id": self.gatcha_id,
-            "seller_id": self.seller_id,
-            "winner_id": self.winner_id,
+            "gatcha_name": self.gatcha_name,
+            "seller_username": self.seller_username,
+            "winner_username": self.winner_username,
             "current_bid": self.current_bid,
             "base_price": self.base_price,
             "end_date": self.end_date.isoformat() if self.end_date else None,
@@ -53,12 +53,13 @@ class Bid(db.Model):
     __tablename__ = 'bids'
     id = db.Column(db.Integer, primary_key=True)
     auction_id = db.Column(db.Integer, db.ForeignKey('auctions.id', ondelete='CASCADE'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    username = db.Column(db.String(50), nullable=False)
     bid_amount = db.Column(db.Float, nullable=False)
     bid_time = db.Column(db.DateTime, default=datetime.now)
 
     auction = db.relationship('Auction', backref=db.backref('bids', cascade='all, delete'))
-    user = db.relationship('User', backref=db.backref('bids', cascade='all, delete'))
+
+
 
 
 @app.route('/see', methods=['GET'])
@@ -86,27 +87,27 @@ def create_auction():
     data = request.get_json()
     
     # Recupera i parametri dall'oggetto JSON
-    seller_id = data.get('seller_id')
-    gatcha_id = data.get('gatcha_id')
+    seller_username = data.get('seller_username')
+    gatcha_name = data.get('gatcha_name')
     base_price = data.get('basePrice')
     end_date = data.get('endDate')
 
     # Controlla che tutti i parametri siano forniti
-    if not all([seller_id, gatcha_id, base_price, end_date]):
+    if not all([seller_username, gatcha_name, base_price, end_date]):
         return jsonify({"error": "Missing required parameters"}), 400
 
     # Creazione della nuova asta
     new_auction = Auction(
-        gatcha_name=gatcha_id,
-        seller_username=seller_id,
+        gatcha_name=gatcha_name,
+        seller_username=seller_username,
         base_price=base_price,
         end_date=end_date
     )
 
     profile_service_url = "http://profile_setting:5003/deleteGacha"
     payload = {
-        "username": seller_id,
-        "gacha_name": gatcha_id
+        "username": seller_username,
+        "gacha_name": gatcha_name
     }
 
     try:
@@ -142,15 +143,15 @@ def modify_auction():
         return jsonify({"error": "Auction not found"}), 404
 
     # Aggiorna i campi specificati, se forniti
-    seller_id = request.args.get('seller_id')
-    gatcha_id = request.args.get('gatcha_id')
+    seller_username = request.args.get('seller_username')
+    gatcha_name = request.args.get('gatcha_name')
     end_date = request.args.get('endDate')
     base_price = request.args.get('basePrice')
 
-    if seller_id:
-        auction.seller_id = seller_id
-    if gatcha_id:
-        auction.gatcha_id = gatcha_id
+    if seller_username:
+        auction.seller_username = seller_username
+    if gatcha_name:
+        auction.gatcha_name = gatcha_name
     if end_date:
         auction.end_date = end_date
     if base_price:
@@ -161,14 +162,13 @@ def modify_auction():
 
 @app.route('/bid', methods=['PATCH'])
 def bid_for_auction():
-    # Recupera i parametri dal JSON del corpo della richiesta
-    data = request.get_json()
-    bidder_id = data.get('bidder_id')
-    auction_id = data.get('auction_id')
-    new_bid = data.get('newBid')
+    # Recupera i parametri dalla query string
+    bidder_username = request.args.get('username') 
+    auction_id = request.args.get('auction_id')
+    new_bid = request.args.get('newBid', type=float)
 
     # Controlla che tutti i parametri siano presenti
-    if not all([bidder_id, auction_id, new_bid]):
+    if not all([bidder_username, auction_id, new_bid]):
         return jsonify({"error": "Missing required parameters"}), 400
 
     # Trova l'asta corrispondente
@@ -181,7 +181,7 @@ def bid_for_auction():
         return jsonify({"error": "Bid must be higher than the current bid"}), 400
 
     # Trova l'offerta precedente dell'utente per questa asta
-    previous_bid = Bid.query.filter_by(auction_id=auction_id, user_id=bidder_id).first()
+    previous_bid = Bid.query.filter_by(auction_id=auction_id, username=bidder_username).first()
 
     # Calcola la differenza da sottrarre
     bid_difference = new_bid - (previous_bid.bid_amount if previous_bid else 0)
@@ -189,20 +189,19 @@ def bid_for_auction():
     if bid_difference <= 0:
         return jsonify({"error": "New bid must be higher than your previous bid"}), 400
 
-    # Chiamata al servizio Payment per dedurre la differenza
     payment_service_url = "http://payment_service:5006/pay"
     payload = {
-        "payer_us": bidder_id,
-        "receiver_us": "auction_system",  # Sistema come destinatario temporaneo
+        "payer_us": bidder_username,
+        "receiver_us": "auction_system",
         "amount": bid_difference
-    }
+    }git 
 
     try:
         payment_response = requests.post(payment_service_url, data=payload)
         payment_response.raise_for_status()
-    except ConnectionError:
+    except requests.ConnectionError:
         return jsonify({"error": "Payment Service is down"}), 404
-    except HTTPError as e:
+    except requests.HTTPError as e:
         return jsonify({"error": f"Payment failed: {str(e)}"}), payment_response.status_code
 
     # Aggiorna o crea l'offerta dell'utente nella tabella `bids`
@@ -210,15 +209,17 @@ def bid_for_auction():
         previous_bid.bid_amount = new_bid
         previous_bid.bid_time = datetime.now()
     else:
-        new_bid_entry = Bid(auction_id=auction_id, user_id=bidder_id, bid_amount=new_bid)
+        new_bid_entry = Bid(auction_id=auction_id, username=bidder_username, bid_amount=new_bid)
         db.session.add(new_bid_entry)
 
     # Aggiorna l'offerta corrente e il vincitore nell'asta
     auction.current_bid = new_bid
-    auction.winner_id = bidder_id
+    auction.winner_username = bidder_username
     db.session.commit()
 
     return jsonify({"message": "New bid set"}), 200
+
+
 
 
 # @app.route('/gatcha_receive', methods=['POST'])

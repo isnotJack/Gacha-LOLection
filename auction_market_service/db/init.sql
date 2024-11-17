@@ -10,6 +10,15 @@ CREATE TABLE IF NOT EXISTS auctions (
     status VARCHAR(10) DEFAULT 'active'
 );
 
+-- Creazione della tabella bids
+CREATE TABLE IF NOT EXISTS bids (
+    id SERIAL PRIMARY KEY,
+    auction_id INTEGER NOT NULL,
+    username  VARCHAR(50) NOT NULL,
+    bid_amount FLOAT NOT NULL,
+    bid_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE
+);
 -- Creazione della tabella users (per autenticazione e ruoli)
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
