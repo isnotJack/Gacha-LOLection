@@ -34,7 +34,6 @@ class Balance(db.Model):
 
 
 from datetime import datetime
-from flask import request, jsonify
 
 @app.route('/pay', methods=['POST'])
 def pay():
