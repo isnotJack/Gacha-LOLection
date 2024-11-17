@@ -97,8 +97,8 @@ def create_auction():
 
     # Creazione della nuova asta
     new_auction = Auction(
-        gatcha_id=gatcha_id,
-        seller_id=seller_id,
+        gatcha_name=gatcha_id,
+        seller_username=seller_id,
         base_price=base_price,
         end_date=end_date
     )
