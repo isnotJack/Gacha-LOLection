@@ -23,9 +23,9 @@ jwt = JWTManager(app)
 class Auction(db.Model):
     __tablename__ = 'auctions'
     id = db.Column(db.Integer, primary_key=True)
-    gatcha_id = db.Column(db.Integer, nullable=False)
-    seller_id = db.Column(db.Integer, nullable=False)
-    winner_id = db.Column(db.Integer)
+    gatcha_id = db.Column(db.String(50))
+    seller_id = db.Column(db.String(50))
+    winner_id = db.Column(db.String(50))
     current_bid = db.Column(db.Float, default=0.0)
     base_price = db.Column(db.Float, nullable=False)
     end_date = db.Column(db.DateTime, nullable=False)
@@ -97,25 +97,25 @@ def create_auction():
 
     # Creazione della nuova asta
     new_auction = Auction(
-        gatcha_id=gatcha_id,
-        seller_id=seller_id,
+        gatcha_name=gatcha_id,
+        seller_username=seller_id,
         base_price=base_price,
         end_date=end_date
     )
-    # Chiamata a Profile Setting per rimuovere il gatcha LASCIO IN SOSPESO PERCHE DELETE GACHA HA ANCHE COME PARAM LA DATA E NON VORREI CHE SE LA LEVASSI QUALCUNO DI VOI LA USA
-    # profile_service_url = "http://profile_setting:5003/deleteGacha"
-    # payload = {
-    #     "username": seller_id,
-    #     "gacha_name": gatcha_id
-    # }
 
-    # try:
-    #     response = requests.delete(profile_service_url, json=payload)
-    #     response.raise_for_status()
-    # except ConnectionError:
-    #     return jsonify({"error": "Profile Service is down"}), 404
-    # except HTTPError as e:
-    #     return jsonify({"error": f"Error removing gacha from profile: {str(e)}"}), response.status_code
+    profile_service_url = "http://profile_setting:5003/deleteGacha"
+    payload = {
+        "username": seller_id,
+        "gacha_name": gatcha_id
+    }
+
+    try:
+        response = requests.delete(profile_service_url, json=payload)
+        response.raise_for_status()
+    except ConnectionError:
+        return jsonify({"error": "Profile Service is down"}), 404
+    except HTTPError as e:
+        return jsonify({"error": f"Error removing gacha from profile: {str(e)}"}), response.status_code
 
     db.session.add(new_auction)
     db.session.commit()

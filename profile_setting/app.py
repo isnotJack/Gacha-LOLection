@@ -196,27 +196,35 @@ def deleteGacha():
     data = request.get_json()
     username = data.get('username')
     gacha_name = data.get('gacha_name')
-    collected_date = data.get('collected_date')
+    all = data.get('all', False)
+    #collected_date = data.get('collected_date')
 
-    # Recupera l'utente
-    profile = Profile.query.filter_by(username=username).first()
-    if not profile:
-        return jsonify({"error": "User not found"}), 400
-
-    # Trova il GachaItem corrispondente
-    gacha = GachaItem.query.filter_by(
-        gacha_name=gacha_name,
-        collected_date=collected_date,
-        username=profile.username
-    ).first()
-
-    if not gacha:
-        return jsonify({"error": "Gacha not found"}), 404
-
-    # Elimina il GachaItem
-    db.session.delete(gacha)
-    db.session.commit()
-    return jsonify({"message": f"Gacha '{gacha_name}' deleted from collection"}), 200
+    if all:
+        if not username or username == "null":
+            # Elimina il GachaItem specificato per tutti gli utenti
+            gacha_items = GachaItem.query.filter_by(gacha_name=gacha_name).all()
+            if not gacha_items:
+                return jsonify({"error": f"No Gacha items found with name {gacha_name}"}), 404
+            
+            for gacha in gacha_items:
+                db.session.delete(gacha)
+            db.session.commit()
+            return jsonify({"message": f"Gacha items with name {gacha_name} have been deleted for all users"}), 200
+    else:
+        # Recupera l'utente
+        profile = Profile.query.filter_by(username=username).first()
+        if not profile:
+            return jsonify({"error": "User not found"}), 400
+        gacha = GachaItem.query.filter_by(
+            gacha_name=gacha_name,
+            username=profile.username
+        ).first()
+        if not gacha:
+            return jsonify({"error": "Gacha not found"}), 404
+        # Elimina il GachaItem
+        db.session.delete(gacha)
+        db.session.commit()
+        return jsonify({"message": f"Gacha '{gacha_name}' deleted from collection"}), 200
 
 
 if __name__ == '__main__':
