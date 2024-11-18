@@ -82,7 +82,7 @@ def check_profile():
 
     profile_data = {
         "username": profile.username,
-        "profile_image": profile.profile_image,
+        "profile_image": f"http://localhost:5001/images_profile/uploads/{os.path.basename(profile.profile_image)}",
         "currency_balance": profile.currency_balance,
     }
     return jsonify(profile_data), 200
@@ -161,28 +161,34 @@ def allowed_file(filename):
 def create_profile():
     data = request.get_json()
     username = data.get('username')
-    #profile_image = data.get('profile_image', 'default_image_url')
     currency_balance = data.get('currency_balance', 0)
 
     if not username:
         return jsonify({"error": "Missing 'username' parameter"}), 400
     
-    file = request.files['image']
+    # Percorso immagine predefinita
+    default_image_path = os.path.join(app.config['UPLOAD_FOLDER'], 'DefaultProfileIcon.jpg')
 
-    # Verifica che l'immagine abbia un nome valido
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
+    # Percorso immagine salvata (valore predefinito)
+    save_path = default_image_path
+    
+    if 'image' in request.files:
+        file = request.files['image']
 
-    # Verifica il tipo di file immagine
-    if not allowed_file(file.filename):
-        return jsonify({"error": "File type not allowed"}), 400
+        # Verifica che l'immagine abbia un nome valido
+        if file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
 
-    # Genera un nome sicuro per il file
-    filename = secure_filename(file.filename)
+        # Verifica il tipo di file immagine
+        if not allowed_file(file.filename):
+            return jsonify({"error": "File type not allowed"}), 400
 
-    # Salva l'immagine nella cartella configurata
-    save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(save_path)
+        # Genera un nome sicuro per il file
+        filename = secure_filename(file.filename)
+
+        # Salva l'immagine nella cartella configurata
+        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(save_path)
 
     try:
         # Controlla se il profilo esiste già

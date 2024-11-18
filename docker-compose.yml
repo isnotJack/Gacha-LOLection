@@ -52,6 +52,8 @@ services:
 
   profile_setting:
     build: ./profile_setting
+    volumes:
+      - profile_images:/app/static/uploads  # Monta il volume nella cartella del server per contenere le immagini dei memes
     ports:
       - "5003:5003"
     environment:
@@ -141,6 +143,7 @@ services:
       - auction_db
 volumes:
   profile_data:
+  profile_images:
   auth_data:
   memes_data:  # definisce il volume Docker meme_data per salvare in modo persistente i dati del database
   meme_images:
