@@ -299,6 +299,7 @@ paths:
               description: Invalid Input
         '404':
               description: Service down or invalid operation
+              
   /auction_terminated:
     post:
       summary: receive currency because one auction has terminated with a winner

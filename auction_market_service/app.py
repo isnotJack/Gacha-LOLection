@@ -259,6 +259,63 @@ def gatcha_receive():
         # Gestisce errori di rete o problemi con il servizio profile_setting
         return jsonify({"error": "Profile service is down", "details": str(e)}), 404
 
+@app.route('/auction_lost', methods=['POST'])
+def auction_lost():
+    # Recupera i parametri dal corpo JSON
+    data = request.get_json()
+    auction_id = data.get('auction_id')
+
+    if not auction_id:
+        return jsonify({"error": "Missing auction_id"}), 400
+
+    # Trova l'asta corrispondente
+    auction = Auction.query.get(auction_id)
+    if not auction:
+        return jsonify({"error": "Auction not found"}), 404
+
+    # Controlla che l'asta sia conclusa PER ORA LO DISABILITO, SIA PER TESTING MA ANCHE PER CAPIRE COME DOBBIAMO GESTIRE QUANDO L'ASTA E' CHIUSA (1: SE C'E' UNO SCRIPT CHE GIRA CONTROLLA CHE L'ASTA
+    # SIA CHIUSA E CHIAMA L'API (CONTROLLO SULLO SCRIPT), 2: SE INVECE LA CHIAMIAMO NOI
+    # if auction.status != 'closed':
+    #     return jsonify({"error": "Auction is not closed"}), 400
+
+    # Ottieni tutti i partecipanti all'asta (dalla tabella `bids`)
+    bids = Bid.query.filter_by(auction_id=auction_id).all()
+    if not bids:
+        return jsonify({"error": "No bids found for this auction"}), 404
+
+    # Itera su tutti i partecipanti e fai il refund ai non vincitori
+    payment_service_url = "http://payment_service:5006/pay"
+    failed_refunds = []
+    successful_refunds = []
+
+    for bid in bids:
+        if bid.username != auction.winner_username:
+            # Calcola il refund per ogni non vincitore
+            refund_payload = {
+                "payer_us": "auction_system",  # Sistema come pagatore
+                "receiver_us": bid.username,  # Utente come destinatario
+                "amount": bid.bid_amount      # Refund del totale offerto
+            }
+
+            try:
+                payment_response = requests.post(payment_service_url, data=refund_payload)
+                payment_response.raise_for_status()
+                successful_refunds.append({
+                    "username": bid.username,
+                    "amount": bid.bid_amount
+                })
+            except requests.ConnectionError:
+                failed_refunds.append({"username": bid.username, "error": "Payment service down"})
+            except requests.HTTPError as e:
+                failed_refunds.append({"username": bid.username, "error": f"Payment failed: {str(e)}"})
+
+    # Ritorna i dettagli delle transazioni
+    return jsonify({
+        "message": "Refund process completed",
+        "successful_refunds": successful_refunds,
+        "failed_refunds": failed_refunds
+    }), 200
+
 
 if __name__ == '__main__':
     db.create_all()

@@ -41,6 +41,11 @@ curl -X POST http://localhost:5006/buycurrency \
 // get balance
 curl -X GET "http://localhost:5006/getBalance?username=user1"
 
+// VEDERE DB
+docker exec -it sse-project-db_payment-1 bash
+psql -U user -d trans_db
+SELECT * FROM balance;
+
 //// PROFILE SETTING //////
 // create profile
 curl -X POST http://localhost:5003/create_profile \
@@ -56,7 +61,7 @@ curl -X POST http://localhost:5003/insertGacha \
   -H "Content-Type: application/json" \
   -d '{"username": "user1", "gacha_name": "gacha_1", "collected_date": "2024-11-16"}'
 
-// per vedere il db
+// VEDERE DB
 docker exec -it sse-project-profile_db-1 bash
 psql -U user -d profile_db
 SELECT * FROM gacha_items;
@@ -99,6 +104,13 @@ curl -X POST "http://localhost:5008/gatcha_receive" \
     "auction_id": 1,
     "winner_username": "player1",
     "gatcha_name": "doge"
+}'
+
+// auction lost 
+curl -X POST "http://localhost:5008/auction_lost" \
+-H "Content-Type: application/json" \
+-d '{
+    "auction_id": 1
 }'
 
 
