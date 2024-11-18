@@ -96,9 +96,10 @@ def pay():
 
 @app.route('/buycurrency', methods = ['POST'])
 def buycurrency():  
-    username = request.form.get('username')
-    amount = request.form.get('amount')
-    method = request.form.get('payment_method')
+    data = request.get_json()
+    username = data.get('username')
+    amount = data.get('amount')
+    method = data.get('payment_method')
 
     # Conversion from string to float
     try:

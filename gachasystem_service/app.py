@@ -119,7 +119,8 @@ def delete_gacha():
     #    return jsonify({"error": "You are not authorized to perform this action"}), 403 # forbidden
 
     # Recupera il nome del gacha dai parametri della query string
-    gacha_name = request.args.get('gacha_name')
+    data= request.get_json()
+    gacha_name = data.get('gacha_name')
     if not gacha_name:
         return jsonify({"error": "Missing 'gacha_name' in query string."}), 400
 
@@ -159,7 +160,7 @@ def delete_gacha():
 
     return jsonify({"message": f"Gacha with name '{gacha_name}' deleted successfully."}), 200
 
-@app.route('/update_gacha', methods=['PUT'])
+@app.route('/update_gacha', methods=['PATCH'])
 # @jwt_required()  # Sblocca questa linea se vuoi proteggere l'endpoint con JWT
 def update_gacha():
 
@@ -171,9 +172,10 @@ def update_gacha():
     #    return jsonify({"error": "You are not authorized to perform this action"}), 403 # forbidden
 
     # Estrai i parametri dalla query string
-    name = request.form.get('gacha_name')
-    rarity = request.form.get('rarity')
-    description = request.form.get('description')
+    data = request.get_json()
+    name = data.get('gacha_name')
+    rarity = data.get('rarity')
+    description = data.get('description')
 
     # Verifica che il parametro 'name' sia presente
     if not name:
@@ -216,14 +218,15 @@ def update_gacha():
 def uploaded_file(filename):
     # Crea il percorso completo per la cartella "uploads"
     uploads_folder = os.path.join(app.root_path, 'static', 'uploads')
-    
     # Restituisce il file dalla cartella "uploads", 404 se il file non esiste
     return send_from_directory(uploads_folder, filename)
 
 @app.route('/get_gacha_collection', methods=['GET'])
 def get_gacha_collection():
+    
+    data= request.get_json()
     # Estrai il parametro 'gacha_name' dalla query string (facoltativo), supporta una lista separata da virgola
-    gacha_names = request.args.get('gacha_name')
+    gacha_names = data.get('gacha_name')
     
     if gacha_names:
         # Suddividi i nomi in una lista
