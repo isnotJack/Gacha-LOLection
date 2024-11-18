@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 import requests
+import os
 from requests.exceptions import ConnectionError, HTTPError
 from datetime import datetime
 
@@ -10,6 +11,11 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@profile_db:5432/profile_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'
+
+UPLOAD_FOLDER = '/app/static/uploads'  # Percorso dove Docker monta il volume
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}  # Estensioni permesse
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -138,15 +144,45 @@ def info_gacha_collection():
     except HTTPError:
             return jsonify(x.content, x.status_code)
 
+# route che serve le immagini
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    # Crea il percorso completo per la cartella "uploads"
+    uploads_folder = os.path.join(app.root_path, 'static', 'uploads')
+    
+    # Restituisce il file dalla cartella "uploads", 404 se il file non esiste
+    return send_from_directory(uploads_folder, filename)
+
+# Funzione per controllare il tipo di file
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/create_profile', methods=['POST'])
 def create_profile():
     data = request.get_json()
     username = data.get('username')
-    profile_image = data.get('profile_image', 'default_image_url')
+    #profile_image = data.get('profile_image', 'default_image_url')
     currency_balance = data.get('currency_balance', 0)
 
     if not username:
         return jsonify({"error": "Missing 'username' parameter"}), 400
+    
+    file = request.files['image']
+
+    # Verifica che l'immagine abbia un nome valido
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    # Verifica il tipo di file immagine
+    if not allowed_file(file.filename):
+        return jsonify({"error": "File type not allowed"}), 400
+
+    # Genera un nome sicuro per il file
+    filename = secure_filename(file.filename)
+
+    # Salva l'immagine nella cartella configurata
+    save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(save_path)
 
     try:
         # Controlla se il profilo esiste già
@@ -157,7 +193,7 @@ def create_profile():
         # Crea un nuovo profilo
         new_profile = Profile(
             username=username,
-            profile_image=profile_image,
+            profile_image=save_path,
             currency_balance=currency_balance
         )
         db.session.add(new_profile)
