@@ -266,7 +266,7 @@ paths:
 
   /auction_lost:
     post:
-      summary: receive currency for losing an auction (invoke receive API on payment with system_id as payer)
+      summary: Process refunds for all participants who lost an auction (invokes the payment service to transfer funds back to users).
       requestBody:
         required: true
         content:
@@ -274,70 +274,124 @@ paths:
             schema:
               type: object
               properties:
-                user_id:
+                auction_id:
                   type: integer
-                  description: id of the user that has lost, he will receive back the money.
-                amount:
-                  type: number
-                  format: float
-                  description: The amount of memecoins returned back.
+                  description: ID of the auction to process refunds for.
       responses:
         '200':
-          description: Money correctly returned
+          description: Refund process completed with details of successful and failed transactions.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  id:
-                      type: integer
-                      description: The ID of the transaction
                   message:
                     type: string
-                    example: Money correctly returned                       
+                    example: Refund process completed
+                  successful_refunds:
+                    type: array
+                    description: List of refunds that were processed successfully.
+                    items:
+                      type: object
+                      properties:
+                        username:
+                          type: string
+                          description: Username of the user who received the refund.
+                        amount:
+                          type: number
+                          format: float
+                          description: Amount refunded to the user.
+                  failed_refunds:
+                    type: array
+                    description: List of refunds that failed during processing.
+                    items:
+                      type: object
+                      properties:
+                        username:
+                          type: string
+                          description: Username of the user whose refund failed.
+                        error:
+                          type: string
+                          description: Reason for the failure.
         '400':
-              description: Invalid Input
+          description: Invalid Input (e.g., missing auction ID).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Missing auction_id
         '404':
-              description: Service down or invalid operation
+          description: Auction not found or no bids associated with the auction.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Auction not found
+
               
-  /auction_terminated:
-    post:
-      summary: receive currency because one auction has terminated with a winner
-      requestBody:
-        required: true
+/auction_terminated:
+  post:
+    summary: Process the transfer of funds to the seller after an auction is terminated with a winner.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              auction_id:
+                type: integer
+                description: ID of the auction that has terminated.
+    responses:
+      '200':
+        description: Funds successfully transferred to the seller.
         content:
           application/json:
             schema:
               type: object
               properties:
-                payer_id:
-                  type: integer
-                  description: id of the auction winner
-                receiver_id:
-                  type: integer
-                  description: id of the creator of the auction
-                amount:
-                  type: number
-                  format: float
-                  description: amount of money payed to win the auction      
-      responses:
-        '200':
-          description: Money correctly received
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                      type: integer
-                      description: The ID of the transaction
-                  message:
-                    type: string
-                    example: Money correctly received                       
-        '400':
-              description: Invalid Input
-        '404':
-              description: Service down or invalid operation
-  
+                message:
+                  type: string
+                  example: Money correctly received
+                transaction_details:
+                  type: object
+                  properties:
+                    payer_us:
+                      type: string
+                      description: Username of the system as the payer.
+                    receiver_us:
+                      type: string
+                      description: Username of the seller who received the payment.
+                    amount:
+                      type: number
+                      format: float
+                      description: Amount transferred to the seller.
+      '400':
+        description: Invalid Input (e.g., missing or incorrect auction ID).
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  example: Missing auction_id
+      '404':
+        description: Auction not found or auction has no winner.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  example: Auction not found or no winner assigned
+
 
 
