@@ -123,6 +123,12 @@ curl -X POST "http://localhost:5008/auction_lost" \
     "auction_id": 1
 }'
 
+// auction terminated
+curl -X POST "http://localhost:5008/auction_terminated" \
+-H "Content-Type: application/json" \
+-d '{
+    "auction_id": 1
+}'
 
 
 
