@@ -62,7 +62,9 @@ else:
 
 # Imposta il percorso della cartella contenente le immagini
 images_folder = "./meme images"
-url = "http://localhost:5004/add_gacha"
+url = "http://localhost:5001/gachasystem_service/add_gacha"
+# url = "http://localhost:5004/add_gacha"
+
 count = 0
 rarity = ['common', 'rare', 'legendary' ]
 # Itera sui file della cartella

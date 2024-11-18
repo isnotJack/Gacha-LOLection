@@ -6,6 +6,13 @@ from werkzeug.exceptions import NotFound
 from io import BytesIO
 
 
+ALLOWED_GACHA_SYS_OP ={'add_gacha', 'delete_gacha', 'update_gacha', 'get_gacha_collection'}
+ADD_URL = 'http://gachasystem:5004/add_gacha'
+DELETE_GACHA_URL = 'http://gachasystem:5004/delete_gacha'
+UPDATE_GACHA_URL = 'http://gachasystem:5004/update_gacha'
+GET_GACHA_COLL_URL = 'http://gachasystem:5004/get_gacha_collection'
+GACHA_IMAGE_URL = 'http://gachasystem:5004/uploads/'
+
 ALLOWED_AUTH_OP ={'signup', 'login', 'logout', 'delete'}
 SINGUP_URL = 'http://auth_service:5002/signup'
 LOGIN_URL = 'http://auth_service:5002/login'
@@ -26,7 +33,6 @@ MODIFY_AUCTION_URL = f'{AUCTION_BASE_URL}/modify'
 BID_AUCTION_URL = f'{AUCTION_BASE_URL}/bid'
 
 GACHAROLL_URL = 'http://gacha_roll:5007/gacharoll'
-GACHA_IMAGE_URL = 'http://gachasystem:5004/uploads/'
 
 PROFILE_IMAGE_URL = 'http://profile_setting:5003/uploads/'
 
@@ -454,3 +460,78 @@ def buycurrency():
     except HTTPError:
         return make_response(x.content, x.status_code)
     
+@app.route('/gachasystem_service/<op>', methods=['POST', 'DELETE', 'PATCH','GET'])
+def gachasystem(op):
+    if op not in ALLOWED_GACHA_SYS_OP:
+        return make_response(f'Invalid operation {op}'),400
+    if op == 'add_gacha':
+        #Dati che arrivano al gateway da un form lato client
+        gacha_name = request.form.get('gacha_name')
+        rarity = request.form.get('rarity')
+        description = request.form.get('description')
+        file = request.files['image']
+        files = {'image': (file.filename, file.stream, file.mimetype)}
+        url = ADD_URL
+        params = { 
+            'gacha_name' : gacha_name,
+            'rarity' : rarity,
+            'description' : description
+            }
+    elif op =='delete_gacha':
+        gacha_name = request.form.get('gacha_name')
+        url = DELETE_GACHA_URL
+        params={
+            'gacha_name': gacha_name
+        }
+    elif op == 'update_gacha':
+        #Dati che arrivano al gateway da un form lato client
+        gacha_name = request.form.get('gacha_name')
+        rarity = request.form.get('rarity')
+        description = request.form.get('description')
+        url = UPDATE_GACHA_URL
+        params = { 
+            'gacha_name' : gacha_name,
+            'rarity' : rarity,
+            'description' : description
+            }
+    elif op == 'get_gacha_collection':
+        params={}
+        url= GET_GACHA_COLL_URL
+    try:
+        if(op == 'add_gacha'):
+            x = requests.post(url, data=params, files=files)
+        elif(op == 'delete_gacha'):
+            x = requests.delete(url, json=params)
+        elif(op == 'update_gacha'):
+            x = requests.patch(url, json=params)
+        elif(op == 'get_gacha_collection'):
+            x = requests.get(url, json=params)
+            x.raise_for_status()
+            res = x.json()
+            return jsonify(res)
+        x.raise_for_status()
+        res = x.json()
+        return res
+    except ConnectionError:
+        try:
+            if(op == 'add_gacha'):
+                x = requests.post(url, data=params, files=files)
+            elif(op == 'delete_gacha'):
+                x = requests.delete(url, json=params)
+            elif(op == 'update_gacha'):
+                x = requests.patch(url, json=params)
+            elif(op == 'get_gacha_collection'):
+                x = requests.get(url, json=params)
+                x.raise_for_status()
+                res = x.json()
+                return jsonify(res)
+            x.raise_for_status()
+            res = x.json()
+            return res
+        except ConnectionError:
+            return make_response("Gacha System Service is down\n",404)
+        except HTTPError:
+            return make_response(x.content, x.status_code)
+        return res
+    except HTTPError:
+        return make_response(x.content, x.status_code)
