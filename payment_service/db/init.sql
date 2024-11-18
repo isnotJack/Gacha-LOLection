@@ -13,3 +13,8 @@ CREATE TABLE IF NOT EXISTS balance (
     balance FLOAT NOT NULL
 );
 
+INSERT INTO balance (username, balance) VALUES 
+('player1', 100.0),  -- Payer
+('auction_system', 100000.0),  -- Receiver
+('player2', 100.0);  -- Payer
+

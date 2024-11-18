@@ -41,6 +41,11 @@ curl -X POST http://localhost:5006/buycurrency \
 // get balance
 curl -X GET "http://localhost:5006/getBalance?username=user1"
 
+// VEDERE DB
+docker exec -it sse-project-db_payment-1 bash
+psql -U user -d trans_db
+SELECT * FROM balance;
+
 //// PROFILE SETTING //////
 // create profile
 curl -X POST http://localhost:5003/create_profile \
@@ -55,6 +60,7 @@ curl -X POST http://localhost:5003/insertGacha \
   -H "Content-Type: application/json" \
   -d '{"username": "user1", "gacha_name": "gacha_1", "collected_date": "2024-11-16"}'
 
+
 // create profile
 curl -X POST http://localhost:5003/create_profile \
   -H "Content-Type: application/json" \
@@ -64,11 +70,58 @@ curl -X POST http://localhost:5003/create_profile \
 // check profile
 curl -X GET "http://localhost:5003/check_profile?username=player2"
 
+// VEDERE DB
+docker exec -it sse-project-profile_db-1 bash
+psql -U user -d profile_db
+SELECT * FROM gacha_items;
+
+
 ////// GACHAROLL SERVICE /////
 // gacharoll
 curl -X POST http://localhost:5007/gacharoll \
   -H "Content-Type: application/json" \
   -d '{"username": "user1", "level": "standard"}'
+
+
+
+////// AUCTION MARKET/////
+// see
+curl -X GET "http://localhost:5008/see"
+
+// create
+curl -X POST "http://localhost:5008/create" \
+-H "Content-Type: application/json" \
+-d '{
+    "seller_username": "player1",
+    "gatcha_name": "doge",
+    "basePrice": 10.0,
+    "endDate": "2024-12-31T23:59:59"
+}'
+
+// modify
+curl -X PATCH "http://localhost:5008/modify?auction_id=1&seller_username=new_seller&gatcha_name=new_gacha&endDate=2024-12-31T23:59:59&basePrice=15.0" \
+-H "Content-Type: application/json"
+
+// bid
+
+curl -X PATCH "http://localhost:5008/bid?username=player1&auction_id=1&newBid=70.0" \
+-H "Content-Type: application/json"
+
+// gacha receive
+curl -X POST "http://localhost:5008/gatcha_receive" \
+-H "Content-Type: application/json" \
+-d '{
+    "auction_id": 1,
+    "winner_username": "player1",
+    "gatcha_name": "doge"
+}'
+
+// auction lost 
+curl -X POST "http://localhost:5008/auction_lost" \
+-H "Content-Type: application/json" \
+-d '{
+    "auction_id": 1
+}'
 
 
 

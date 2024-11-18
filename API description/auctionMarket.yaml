@@ -214,21 +214,23 @@ paths:
         
   /gatcha_receive:
     post:
-      summary: Receive a gactha after winning it (talks with profile APIs)
-      parameters: 
-        - name: user_id
-          in: query
-          required: true
-          description: id of the user that will receive the gatcha 
-          schema:
-            type: integer
-
-        - name: gactha_id
-          in: query
-          required: true
-          description: id of the gatcha
-          schema:
-            type: integer
+      summary: Receive a gatcha after winning it (talks with profile APIs)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                auction_id:
+                  type: integer
+                  description: ID of the auction associated with the gatcha
+                winner_username:
+                  type: string
+                  description: Username of the user who won the gatcha
+                gatcha_name:
+                  type: string
+                  description: Name of the gatcha
       responses:
         '200':
           description: Gatcha correctly received
@@ -241,9 +243,26 @@ paths:
                     type: string
                     example: Gatcha correctly received                           
         '400':
-              description: Invalid Input
+          description: Invalid Input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid input
         '404':
-              description: Service down or invalid operation
+          description: Service down or invalid operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Auction not found or service is down
+
 
   /auction_lost:
     post:
@@ -280,6 +299,7 @@ paths:
               description: Invalid Input
         '404':
               description: Service down or invalid operation
+              
   /auction_terminated:
     post:
       summary: receive currency because one auction has terminated with a winner
