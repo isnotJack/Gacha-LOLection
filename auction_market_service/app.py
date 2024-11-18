@@ -316,6 +316,55 @@ def auction_lost():
         "failed_refunds": failed_refunds
     }), 200
 
+@app.route('/auction_terminated', methods=['POST'])
+def auction_terminated():
+    # Recupera i parametri dal corpo JSON
+    data = request.get_json()
+    auction_id = data.get('auction_id')
+
+    if not auction_id:
+        return jsonify({"error": "Missing auction_id"}), 400
+
+    # Trova l'asta corrispondente
+    auction = Auction.query.get(auction_id)
+    if not auction:
+        return jsonify({"error": "Auction not found"}), 404
+
+    # Controlla se l'asta è conclusa SOLITO DISCORSO
+    #if auction.status != 'closed':
+    #    return jsonify({"error": "Auction is not closed"}), 400
+
+    # Controlla se l'asta ha un vincitore
+    if not auction.winner_username:
+        return jsonify({"error": "Auction has no winner assigned"}), 404
+
+    # Recupera i dettagli per la transazione
+    payment_service_url = "http://payment_service:5006/pay"
+    transfer_payload = {
+        "payer_us": "auction_system",  # Il sistema paga il seller
+        "receiver_us": auction.seller_username,  # Il creatore dell'asta riceve
+        "amount": auction.current_bid  # L'importo totale offerto dal vincitore
+    }
+
+    try:
+        payment_response = requests.post(payment_service_url, data=transfer_payload)
+        payment_response.raise_for_status()
+    except requests.ConnectionError:
+        return jsonify({"error": "Payment Service is down"}), 404
+    except requests.HTTPError as e:
+        return jsonify({"error": f"Payment failed: {str(e)}"}), payment_response.status_code
+
+    # Ritorna i dettagli della transazione completata
+    return jsonify({
+        "message": "Money correctly transferred to seller",
+        "transaction_details": {
+            "payer_us": "auction_system",
+            "receiver_us": auction.seller_username,
+            "amount": auction.current_bid
+        }
+    }), 200
+
+
 
 if __name__ == '__main__':
     db.create_all()
