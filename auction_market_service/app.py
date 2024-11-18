@@ -220,32 +220,45 @@ def bid_for_auction():
     return jsonify({"message": "New bid set"}), 200
 
 
+@app.route('/gatcha_receive', methods=['POST'])
+def gatcha_receive():
+    # Recupera i parametri dall'oggetto JSON
+    data = request.get_json()
+    auction_id = data.get('auction_id')
+    winner_username = data.get('winner_username')
+    gatcha_name = data.get('gatcha_name')
 
+    # Verifica che i parametri siano validi
+    if not auction_id or not winner_username or not gatcha_name:
+        return jsonify({"error": "Invalid input"}), 400
 
-# @app.route('/gatcha_receive', methods=['POST'])
-# def gatcha_receive():
-#     data = request.get_json()
-#     user_id = data.get('user_id')
-#     gatcha_id = data.get('gatcha_id')
+    # Recupera l'asta dal database usando l'ID
+    auction = Auction.query.filter_by(id=auction_id, winner_username=winner_username, gatcha_name=gatcha_name).first()
 
-#     if not all([user_id, gatcha_id]):
-#         return jsonify({"error": "Missing required parameters"}), 400
+    if not auction:
+        return jsonify({"error": "Auction not found or no winner assigned"}), 404
 
-#     profile_service_url = "http://profile_setting:5003/insertGacha"
-#     payload = {
-#         "username": user_id,
-#         "gacha_name": gatcha_id,
-#         "collected_date": datetime.now().isoformat()  # Aggiungi la data attuale
-#     }
+    # Crea il payload per la chiamata al servizio di profile_setting
+    profile_service_url = "http://profile_setting:5003/insertGacha"
+    payload = {
+        "username": winner_username,  # Nome del vincitore
+        "gacha_name": gatcha_name,   # Nome del gatcha
+        "collected_date": datetime.now().isoformat()  # Usa il formato ISO per la data
+    }
 
-#     try:
-#         response = requests.post(profile_service_url, json=payload)
-#         response.raise_for_status()
-#         return jsonify({"message": "Gatcha correctly received"}), 200
-#     except ConnectionError:
-#         return jsonify({"error": "Profile Service is down"}), 404
-#     except HTTPError as e:
-#         return jsonify({"error": str(e)}), response.status_code
+    try:
+        response = requests.post(profile_service_url, json=payload)
+
+        # Controlla la risposta del servizio profile_setting
+        if response.status_code == 200:
+            return jsonify({"message": "Gatcha correctly received"}), 200
+        else:
+            return jsonify({"error": "Profile service failed", "details": response.text}), 404
+
+    except requests.exceptions.RequestException as e:
+        # Gestisce errori di rete o problemi con il servizio profile_setting
+        return jsonify({"error": "Profile service is down", "details": str(e)}), 404
+
 
 if __name__ == '__main__':
     db.create_all()
