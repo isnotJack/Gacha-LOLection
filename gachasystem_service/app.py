@@ -216,7 +216,6 @@ def update_gacha():
 def uploaded_file(filename):
     # Crea il percorso completo per la cartella "uploads"
     uploads_folder = os.path.join(app.root_path, 'static', 'uploads')
-    
     # Restituisce il file dalla cartella "uploads", 404 se il file non esiste
     return send_from_directory(uploads_folder, filename)
 

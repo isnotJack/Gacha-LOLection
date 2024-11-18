@@ -1,8 +1,9 @@
 import requests, time
-
-from flask import Flask, request, make_response, jsonify
+import os
+from flask import Flask, request, make_response, jsonify, send_file
 from requests.exceptions import ConnectionError, HTTPError
 from werkzeug.exceptions import NotFound
+from io import BytesIO
 
 
 ALLOWED_AUTH_OP ={'signup', 'login', 'logout', 'delete'}
@@ -24,6 +25,23 @@ CREATE_AUCTION_URL = f'{AUCTION_BASE_URL}/create'
 MODIFY_AUCTION_URL = f'{AUCTION_BASE_URL}/modify'
 BID_AUCTION_URL = f'{AUCTION_BASE_URL}/bid'
 
+GACHAROLL_URL = 'http://gacha_roll:5007/gacharoll'
+GACHA_IMAGE_URL = 'http://gachasystem:5004/uploads/'
+
+PROFILE_IMAGE_URL = 'http://profile_setting:5003/uploads/'
+
+BUYCURRENCY_URL = 'http://payment_service:5006/buycurrency'
+#Per gestione immagini
+def get_mime_type(extension):
+    mime_types = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'bmp': 'image/bmp',
+        'webp': 'image/webp',
+    }
+    return mime_types.get(extension.lower(), 'application/octet-stream')  # Tipo predefinito se non trovato
 
 app = Flask(__name__, instance_relative_config=True)
 def create_app():
@@ -292,3 +310,147 @@ def auction_service(op):
             return jsonify({"error": str(e)}), 500
     # Caso non gestito
     return jsonify({"error": "Unhandled operation"}), 500
+
+@app.route('/gacha_roll/<op>', methods=['POST'])
+def gacha_roll(op):
+    if op != 'gacharoll':
+        return make_response(f'Invalid operation {op}'),400
+    data = request.get_json()
+    #Dati che arrivano al gateway da un form lato client
+    username = data.get('username')
+    level = data.get('level')
+    url = GACHAROLL_URL
+    params = { 
+        'username' : username,
+        'level' : level
+        }
+    try:
+        x = requests.post(url, json=params)
+        x.raise_for_status()
+        res = x.json()
+        return res
+    except ConnectionError:
+        try:
+            x = requests.post(url, json=params)
+            x.raise_for_status()
+            res = x.json()
+            return res
+        except ConnectionError:
+            return make_response("Gacha Roll Service is down\n",404)
+        except HTTPError:
+            return make_response(x.content, x.status_code)
+        return res
+    except HTTPError:
+        return make_response(x.content, x.status_code)
+    
+@app.route('/image_gacha/uploads/<name>', methods=['GET'])
+def gacha_image(name):
+    url = GACHA_IMAGE_URL + name
+    file_extension = os.path.splitext(name)[1][1:]  # Rimuovi il punto e ottieni l'estensione
+    # Determina il tipo MIME in base all'estensione
+    mime_type = get_mime_type(file_extension)
+    try:
+        x = requests.get(url)
+        if x.status_code == 200:
+            # Create an in-memory file object
+            file = BytesIO(x.content)
+            
+            # Return the file to the client (forward the file)
+            return send_file(file, mimetype=mime_type)
+        
+        else:
+            # Return a 404 if the file was not found in the service
+            return jsonify({"error": "File not found"}), 404
+    
+    except ConnectionError as e:
+        try:
+            x = requests.get(url)
+            if x.status_code == 200:
+                # Create an in-memory file object
+                file = BytesIO(x.content)
+                
+                # Return the file to the client (forward the file)
+                return send_file(file, mimetype=mime_type)
+            else:
+                # Return a 404 if the file was not found in the service
+                return jsonify({"error": "File not found"}), 404
+        
+        except ConnectionError as e:
+            # Handle any error that occurs while contacting the service
+            return jsonify({"error": str(e)}), 500
+        except HTTPError:
+            return make_response(x.content, x.status_code)
+    except HTTPError:
+        return make_response(x.content, x.status_code)
+    
+@app.route('/image_profile/uploads/<name>', methods=['GET'])
+def profile_image(name):
+    url = PROFILE_IMAGE_URL + name
+    file_extension = os.path.splitext(name)[1][1:]  # Rimuovi il punto e ottieni l'estensione
+    # Determina il tipo MIME in base all'estensione
+    mime_type = get_mime_type(file_extension)
+    try:
+        x = requests.get(url)
+        if x.status_code == 200:
+            # Create an in-memory file object
+            file = BytesIO(x.content)
+            
+            # Return the file to the client (forward the file)
+            return send_file(file, mimetype=mime_type)
+        
+        else:
+            # Return a 404 if the file was not found in the service
+            return jsonify({"error": "File not found"}), 404
+    
+    except ConnectionError as e:
+        try:
+            x = requests.get(url)
+            if x.status_code == 200:
+                # Create an in-memory file object
+                file = BytesIO(x.content)
+                
+                # Return the file to the client (forward the file)
+                return send_file(file, mimetype=mime_type)
+            else:
+                # Return a 404 if the file was not found in the service
+                return jsonify({"error": "File not found"}), 404
+        
+        except ConnectionError as e:
+            # Handle any error that occurs while contacting the service
+            return jsonify({"error": str(e)}), 500
+        except HTTPError:
+            return make_response(x.content, x.status_code)
+    except HTTPError:
+        return make_response(x.content, x.status_code)
+    
+@app.route('/payment_service/buycurrency', methods=['POST'])
+def buycurrency():
+    username = request.form.get('username')
+    amount = request.form.get('amount')
+    method = request.form.get('method')
+
+    url = BUYCURRENCY_URL
+    params ={
+        'username' : username,
+        'amount' : amount,
+        'method' : method
+    }
+    try:
+        x = requests.post(url, json=params)
+        x.raise_for_status()
+        res = x.json()
+        return res
+    except ConnectionError:
+        try:
+            x = requests.post(url, json=params)
+            x.raise_for_status()
+            res = x.json()
+            return res
+        except ConnectionError:
+            return make_response("Gacha Roll Service is down\n",404)
+        except HTTPError:
+            return make_response(x.content, x.status_code)
+        return res
+    except HTTPError:
+        return make_response(x.content, x.status_code)
+    
