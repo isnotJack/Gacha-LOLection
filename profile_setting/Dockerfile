@@ -7,6 +7,9 @@ WORKDIR /app
 # Copia i file necessari
 COPY . /app
 
+# Copia l'immagine predefinita nella cartella designata
+COPY ProfileImages/DefaultProfileIcon.jpg /app/static/uploads/DefaultProfileIcon.jpg
+
 # Installa le dipendenze
 RUN pip install --no-cache-dir -r requirements.txt
 

@@ -2,13 +2,13 @@
 // add gacha
 curl -X POST http://localhost:5004/add_gacha \
 -H "Content-Type: multipart/form-data" \
--F "gacha_name=Trial gacha" \
--F "rarity=rare" \
+-F "gacha_name=doge" \
+-F "rarity=legendary" \
 -F "description=This is a rare gacha." \
--F "image=@/Users/giacomo/Downloads/meme.jpg"
+-F "image=@/Users/giacomo/Desktop/SSE-project/meme images/Doge-meme.jpg"
 
 // delete gacha
-curl -X DELETE "http://localhost:5004/delete_gacha?gacha_name=Trial Gacha"
+curl -X DELETE "http://localhost:5004/delete_gacha?gacha_name=Trial%20gacha"
 
 // update gacha
 curl -X PUT http://localhost:5004/update_gacha \
@@ -55,16 +55,26 @@ curl -X POST http://localhost:5003/create_profile \
 // retrieve gacha collection
 curl -X GET "http://localhost:5003/retrieve_gachacollection?username=user1"
 
-
 // insert gacha
 curl -X POST http://localhost:5003/insertGacha \
   -H "Content-Type: application/json" \
   -d '{"username": "user1", "gacha_name": "gacha_1", "collected_date": "2024-11-16"}'
 
+
+// create profile
+curl -X POST http://localhost:5003/create_profile \
+  -H "Content-Type: application/json" \
+  -d '{"username": "player1"}'
+
+
+// check profile
+curl -X GET "http://localhost:5003/check_profile?username=player2"
+
 // VEDERE DB
 docker exec -it sse-project-profile_db-1 bash
 psql -U user -d profile_db
 SELECT * FROM gacha_items;
+
 
 ////// GACHAROLL SERVICE /////
 // gacharoll
