@@ -19,8 +19,8 @@ LOGIN_URL = 'http://auth_service:5002/login'
 LOGOUT_URL = 'http://auth_service:5002/logout'
 DELETE_URL = 'http://auth_service:5002/delete'
 
-ALLOWED_PROF_OP ={'modify','checkprofile', 'retrieve_gachacollection', 'info_gachacollection'}
-MODIFY_URL = 'http://profile_setting:5003/modify'
+ALLOWED_PROF_OP ={'modify_profile','checkprofile', 'retrieve_gachacollection', 'info_gachacollection'}
+MODIFY_URL = 'http://profile_setting:5003/modify_profile'
 CHECK_URL = 'http://profile_setting:5003/checkprofile'
 RETRIEVE_URL = 'http://profile_setting:5003/retrieve_gachacollection'
 INFO_URL = 'http://profile_setting:5003/info_gachacollection'
@@ -124,11 +124,13 @@ def auth(op):
 def profile_setting(op):
     if op not in ALLOWED_PROF_OP:
         return make_response(f'Invalid operation {op}'),400
-    if op == 'modify':
+    if op == 'modify_profile':
         #Dati che arrivano al gateway da un form lato client
         username = request.form.get('username')
         value = request.form.get('value')
         field = request.form.get('field')
+        file = request.files['image']
+        files = {'image': (file.filename, file.stream, file.mimetype)}
         url = MODIFY_URL
         params = { 
             'username' : username,
@@ -158,8 +160,8 @@ def profile_setting(op):
             'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
         }
     try:
-        if(op == 'modify'):
-            x = requests.patch(url, json=params)
+        if(op == 'modify_profile'):
+            x = requests.patch(url, data=params, files=files)
         else:
             x = requests.get(url, headers=headers)
         x.raise_for_status()
@@ -167,8 +169,8 @@ def profile_setting(op):
         return res
     except ConnectionError:
         try:
-            if(op == 'modify'):
-                x = requests.patch(url, json=params)
+            if(op == 'modify_profile'):
+                x = requests.patch(url, data=params, files=files)
             else:
                 x = requests.get(url, headers=headers)
             x.raise_for_status()
