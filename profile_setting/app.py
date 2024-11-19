@@ -6,6 +6,7 @@ import requests
 import os
 from requests.exceptions import ConnectionError, HTTPError
 from datetime import datetime
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@profile_db:5432/profile_db'
@@ -41,34 +42,69 @@ class GachaItem(db.Model):
     )
 
 # Endpoint per modificare il profilo
-@app.route('/modify', methods=['PATCH'])
-#@jwt_required()
+@app.route('/modify_profile', methods=['PATCH'])
+#@jwt_required()  # Attiva il controllo del token JWT se richiesto
 def modify_profile():
-    updated_data= request.get_json()
+    updated_data = request.form                     
     username = updated_data.get('username')
-    field = updated_data.get('field')
-    value = updated_data.get('value')
-    #current_user = get_jwt_identity()
+    field = updated_data.get('field')           # specify the text fields to be modified
+    value = updated_data.get('value')           # for text fields
 
-    # Controllo se l'utente è autorizzato a modificare il profilo
-    #if current_user != username:
-    #    return jsonify({"error": "Unauthorized to modify this profile"}), 401
+    # Controlla che il campo username sia fornito
+    if not username:
+        return jsonify({"error": "Missing required 'username' field"}), 400
 
     # Recupera il profilo da modificare
     profile = Profile.query.filter_by(username=username).first()
     if not profile:
         return jsonify({"error": "Profile not found"}), 404
 
-    # Controlla se il campo specificato esiste nel modello Profile
-    if not hasattr(profile, field):
-        return jsonify({"error": f"Field '{field}' does not exist in profile"}), 400
+    # Controlla se l'utente ha inviato un'immagine
+    if 'image' in request.files:
+        file = request.files['image']
 
-    # Esegui la modifica del campo specificato
-    setattr(profile, field, value)
-    db.session.commit()
-    
-    return jsonify({"message": f"Profile field '{field}' updated successfully"}), 200
+        # Verifica che l'immagine abbia un nome valido
+        if file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
 
+        # Verifica il tipo di file immagine
+        if not allowed_file(file.filename):
+            return jsonify({"error": "File type not allowed"}), 400
+
+        # Genera un nome sicuro per il file
+        filename = secure_filename(file.filename)
+
+        # Salva l'immagine nella cartella configurata
+        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(save_path)
+
+        # Aggiorna il campo `profile_image` con il nuovo percorso
+        profile.profile_image = save_path
+
+    elif field:  # Modifica di altri campi
+        # Controlla se il campo esiste nel modello Profile
+        if not hasattr(profile, field):
+            return jsonify({"error": f"Field '{field}' does not exist in profile"}), 400
+
+        # Esegui la modifica del campo specificato
+        setattr(profile, field, value)
+
+    else:
+        return jsonify({"error": "No valid field or image provided for update"}), 400
+
+    # Salva le modifiche nel database
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({"message": "Profile updated successfully", 
+                    "profile": {
+                        "username": profile.username,
+                        "profile_image": f"http://localhost:5001/images_profile/uploads/{os.path.basename(profile.profile_image)}",
+                        "currency_balance": profile.currency_balance
+                    }}), 200
 
 # Endpoint per visualizzare il profilo
 @app.route('/checkprofile', methods=['GET'])

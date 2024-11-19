@@ -1,7 +1,6 @@
 //// GACHASYSTEM SERVICE /////
 // add gacha
-curl -X POST http://localhost:5004/add_gacha \
--H "Content-Type: multipart/form-data" \
+curl -X POST http://localhost:5001/gachasystem_service/add_gacha \
 -F "gacha_name=doge" \
 -F "rarity=legendary" \
 -F "description=This is a rare gacha." \
@@ -66,9 +65,14 @@ curl -X POST http://localhost:5003/create_profile \
   -H "Content-Type: application/json" \
   -d '{"username": "player1"}'
 
+// modify profile
+curl -X PATCH "http://localhost:5001/profile_setting/modify_profile" \
+     -F "username=player1" \
+     -F "image=@Users/giacomo/Desktop/SSE-project/profile_setting/ProfileImages/man1.png"
+
 
 // check profile
-curl -X GET "http://localhost:5003/check_profile?username=player2"
+curl -X GET "http://localhost:5001/profile_setting/checkprofile?username=player2"
 
 // VEDERE DB
 docker exec -it sse-project-profile_db-1 bash
