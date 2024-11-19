@@ -86,10 +86,12 @@ curl -X POST http://localhost:5007/gacharoll \
 
 ////// AUCTION MARKET/////
 // see
-curl -X GET "http://localhost:5008/see"
+curl -X GET "http://localhost:5008/see"  ----------- curl -X GET "http://localhost:5001/auction_service/see"
+
 
 // create
-curl -X POST "http://localhost:5008/create" \
+curl -X POST "http://localhost:5001/auction_service/create" \
+curl -X POST "http://localhost:5008/create" \  
 -H "Content-Type: application/json" \
 -d '{
     "seller_username": "player1",

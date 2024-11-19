@@ -138,7 +138,7 @@ def create_auction():
 
 
 
-# Rotta per modificare un'asta esistente (solo admin)
+# Rotta per modificare un'asta esistente (solo admin) -> NON FACCIO CONTROLLI PERCHE' QUESTA OP LA FA SOLO L'ADMIN QUINDI DOVREBBE ESSERE CONSAPEVOLE
 @app.route('/modify', methods=['PATCH'])
 #@jwt_required()
 def modify_auction():
@@ -350,9 +350,9 @@ def auction_terminated():
     #if auction.status != 'closed':
     #    return jsonify({"error": "Auction is not closed"}), 400
 
-    # Controlla se l'asta ha un vincitore
-    if not auction.winner_username:
-        return jsonify({"error": "Auction has no winner assigned"}), 404
+    # Controlla se l'asta ha un current_bid di 0
+    if auction.current_bid == 0:
+        return jsonify({"error": "Auction has no valid bids to transfer, no money sento from system to seller :()"}), 400
 
     # Recupera i dettagli per la transazione
     payment_service_url = "http://payment_service:5006/pay"

@@ -25,12 +25,14 @@ CHECK_URL = 'http://profile_setting:5003/checkprofile'
 RETRIEVE_URL = 'http://profile_setting:5003/retrieve_gachacollection'
 INFO_URL = 'http://profile_setting:5003/info_gachacollection'
 
-ALLOWED_AUCTION_OP = {'see', 'create', 'modify', 'bid','gatcha_receive'} 
+ALLOWED_AUCTION_OP = {'see', 'create', 'modify', 'bid','gatcha_receive', 'auction_lost', 'auction_terminated'} 
 AUCTION_BASE_URL = 'http://auction_service:5008'
 SEE_AUCTION_URL = f'{AUCTION_BASE_URL}/see'
 CREATE_AUCTION_URL = f'{AUCTION_BASE_URL}/create'
 MODIFY_AUCTION_URL = f'{AUCTION_BASE_URL}/modify'
 BID_AUCTION_URL = f'{AUCTION_BASE_URL}/bid'
+GATCHA_RECEIVE_URL = f'{AUCTION_BASE_URL}/gatcha_receive'
+AUCTION_LOST_URL = f'{AUCTION_BASE_URL}/auction_lost'
 
 GACHAROLL_URL = 'http://gacha_roll:5007/gacharoll'
 
@@ -210,13 +212,13 @@ def auction_service(op):
     elif op == 'create':
         try:
             data = request.get_json()  # Recupera i parametri dal corpo JSON
-            seller_id = data.get('seller_id')
-            gatcha_id = data.get('gatcha_id')
+            seller_username = data.get('seller_username')  # Corretto da seller_id a seller_username
+            gatcha_name = data.get('gatcha_name')  # Corretto da gatcha_id a gatcha_name
             base_price = data.get('basePrice')
             end_date = data.get('endDate')
 
             # Verifica che tutti i parametri richiesti siano presenti
-            if not all([seller_id, gatcha_id, base_price, end_date]):
+            if not all([seller_username, gatcha_name, base_price, end_date]):
                 return jsonify({"error": "Missing required parameters"}), 400
 
             url = CREATE_AUCTION_URL
@@ -234,8 +236,8 @@ def auction_service(op):
         # Recupera i parametri dal JSON del client
         data = request.get_json()  
         auction_id = data.get('auction_id')
-        seller_id = data.get('seller_id')
-        gatcha_id = data.get('gatcha_id')
+        seller_username = data.get('seller_username')  # Corretto da seller_id a seller_username
+        gatcha_name = data.get('gatcha_name')         # Corretto da gatcha_id a gatcha_name
         base_price = data.get('basePrice')
         end_date = data.get('endDate')
 
@@ -245,10 +247,10 @@ def auction_service(op):
 
         # Costruisce l'URL con i parametri come query string
         url = f'{MODIFY_AUCTION_URL}?auction_id={auction_id}'
-        if seller_id:
-            url += f'&seller_id={seller_id}'
-        if gatcha_id:
-            url += f'&gatcha_id={gatcha_id}'
+        if seller_username:
+            url += f'&seller_username={seller_username}'
+        if gatcha_name:
+            url += f'&gatcha_name={gatcha_name}'
         if base_price:
             url += f'&basePrice={base_price}'
         if end_date:
@@ -265,57 +267,111 @@ def auction_service(op):
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-    elif op == 'bid':
-        # Recupera i parametri dal JSON del client
-        data = request.get_json()
-        bidder_id = data.get('bidder_id')
-        auction_id = data.get('auction_id')
-        new_bid = data.get('newBid')
 
-        # Controlla che tutti i parametri siano presenti
-        if not all([bidder_id, auction_id, new_bid]):
+    # Operazione "bid"
+    elif op == 'bid':
+        # Recupera i parametri dalla query string
+        username = request.args.get('username')
+        auction_id = request.args.get('auction_id')
+        new_bid = request.args.get('newBid', type=float)
+
+        # Verifica che tutti i parametri richiesti siano presenti
+        if not all([username, auction_id, new_bid]):
             return jsonify({"error": "Missing required parameters"}), 400
 
-        # Costruisce l'URL
-        url = f'{AUCTION_BASE_URL}/bid'
+        # Costruisce l'URL con i parametri della query string
+        url = f'{AUCTION_BASE_URL}/bid?username={username}&auction_id={auction_id}&newBid={new_bid}'
 
         try:
-            response = requests.patch(url, json=data)
+            # Effettua la richiesta PATCH all’Auction Service
+            response = requests.patch(url)
             response.raise_for_status()
             return jsonify(response.json())  # Wrappa la risposta in jsonify
-        except ConnectionError:
+        except requests.ConnectionError:
             return jsonify({"error": "Auction Service is down"}), 404
-        except HTTPError as e:
-            return jsonify({"error": str(e)}), response.status_code
+        except requests.HTTPError as e:
+            return jsonify({"error": f"HTTP Error: {str(e)}"}), response.status_code
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": f"Unexpected Error: {str(e)}"}), 500
+
         
+        # Operazione "gatcha_receive"
     elif op == 'gatcha_receive':
-        # Recupera i parametri dal JSON del client
-        data = request.get_json()
-        user_id = data.get('user_id')
-        gatcha_id = data.get('gatcha_id')
-
-        # Controlla che tutti i parametri siano presenti
-        if not all([user_id, gatcha_id]):
-            return jsonify({"error": "Missing required parameters"}), 400
-
-        # Costruisce l'URL per il servizio auction
-        url = f'{AUCTION_BASE_URL}/gatcha_receive'
-
         try:
-            # Invio della richiesta POST al servizio auction
+            # Recupera i parametri dal corpo JSON della richiesta
+            data = request.get_json()
+            auction_id = data.get('auction_id')
+            winner_username = data.get('winner_username')
+            gatcha_name = data.get('gatcha_name')
+
+            # Controlla che tutti i parametri richiesti siano presenti
+            if not all([auction_id, winner_username, gatcha_name]):
+                return jsonify({"error": "Missing required parameters"}), 400
+
+            # Effettua la richiesta al servizio Auction
+            url = f'{AUCTION_BASE_URL}/gatcha_receive'
             response = requests.post(url, json=data)
             response.raise_for_status()
             return jsonify(response.json())  # Wrappa la risposta in jsonify
-        except ConnectionError:
+
+        except requests.ConnectionError:
             return jsonify({"error": "Auction Service is down"}), 404
-        except HTTPError as e:
-            return jsonify({"error": str(e)}), response.status_code
+        except requests.HTTPError as e:
+            return jsonify({"error": f"HTTP Error: {str(e)}"}), response.status_code
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    # Caso non gestito
-    return jsonify({"error": "Unhandled operation"}), 500
+            return jsonify({"error": f"Unexpected Error: {str(e)}"}), 500
+
+    # Operazione "auction_lost"
+    elif op == 'auction_lost':
+        try:
+            # Recupera i parametri dal corpo JSON della richiesta
+            data = request.get_json()
+            auction_id = data.get('auction_id')
+
+            # Controlla che l'ID dell'asta sia presente
+            if not auction_id:
+                return jsonify({"error": "Missing auction_id"}), 400
+
+            # Effettua la richiesta al servizio Auction
+            url = f'{AUCTION_BASE_URL}/auction_lost'
+            response = requests.post(url, json=data)
+            response.raise_for_status()
+            return jsonify(response.json())  # Wrappa la risposta in jsonify
+
+        except requests.ConnectionError:
+            return jsonify({"error": "Auction Service is down"}), 404
+        except requests.HTTPError as e:
+            return jsonify({"error": f"HTTP Error: {str(e)}"}), response.status_code
+        except Exception as e:
+            return jsonify({"error": f"Unexpected Error: {str(e)}"}), 500
+        
+        # Operazione "auction_terminated"
+    elif op == 'auction_terminated':
+        try:
+            # Recupera i parametri dal corpo JSON della richiesta
+            data = request.get_json()
+            auction_id = data.get('auction_id')
+
+            # Verifica che auction_id sia presente
+            if not auction_id:
+                return jsonify({"error": "Missing auction_id"}), 400
+
+            # Costruisce l'URL per il servizio Auction
+            url = f'{AUCTION_BASE_URL}/auction_terminated'
+
+            # Effettua la richiesta al servizio Auction
+            response = requests.post(url, json=data)
+            response.raise_for_status()
+            return jsonify(response.json())  # Wrappa la risposta in jsonify
+
+        except requests.ConnectionError:
+            return jsonify({"error": "Auction Service is down"}), 404
+        except requests.HTTPError as e:
+            return jsonify({"error": f"HTTP Error: {str(e)}"}), response.status_code
+        except Exception as e:
+            return jsonify({"error": f"Unexpected Error: {str(e)}"}), 500
+    
+
 
 @app.route('/gacha_roll/<op>', methods=['POST'])
 def gacha_roll(op):
