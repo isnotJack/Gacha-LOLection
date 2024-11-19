@@ -95,11 +95,24 @@ def create_auction():
     # Controlla che tutti i parametri siano forniti
     if not all([seller_username, gatcha_name, base_price, end_date]):
         return jsonify({"error": "Missing required parameters"}), 400
+    
+        # Controlla che base_price sia un numero valido
+    if not isinstance(base_price, (int, float)) or base_price <= 0:
+        return jsonify({"error": "Base price must be a positive number"}), 400
+
+    # Controlla che end_date sia una data valida e futura
+    try:
+        end_date = datetime.fromisoformat(end_date)
+        if end_date <= datetime.now():
+            return jsonify({"error": "End date must be in the future"}), 400
+    except ValueError:
+        return jsonify({"error": "Invalid end date format. Use ISO format, e.g., '2024-12-31T23:59:59'"}), 400
 
     # Creazione della nuova asta
     new_auction = Auction(
         gatcha_name=gatcha_name,
         seller_username=seller_username,
+        winner_username = seller_username,
         base_price=base_price,
         end_date=end_date
     )
@@ -179,6 +192,9 @@ def bid_for_auction():
     # Controlla che l'offerta sia valida
     if new_bid <= auction.current_bid:
         return jsonify({"error": "Bid must be higher than the current bid"}), 400
+    
+    if new_bid <= auction.base_price:
+        return jsonify({"error": "Bid must be higher than the base_price"}), 400
 
     # Trova l'offerta precedente dell'utente per questa asta
     previous_bid = Bid.query.filter_by(auction_id=auction_id, username=bidder_username).first()
