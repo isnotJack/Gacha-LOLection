@@ -194,6 +194,12 @@ def bid_for_auction():
     if not auction:
         return jsonify({"error": "Auction not found"}), 404
 
+    if auction.status != 'active':
+        return jsonify({"error": "Cannot place a bid on a closed or inactive auction"}), 400
+    
+    if auction.winner_username == bidder_username:
+        return jsonify({"error": "You are already the highest bidder"}), 400
+
     # Controlla che l'offerta sia valida
     if new_bid <= auction.current_bid:
         return jsonify({"error": "Bid must be higher than the current bid"}), 400
