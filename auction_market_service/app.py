@@ -92,6 +92,11 @@ def create_auction():
     base_price = data.get('basePrice')
     end_date = data.get('endDate')
 
+    existing_auction = Auction.query.filter_by(gatcha_name=gacha_name, seller_username=seller_username, status='active').first()
+    if existing_auction:
+        return jsonify({"error": "An active auction already exists for this gatcha"}), 400
+
+
     # Controlla che tutti i parametri siano forniti
     if not all([seller_username, gacha_name, base_price, end_date]):
         return jsonify({"error": "Missing required parameters"}), 400
