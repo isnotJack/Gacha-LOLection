@@ -41,9 +41,9 @@ paths:
                         auct_id:
                           type: integer
                           description: Auction ID
-                        gatcha_id:
+                        gacha_id:
                           type: integer
-                          description: Gatcha ID
+                          description: Gacha ID
                         Winner:
                           type: integer
                           description: Current Winner ID
@@ -71,10 +71,10 @@ paths:
           schema:
             type: integer
 
-        - name: gatcha_id
+        - name: gacha_id
           in: query
           required: true
-          description: id of gatcha which will be auctioned off 
+          description: id of gacha which will be auctioned off 
           schema:
             type: integer
 
@@ -130,10 +130,10 @@ paths:
           schema:
             type: integer
 
-        - name: gatcha_id
+        - name: gacha_id
           in: query
           required: false
-          description: id of gatcha which will be auctioned off (if not present, remains the same)
+          description: id of gacha which will be auctioned off (if not present, remains the same)
           schema:
             type: integer
 
@@ -212,9 +212,9 @@ paths:
         '404':
               description: Service down or invalid operation          
         
-  /gatcha_receive:
+  /gacha_receive:
     post:
-      summary: Receive a gatcha after winning it (talks with profile APIs)
+      summary: Receive a gacha after winning it (talks with profile APIs)
       requestBody:
         required: true
         content:
@@ -224,16 +224,16 @@ paths:
               properties:
                 auction_id:
                   type: integer
-                  description: ID of the auction associated with the gatcha
+                  description: ID of the auction associated with the gacha
                 winner_username:
                   type: string
-                  description: Username of the user who won the gatcha
-                gatcha_name:
+                  description: Username of the user who won the gacha
+                gacha_name:
                   type: string
-                  description: Name of the gatcha
+                  description: Name of the gacha
       responses:
         '200':
-          description: Gatcha correctly received
+          description: Gacha correctly received
           content:
             application/json:
               schema:
@@ -241,7 +241,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: Gatcha correctly received                           
+                    example: Gacha correctly received                           
         '400':
           description: Invalid Input
           content:

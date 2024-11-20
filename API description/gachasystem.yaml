@@ -5,13 +5,13 @@ info:
   description: API per la gestione delle collezioni di gacha del sistema. Consente ai giocatori di vedere la collezione globale di gacha e di ottenere informazioni sui gacha mancanti.
 
 servers:
-  - url: http://.../gatchasystem
+  - url: http://.../gachasystem
 
 paths:
   /get_gacha_collection:
     get:
       summary: Get the details of a specific system gacha
-      description: Retrieve the detailed information of a specific gacha from the system collection or if the gacha_id is not set, retrieve all the entire gatcha collection.
+      description: Retrieve the detailed information of a specific gacha from the system collection or if the gacha_id is not set, retrieve all the entire gacha collection.
       parameters:
         - name: gacha_name
           in: query

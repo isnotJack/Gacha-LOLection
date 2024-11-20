@@ -5,7 +5,7 @@ info:
   description: API per la gestione delle collezioni di gacha del sistema. Consente ai giocatori di vedere la collezione globale di gacha e di ottenere informazioni sui gacha mancanti.
 
 servers:
-  - url: http://.../gatcharoll
+  - url: http://.../gacharoll
 
 paths:
     /gacharoll:

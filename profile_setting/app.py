@@ -169,7 +169,7 @@ def info_gacha_collection():
         "gacha_name": gacha_name
         }
 
-    url="http://gatchasystem_service:5005/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
+    url="http://gachasystem_service:5005/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
     try:
         x=requests.get(url,gacha)
         x.raise_for_status()

@@ -25,13 +25,13 @@ CHECK_URL = 'http://profile_setting:5003/checkprofile'
 RETRIEVE_URL = 'http://profile_setting:5003/retrieve_gachacollection'
 INFO_URL = 'http://profile_setting:5003/info_gachacollection'
 
-ALLOWED_AUCTION_OP = {'see', 'create', 'modify', 'bid','gatcha_receive', 'auction_lost', 'auction_terminated'} 
+ALLOWED_AUCTION_OP = {'see', 'create', 'modify', 'bid','gacha_receive', 'auction_lost', 'auction_terminated'} 
 AUCTION_BASE_URL = 'http://auction_service:5008'
 SEE_AUCTION_URL = f'{AUCTION_BASE_URL}/see'
 CREATE_AUCTION_URL = f'{AUCTION_BASE_URL}/create'
 MODIFY_AUCTION_URL = f'{AUCTION_BASE_URL}/modify'
 BID_AUCTION_URL = f'{AUCTION_BASE_URL}/bid'
-GATCHA_RECEIVE_URL = f'{AUCTION_BASE_URL}/gatcha_receive'
+GACHA_RECEIVE_URL = f'{AUCTION_BASE_URL}/gacha_receive'
 AUCTION_LOST_URL = f'{AUCTION_BASE_URL}/auction_lost'
 
 GACHAROLL_URL = 'http://gacha_roll:5007/gacharoll'
@@ -155,8 +155,8 @@ def profile_setting(op):
         }
     elif op == 'info_gachacollection':
         username = request.args.get('username')
-        gatcha_id = request.args.get('gatcha_id')
-        url = RETRIEVE_URL + f"?username={username}&gatcha_id={gatcha_id}"
+        gacha_id = request.args.get('gacha_id')
+        url = RETRIEVE_URL + f"?username={username}&gacha_id={gacha_id}"
         jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
         headers = {
             'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
@@ -215,12 +215,12 @@ def auction_service(op):
         try:
             data = request.get_json()  # Recupera i parametri dal corpo JSON
             seller_username = data.get('seller_username')  # Corretto da seller_id a seller_username
-            gatcha_name = data.get('gatcha_name')  # Corretto da gatcha_id a gatcha_name
+            gacha_name = data.get('gacha_name')  # Corretto da gacha_id a gacha_name
             base_price = data.get('basePrice')
             end_date = data.get('endDate')
 
             # Verifica che tutti i parametri richiesti siano presenti
-            if not all([seller_username, gatcha_name, base_price, end_date]):
+            if not all([seller_username, gacha_name, base_price, end_date]):
                 return jsonify({"error": "Missing required parameters"}), 400
 
             url = CREATE_AUCTION_URL
@@ -239,7 +239,7 @@ def auction_service(op):
         data = request.get_json()  
         auction_id = data.get('auction_id')
         seller_username = data.get('seller_username')  # Corretto da seller_id a seller_username
-        gatcha_name = data.get('gatcha_name')         # Corretto da gatcha_id a gatcha_name
+        gacha_name = data.get('gacha_name')         # Corretto da gacha_id a gacha_name
         base_price = data.get('basePrice')
         end_date = data.get('endDate')
 
@@ -251,8 +251,8 @@ def auction_service(op):
         url = f'{MODIFY_AUCTION_URL}?auction_id={auction_id}'
         if seller_username:
             url += f'&seller_username={seller_username}'
-        if gatcha_name:
-            url += f'&gatcha_name={gatcha_name}'
+        if gacha_name:
+            url += f'&gacha_name={gacha_name}'
         if base_price:
             url += f'&basePrice={base_price}'
         if end_date:
@@ -297,21 +297,21 @@ def auction_service(op):
             return jsonify({"error": f"Unexpected Error: {str(e)}"}), 500
 
         
-        # Operazione "gatcha_receive"
-    elif op == 'gatcha_receive':
+        # Operazione "gacha_receive"
+    elif op == 'gacha_receive':
         try:
             # Recupera i parametri dal corpo JSON della richiesta
             data = request.get_json()
             auction_id = data.get('auction_id')
             winner_username = data.get('winner_username')
-            gatcha_name = data.get('gatcha_name')
+            gacha_name = data.get('gacha_name')
 
             # Controlla che tutti i parametri richiesti siano presenti
-            if not all([auction_id, winner_username, gatcha_name]):
+            if not all([auction_id, winner_username, gacha_name]):
                 return jsonify({"error": "Missing required parameters"}), 400
 
             # Effettua la richiesta al servizio Auction
-            url = f'{AUCTION_BASE_URL}/gatcha_receive'
+            url = f'{AUCTION_BASE_URL}/gacha_receive'
             response = requests.post(url, json=data)
             response.raise_for_status()
             return jsonify(response.json())  # Wrappa la risposta in jsonify
