@@ -23,7 +23,7 @@ jwt = JWTManager(app)
 class Auction(db.Model):
     __tablename__ = 'auctions'
     id = db.Column(db.Integer, primary_key=True)
-    gatcha_name = db.Column(db.String(50))
+    gacha_name = db.Column(db.String(50))
     seller_username = db.Column(db.String(50))
     winner_username = db.Column(db.String(50))
     current_bid = db.Column(db.Float, default=0.0)
@@ -34,7 +34,7 @@ class Auction(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
-            "gatcha_name": self.gatcha_name,
+            "gacha_name": self.gacha_name,
             "seller_username": self.seller_username,
             "winner_username": self.winner_username,
             "current_bid": self.current_bid,
@@ -88,12 +88,12 @@ def create_auction():
     
     # Recupera i parametri dall'oggetto JSON
     seller_username = data.get('seller_username')
-    gatcha_name = data.get('gatcha_name')
+    gacha_name = data.get('gacha_name')
     base_price = data.get('basePrice')
     end_date = data.get('endDate')
 
     # Controlla che tutti i parametri siano forniti
-    if not all([seller_username, gatcha_name, base_price, end_date]):
+    if not all([seller_username, gacha_name, base_price, end_date]):
         return jsonify({"error": "Missing required parameters"}), 400
     
         # Controlla che base_price sia un numero valido
@@ -110,7 +110,7 @@ def create_auction():
 
     # Creazione della nuova asta
     new_auction = Auction(
-        gatcha_name=gatcha_name,
+        gacha_name=gacha_name,
         seller_username=seller_username,
         winner_username = seller_username,
         base_price=base_price,
@@ -120,7 +120,7 @@ def create_auction():
     profile_service_url = "http://profile_setting:5003/deleteGacha"
     payload = {
         "username": seller_username,
-        "gacha_name": gatcha_name
+        "gacha_name": gacha_name
     }
 
     try:
@@ -157,14 +157,14 @@ def modify_auction():
 
     # Aggiorna i campi specificati, se forniti
     seller_username = request.args.get('seller_username')
-    gatcha_name = request.args.get('gatcha_name')
+    gacha_name = request.args.get('gacha_name')
     end_date = request.args.get('endDate')
     base_price = request.args.get('basePrice')
 
     if seller_username:
         auction.seller_username = seller_username
-    if gatcha_name:
-        auction.gatcha_name = gatcha_name
+    if gacha_name:
+        auction.gacha_name = gacha_name
     if end_date:
         auction.end_date = end_date
     if base_price:
@@ -236,20 +236,20 @@ def bid_for_auction():
     return jsonify({"message": "New bid set"}), 200
 
 
-@app.route('/gatcha_receive', methods=['POST'])
-def gatcha_receive():
+@app.route('/gacha_receive', methods=['POST'])
+def gacha_receive():
     # Recupera i parametri dall'oggetto JSON
     data = request.get_json()
     auction_id = data.get('auction_id')
     winner_username = data.get('winner_username')
-    gatcha_name = data.get('gatcha_name')
+    gacha_name = data.get('gacha_name')
 
     # Verifica che i parametri siano validi
-    if not auction_id or not winner_username or not gatcha_name:
+    if not auction_id or not winner_username or not gacha_name:
         return jsonify({"error": "Invalid input"}), 400
 
     # Recupera l'asta dal database usando l'ID
-    auction = Auction.query.filter_by(id=auction_id, winner_username=winner_username, gatcha_name=gatcha_name).first()
+    auction = Auction.query.filter_by(id=auction_id, winner_username=winner_username, gacha_name=gacha_name).first()
 
     if not auction:
         return jsonify({"error": "Auction not found or no winner assigned"}), 404
@@ -258,7 +258,7 @@ def gatcha_receive():
     profile_service_url = "http://profile_setting:5003/insertGacha"
     payload = {
         "username": winner_username,  # Nome del vincitore
-        "gacha_name": gatcha_name,   # Nome del gatcha
+        "gacha_name": gacha_name,   # Nome del gacha
         "collected_date": datetime.now().isoformat()  # Usa il formato ISO per la data
     }
 
@@ -267,7 +267,7 @@ def gatcha_receive():
 
         # Controlla la risposta del servizio profile_setting
         if response.status_code == 200:
-            return jsonify({"message": "Gatcha correctly received"}), 200
+            return jsonify({"message": "Gacha correctly received"}), 200
         else:
             return jsonify({"error": "Profile service failed", "details": response.text}), 404
 

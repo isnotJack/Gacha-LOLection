@@ -148,7 +148,7 @@ def delete_gacha():
         }
         response = requests.delete(PROFILE_SETTING_URL, json=payload)
         # Verifica se la richiesta è andata a buon fine
-        if response.status_code != 200:
+        if response.status_code != 200 and response.status_code != 404:
             return jsonify({
                 "error": "Gacha deleted locally, but failed to delete from user profiles.",
                 "details": response.text

@@ -1,7 +1,7 @@
 -- Creazione della tabella auctions
 CREATE TABLE IF NOT EXISTS auctions (
     id SERIAL PRIMARY KEY,
-    gatcha_name VARCHAR(50) NOT NULL,
+    gacha_name VARCHAR(50) NOT NULL,
     seller_username VARCHAR(50) NOT NULL,
     winner_username VARCHAR(50) DEFAULT NULL,
     current_bid FLOAT DEFAULT 0.0,
