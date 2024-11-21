@@ -53,6 +53,11 @@ def modify_profile():
     # Controlla che il campo username sia fornito
     if not username:
         return jsonify({"error": "Missing required 'username' field"}), 400
+    
+    # Controlla che il campo non sia 'currency_balance'
+    if field == 'currency_balance':
+        return jsonify({"error": "Modifying 'currency_balance' field is not allowed"}), 400
+
 
     # Recupera il profilo da modificare
     profile = Profile.query.filter_by(username=username).first()
@@ -114,7 +119,7 @@ def check_profile():
     profile = Profile.query.filter_by(username=username).first()
     
     if not profile:
-        return jsonify({"error": "User not found"}), 401
+        return jsonify({"error": "User not found or missing paramaters"}), 401
 
     profile_data = {
         "username": profile.username,
@@ -171,7 +176,7 @@ def info_gacha_collection():
         "gacha_name": gacha_name
         }
 
-    url="http://gachasystem_service:5005/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
+    url = "http://gachasystem:5004/get_gacha_collection"
     try:
         x=requests.get(url,gacha, timeout=10)
         x.raise_for_status()
@@ -311,4 +316,4 @@ def deleteGacha():
 
 if __name__ == '__main__':
     db.create_all()
-    app.run(host='0.0.0.0', port=5002)
+    app.run(host='0.0.0.0', port=5003)
