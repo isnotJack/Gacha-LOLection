@@ -95,25 +95,29 @@ def auth(op):
         }
     try:
         if(op == 'login' or op=='signup'):
-            x = requests.post(url, json=params)
+            x = requests.post(url, json=params, timeout=10)
         elif (op == 'logout'):
-            x = requests.delete(url, headers=headers)
+            x = requests.delete(url, headers=headers, timeout=10)
         else:
-            x = requests.delete(url, json=params)
+            x = requests.delete(url, json=params, timeout=10)
         x.raise_for_status()
         res = x.json()
         return res
+    except requests.exceptions.Timeout:
+        return jsonify({"Error": "Time out expired"}), 408
     except ConnectionError:
         try:
             if(op == 'login' or op=='signup'):
-                x = requests.post(url, json=params)
+                x = requests.post(url, json=params, timeout=10)
             elif (op == 'logout'):
-                x = requests.delete(url, headers=headers)
+                x = requests.delete(url, headers=headers, timeout=10)
             else:
-                x = requests.delete(url, json=params)
+                x = requests.delete(url, json=params, timeout=10)
             x.raise_for_status()
             res = x.json()
             return res
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except ConnectionError:
             return make_response("Authentication Service is down\n",404)
         except HTTPError:
@@ -163,21 +167,25 @@ def profile_setting(op):
         }
     try:
         if(op == 'modify_profile'):
-            x = requests.patch(url, data=params, files=files)
+            x = requests.patch(url, data=params, files=files, timeout=10)
         else:
-            x = requests.get(url, headers=headers)
+            x = requests.get(url, headers=headers, timeout=10)
         x.raise_for_status()
         res = x.json()
         return res
+    except requests.exceptions.Timeout:
+        return jsonify({"Error": "Time out expired"}), 408
     except ConnectionError:
         try:
             if(op == 'modify_profile'):
-                x = requests.patch(url, data=params, files=files)
+                x = requests.patch(url, data=params, files=files, timeout=10)
             else:
-                x = requests.get(url, headers=headers)
+                x = requests.get(url, headers=headers, timeout=10)
             x.raise_for_status()
             res = x.json()
             return res
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except ConnectionError:
             return make_response("Profile Service is down\n",404)
         except HTTPError:

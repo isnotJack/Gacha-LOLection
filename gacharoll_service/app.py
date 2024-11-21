@@ -37,15 +37,19 @@ def gacharoll():
         "receiver_us": "system",
         "amount": amount
     }
-
-    payment_response = requests.post(PAYMENT_SERVICE_URL, data=payment_data)
-
+    try: 
+        payment_response = requests.post(PAYMENT_SERVICE_URL, data=payment_data, timeout=10)
+    except requests.exceptions.Timeout:
+        return jsonify({"Error": "Time out expired"}), 408
+    
     if payment_response.status_code != 200:
         return jsonify({"error": "Payment failed"}), 500
 
-    # Step 2: Fai una chiamata al servizio Gacha System per ottenere il Gacha (roll)
-    response = requests.get(GACHA_SYSTEM_URL, params={'level': level})
-
+    try:
+        # Step 2: Fai una chiamata al servizio Gacha System per ottenere il Gacha (roll)
+        response = requests.get(GACHA_SYSTEM_URL, params={'level': level}, timeout=10)
+    except requests.exceptions.Timeout:
+        return jsonify({"Error": "Time out expired"}), 408
     if response.status_code != 200:
         return jsonify({"error": "Failed to fetch gacha from gachasystem"}), 500
 
@@ -62,8 +66,11 @@ def gacharoll():
         "collected_date": collected_date.isoformat()  # Passiamo l'oggetto datetime
     }
 
-    profile_response = requests.post(PROFILE_SETTING_URL, json=gacha_data)
-
+    try:
+        profile_response = requests.post(PROFILE_SETTING_URL, json=gacha_data, timeout=10)
+    except requests.exceptions.Timeout:
+        return jsonify({"Error": "Time out expired"}), 408
+    
     if profile_response.status_code != 200:
         return jsonify({"error": "Failed to insert gacha into user profile"}), 500
 
