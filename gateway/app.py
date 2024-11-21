@@ -95,25 +95,29 @@ def auth(op):
         }
     try:
         if(op == 'login' or op=='signup'):
-            x = requests.post(url, json=params)
+            x = requests.post(url, json=params, timeout=10)
         elif (op == 'logout'):
-            x = requests.delete(url, headers=headers)
+            x = requests.delete(url, headers=headers, timeout=10)
         else:
-            x = requests.delete(url, json=params)
+            x = requests.delete(url, json=params, timeout=10)
         x.raise_for_status()
         res = x.json()
         return res
+    except requests.exceptions.Timeout:
+        return jsonify({"Error": "Time out expired"}), 408
     except ConnectionError:
         try:
             if(op == 'login' or op=='signup'):
-                x = requests.post(url, json=params)
+                x = requests.post(url, json=params, timeout=10)
             elif (op == 'logout'):
-                x = requests.delete(url, headers=headers)
+                x = requests.delete(url, headers=headers, timeout=10)
             else:
-                x = requests.delete(url, json=params)
+                x = requests.delete(url, json=params, timeout=10)
             x.raise_for_status()
             res = x.json()
             return res
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except ConnectionError:
             return make_response("Authentication Service is down\n",404)
         except HTTPError:
@@ -163,21 +167,25 @@ def profile_setting(op):
         }
     try:
         if(op == 'modify_profile'):
-            x = requests.patch(url, data=params, files=files)
+            x = requests.patch(url, data=params, files=files, timeout=10)
         else:
-            x = requests.get(url, headers=headers)
+            x = requests.get(url, headers=headers, timeout=10)
         x.raise_for_status()
         res = x.json()
         return res
+    except requests.exceptions.Timeout:
+        return jsonify({"Error": "Time out expired"}), 408
     except ConnectionError:
         try:
             if(op == 'modify_profile'):
-                x = requests.patch(url, data=params, files=files)
+                x = requests.patch(url, data=params, files=files, timeout=10)
             else:
-                x = requests.get(url, headers=headers)
+                x = requests.get(url, headers=headers, timeout=10)
             x.raise_for_status()
             res = x.json()
             return res
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except ConnectionError:
             return make_response("Profile Service is down\n",404)
         except HTTPError:
@@ -202,9 +210,11 @@ def auction_service(op):
             url += f'&auction_id={auction_id}'
 
         try:
-            response = requests.get(url)
+            response = requests.get(url, timeout=10)
             response.raise_for_status()
             return jsonify(response.json())  # Wrappa la lista in jsonify
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except ConnectionError:
             return jsonify({"error": "Auction Service is down"}), 404
         except HTTPError as e:
@@ -224,9 +234,11 @@ def auction_service(op):
                 return jsonify({"error": "Missing required parameters"}), 400
 
             url = CREATE_AUCTION_URL
-            response = requests.post(url, json=data)
+            response = requests.post(url, json=data, timeout=10)
             response.raise_for_status()
             return jsonify(response.json())  # Wrappa la risposta in jsonify
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except ConnectionError:
             return jsonify({"error": "Auction Service is down"}), 404
         except HTTPError as e:
@@ -259,9 +271,11 @@ def auction_service(op):
             url += f'&endDate={end_date}'
 
         try:
-            response = requests.patch(url)  # Nessun JSON, tutto passa come query string
+            response = requests.patch(url, timeout=10)  # Nessun JSON, tutto passa come query string
             response.raise_for_status()
-            return jsonify(response.json())  # Wrappa la risposta in jsonify
+            return jsonify(response.json())  # Wrappa la risposta in jsonify    
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except ConnectionError:
             return jsonify({"error": "Auction Service is down"}), 404
         except HTTPError as e:
@@ -286,9 +300,11 @@ def auction_service(op):
 
         try:
             # Effettua la richiesta PATCH all’Auction Service
-            response = requests.patch(url)
+            response = requests.patch(url, timeout=10)
             response.raise_for_status()
             return jsonify(response.json())  # Wrappa la risposta in jsonify
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except requests.ConnectionError:
             return jsonify({"error": "Auction Service is down"}), 404
         except requests.HTTPError as e:
@@ -312,10 +328,11 @@ def auction_service(op):
 
             # Effettua la richiesta al servizio Auction
             url = f'{AUCTION_BASE_URL}/gacha_receive'
-            response = requests.post(url, json=data)
+            response = requests.post(url, json=data, timeout=10)
             response.raise_for_status()
             return jsonify(response.json())  # Wrappa la risposta in jsonify
-
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except requests.ConnectionError:
             return jsonify({"error": "Auction Service is down"}), 404
         except requests.HTTPError as e:
@@ -336,10 +353,11 @@ def auction_service(op):
 
             # Effettua la richiesta al servizio Auction
             url = f'{AUCTION_BASE_URL}/auction_lost'
-            response = requests.post(url, json=data)
+            response = requests.post(url, json=data, timeout=10)
             response.raise_for_status()
             return jsonify(response.json())  # Wrappa la risposta in jsonify
-
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except requests.ConnectionError:
             return jsonify({"error": "Auction Service is down"}), 404
         except requests.HTTPError as e:
@@ -362,10 +380,11 @@ def auction_service(op):
             url = f'{AUCTION_BASE_URL}/auction_terminated'
 
             # Effettua la richiesta al servizio Auction
-            response = requests.post(url, json=data)
+            response = requests.post(url, json=data, timeout=10)
             response.raise_for_status()
             return jsonify(response.json())  # Wrappa la risposta in jsonify
-
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except requests.ConnectionError:
             return jsonify({"error": "Auction Service is down"}), 404
         except requests.HTTPError as e:
@@ -389,16 +408,20 @@ def gacha_roll(op):
         'level' : level
         }
     try:
-        x = requests.post(url, json=params)
+        x = requests.post(url, json=params, timeout=10)
         x.raise_for_status()
         res = x.json()
         return res
+    except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
     except ConnectionError:
         try:
-            x = requests.post(url, json=params)
+            x = requests.post(url, json=params, timeout=10)
             x.raise_for_status()
             res = x.json()
             return res
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except ConnectionError:
             return make_response("Gacha Roll Service is down\n",404)
         except HTTPError:
@@ -414,7 +437,7 @@ def gacha_image(name):
     # Determina il tipo MIME in base all'estensione
     mime_type = get_mime_type(file_extension)
     try:
-        x = requests.get(url)
+        x = requests.get(url, timeout=10)
         if x.status_code == 200:
             # Create an in-memory file object
             file = BytesIO(x.content)
@@ -425,10 +448,11 @@ def gacha_image(name):
         else:
             # Return a 404 if the file was not found in the service
             return jsonify({"error": "File not found"}), 404
-    
+    except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
     except ConnectionError as e:
         try:
-            x = requests.get(url)
+            x = requests.get(url, timeout=10)
             if x.status_code == 200:
                 # Create an in-memory file object
                 file = BytesIO(x.content)
@@ -438,7 +462,8 @@ def gacha_image(name):
             else:
                 # Return a 404 if the file was not found in the service
                 return jsonify({"error": "File not found"}), 404
-        
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except ConnectionError as e:
             # Handle any error that occurs while contacting the service
             return jsonify({"error": str(e)}), 500
@@ -454,7 +479,7 @@ def profile_image(name):
     # Determina il tipo MIME in base all'estensione
     mime_type = get_mime_type(file_extension)
     try:
-        x = requests.get(url)
+        x = requests.get(url, timeout=10)
         if x.status_code == 200:
             # Create an in-memory file object
             file = BytesIO(x.content)
@@ -465,10 +490,11 @@ def profile_image(name):
         else:
             # Return a 404 if the file was not found in the service
             return jsonify({"error": "File not found"}), 404
-    
+    except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
     except ConnectionError as e:
         try:
-            x = requests.get(url)
+            x = requests.get(url, timeout=10)
             if x.status_code == 200:
                 # Create an in-memory file object
                 file = BytesIO(x.content)
@@ -478,7 +504,8 @@ def profile_image(name):
             else:
                 # Return a 404 if the file was not found in the service
                 return jsonify({"error": "File not found"}), 404
-        
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except ConnectionError as e:
             # Handle any error that occurs while contacting the service
             return jsonify({"error": str(e)}), 500
@@ -491,25 +518,29 @@ def profile_image(name):
 def buycurrency():
     username = request.form.get('username')
     amount = request.form.get('amount')
-    method = request.form.get('method')
+    method = request.form.get('payment_method')
 
     url = BUYCURRENCY_URL
     params ={
         'username' : username,
         'amount' : amount,
-        'method' : method
+        'payment_method' : method
     }
     try:
-        x = requests.post(url, json=params)
+        x = requests.post(url, json=params, timeout=10)
         x.raise_for_status()
         res = x.json()
         return res
+    except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
     except ConnectionError:
         try:
-            x = requests.post(url, json=params)
+            x = requests.post(url, json=params, timeout=10)
             x.raise_for_status()
             res = x.json()
             return res
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except ConnectionError:
             return make_response("Gacha Roll Service is down\n",404)
         except HTTPError:
@@ -557,35 +588,39 @@ def gachasystem(op):
         url= GET_GACHA_COLL_URL
     try:
         if(op == 'add_gacha'):
-            x = requests.post(url, data=params, files=files)
+            x = requests.post(url, data=params, files=files, timeout=10)
         elif(op == 'delete_gacha'):
-            x = requests.delete(url, json=params)
+            x = requests.delete(url, json=params, timeout=10)
         elif(op == 'update_gacha'):
-            x = requests.patch(url, json=params)
+            x = requests.patch(url, json=params, timeout=10)
         elif(op == 'get_gacha_collection'):
-            x = requests.get(url, json=params)
+            x = requests.get(url, json=params, timeout=10)
             x.raise_for_status()
             res = x.json()
             return jsonify(res)
         x.raise_for_status()
         res = x.json()
         return res
+    except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
     except ConnectionError:
         try:
             if(op == 'add_gacha'):
-                x = requests.post(url, data=params, files=files)
+                x = requests.post(url, data=params, files=files, timeout=10)
             elif(op == 'delete_gacha'):
-                x = requests.delete(url, json=params)
+                x = requests.delete(url, json=params, timeout=10)
             elif(op == 'update_gacha'):
-                x = requests.patch(url, json=params)
+                x = requests.patch(url, json=params, timeout=10)
             elif(op == 'get_gacha_collection'):
-                x = requests.get(url, json=params)
+                x = requests.get(url, json=params, timeout=10)
                 x.raise_for_status()
                 res = x.json()
                 return jsonify(res)
             x.raise_for_status()
             res = x.json()
             return res
+        except requests.exceptions.Timeout:
+            return jsonify({"Error": "Time out expired"}), 408
         except ConnectionError:
             return make_response("Gacha System Service is down\n",404)
         except HTTPError:

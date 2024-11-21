@@ -6,7 +6,7 @@ url = 'http://localhost:5001/payment_service/buycurrency'
 data1 = {
     'username' : 'user1',
     'amount':'100',
-    'method' : 'card'
+    'payment_method' : 'card'
 }
 
 # data2 = {

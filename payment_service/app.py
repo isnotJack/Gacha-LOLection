@@ -40,6 +40,13 @@ def pay():
     payer_us = request.form.get('payer_us')
     receiver_us = request.form.get('receiver_us')
     amount = request.form.get('amount')
+
+    if not payer_us:
+        return jsonify({'Error': 'Invalid payer_us'}), 400
+    if not receiver_us:
+        return jsonify({'Error': 'Invalid receiver_us'}), 400
+    if not amount:
+        return jsonify({'Error': 'Invalid amount'}), 400
     
     # Conversion from string to float
     try:
@@ -51,9 +58,9 @@ def pay():
     receiver_balance = Balance.query.filter_by(username=receiver_us).first()
 
     if not payer_balance:
-        return jsonify({'Error': f'Payer user {payer_us} not found'}), 404
+        return jsonify({'Error': f'Payer user "{payer_us}" not found'}), 404
     if not receiver_balance:
-        return jsonify({'Error': f'Receiver user {receiver_us} not found'}), 404
+        return jsonify({'Error': f'Receiver user "{receiver_us}" not found'}), 404
 
     # Controlla che il saldo del pagatore sia sufficiente
     if payer_balance.balance >= amount:
@@ -78,7 +85,7 @@ def pay():
             db.session.rollback()
             return jsonify({'Error': 'Transaction failed', 'details': str(e)}), 500
     else:
-        return jsonify({'Error': 'Balance not sufficient to carry out the operation'}), 400
+        return jsonify({'Error': 'Balance not sufficient to carry out the operation'}), 422
 
 #  # Commit with 3 re-try before failure
 #         for attempt in range(3):
@@ -100,6 +107,13 @@ def buycurrency():
     username = data.get('username')
     amount = data.get('amount')
     method = data.get('payment_method')
+
+    if not username:
+        return jsonify({'Error': 'Invalid username'}), 400
+    if not amount:
+        return jsonify({'Error': 'Invalid amount'}), 400
+    if not method:
+        return jsonify({'Error': f'Invalid method {method}'}), 400
 
     # Conversion from string to float
     try:
@@ -139,6 +153,8 @@ def buycurrency():
 @app.route('/viewTrans', methods = ['GET'])
 def viewTrans():  
     username = request.args.get('username')
+    if not username:
+        return jsonify({'Error' : 'Invalid parameter username'}), 400
     # Search in the transaction db
     payed_t = Transaction.query.filter_by(payer_us=username).all()
     received_t = Transaction.query.filter_by(receiver_us=username).all()
@@ -155,6 +171,8 @@ def viewTrans():
 def newBalance():
     data = request.get_json()
     username = data.get('username')
+    if not username:
+        return jsonify({"Error" : "Invalid parameter username"}) , 400
     res = Balance.query.filter_by(username=username).all()
     if not res:
         new_balance = Balance(username=username, balance=0)
@@ -166,11 +184,13 @@ def newBalance():
             db.session.rollback()
             return jsonify({'Error': 'Committing error', 'details': str(e)}), 500
     else:
-        return jsonify({'Error': 'Username already inserted in balance db'}), 400
+        return jsonify({'Error': 'Username already inserted in balance db'}), 422
 
 @app.route('/getBalance', methods=['GET'])
 def getBalance():
     username = request.args.get('username')
+    if not username:
+        return jsonify({'Error' : 'Invalid parameter username'}), 400
     res = Balance.query.filter_by(username=username).first()
     if res: 
         return jsonify({'username': res.username, 'balance': res.balance}), 200
@@ -181,6 +201,8 @@ def getBalance():
 def deleteBalance():
     data = request.get_json()
     username = data.get('username')
+    if not username:
+        return jsonify({'Error' : 'Invalid parameter username'}), 400
     res = Balance.query.filter_by(username=username).first()
     if res:
         db.session.delete(res)
@@ -191,4 +213,4 @@ def deleteBalance():
             db.session.rollback()
             return jsonify({'Error': 'Committing error', 'details': str(e)}), 500
     else:
-        return jsonify({'Error': 'Balance not found'}), 400
+        return jsonify({'Error': 'Balance not found'}), 404

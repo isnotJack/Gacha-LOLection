@@ -129,8 +129,10 @@ def create_auction():
     }
 
     try:
-        response = requests.delete(profile_service_url, json=payload)
+        response = requests.delete(profile_service_url, json=payload, timeout=10)
         response.raise_for_status()
+    except requests.exceptions.Timeout:
+        return jsonify({"Error": "Time out expired"}), 408
     except ConnectionError:
         return jsonify({"error": "Profile Service is down"}), 404
     except HTTPError as e:
@@ -224,8 +226,10 @@ def bid_for_auction():
     }
 
     try:
-        payment_response = requests.post(payment_service_url, data=payload)
+        payment_response = requests.post(payment_service_url, data=payload, timeout=10)
         payment_response.raise_for_status()
+    except requests.exceptions.Timeout:
+        return jsonify({"Error": "Time out expired"}), 408
     except requests.ConnectionError:
         return jsonify({"error": "Payment Service is down"}), 404
     except requests.HTTPError as e:
@@ -274,14 +278,14 @@ def gacha_receive():
     }
 
     try:
-        response = requests.post(profile_service_url, json=payload)
-
+        response = requests.post(profile_service_url, json=payload, timeout=10)
         # Controlla la risposta del servizio profile_setting
         if response.status_code == 200:
             return jsonify({"message": "Gacha correctly received"}), 200
         else:
             return jsonify({"error": "Profile service failed", "details": response.text}), 404
-
+    except requests.exceptions.Timeout:
+        return jsonify({"Error": "Time out expired"}), 408
     except requests.exceptions.RequestException as e:
         # Gestisce errori di rete o problemi con il servizio profile_setting
         return jsonify({"error": "Profile service is down", "details": str(e)}), 404
@@ -325,12 +329,14 @@ def auction_lost():
             }
 
             try:
-                payment_response = requests.post(payment_service_url, data=refund_payload)
+                payment_response = requests.post(payment_service_url, data=refund_payload, timeout=10)
                 payment_response.raise_for_status()
                 successful_refunds.append({
                     "username": bid.username,
                     "amount": bid.bid_amount
                 })
+            except requests.exceptions.Timeout:
+                return jsonify({"Error": "Time out expired"}), 408
             except requests.ConnectionError:
                 failed_refunds.append({"username": bid.username, "error": "Payment service down"})
             except requests.HTTPError as e:
@@ -374,7 +380,7 @@ def auction_terminated():
     }
 
     try:
-        payment_response = requests.post(payment_service_url, data=transfer_payload)
+        payment_response = requests.post(payment_service_url, data=transfer_payload, timeout=10)
         payment_response.raise_for_status()
     except requests.ConnectionError:
         return jsonify({"error": "Payment Service is down"}), 404

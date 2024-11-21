@@ -146,14 +146,15 @@ def delete_gacha():
             "gacha_name": gacha_name,
             "all": True
         }
-        response = requests.delete(PROFILE_SETTING_URL, json=payload)
+        response = requests.delete(PROFILE_SETTING_URL, json=payload, timeout=10)
         # Verifica se la richiesta è andata a buon fine
         if response.status_code != 200 and response.status_code != 404:
             return jsonify({
                 "error": "Gacha deleted locally, but failed to delete from user profiles.",
                 "details": response.text
             }), response.status_code
-
+    except requests.exceptions.Timeout:
+        return jsonify({"Error": "Time out expired"}), 408
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Failed to delete gacha: {str(e)}"}), 500
