@@ -260,18 +260,23 @@ def gacha_receive():
     # Recupera i parametri dall'oggetto JSON
     data = request.get_json()
     auction_id = data.get('auction_id')
-    winner_username = data.get('winner_username')
-    gacha_name = data.get('gacha_name')
 
-    # Verifica che i parametri siano validi
-    if not auction_id or not winner_username or not gacha_name:
-        return jsonify({"error": "Invalid input"}), 400
+    # Verifica che auction_id sia fornito
+    if not auction_id:
+        return jsonify({"error": "Invalid input: auction_id is required"}), 400
 
     # Recupera l'asta dal database usando l'ID
-    auction = Auction.query.filter_by(id=auction_id, winner_username=winner_username, gacha_name=gacha_name).first()
+    auction = Auction.query.get(auction_id)
 
     if not auction:
-        return jsonify({"error": "Auction not found or no winner assigned"}), 404
+        return jsonify({"error": "Auction not found"}), 404
+
+    # Verifica che l'asta abbia un vincitore e un nome gacha associato
+    if not auction.winner_username or not auction.gacha_name:
+        return jsonify({"error": "Auction has no winner or gacha_name"}), 400
+
+    winner_username = auction.winner_username
+    gacha_name = auction.gacha_name
 
     # Crea il payload per la chiamata al servizio di profile_setting
     profile_service_url = "http://profile_setting:5003/insertGacha"
