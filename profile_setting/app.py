@@ -53,11 +53,6 @@ def modify_profile():
     # Controlla che il campo username sia fornito
     if not username:
         return jsonify({"error": "Missing required 'username' field"}), 400
-    
-    # Controlla che il campo non sia 'currency_balance'
-    if field == 'currency_balance':
-        return jsonify({"error": "Modifying 'currency_balance' field is not allowed"}), 400
-
 
     # Recupera il profilo da modificare
     profile = Profile.query.filter_by(username=username).first()
@@ -119,7 +114,7 @@ def check_profile():
     profile = Profile.query.filter_by(username=username).first()
     
     if not profile:
-        return jsonify({"error": "User not found or missing paramaters"}), 401
+        return jsonify({"error": "User not found"}), 401
 
     profile_data = {
         "username": profile.username,
@@ -148,16 +143,18 @@ def retrieve_gacha_collection():
      # Se l'utente ha dei gachas nella collezione, li inviamo al servizio come parametro
     try:
         # Invia la lista di gacha_name come query string
-        response = requests.get(url, params={'gacha_name': ','.join(gacha_collection)}, timeout=10)
-
+        #response = requests.get(url, params={'gacha_name': ','.join(gacha_collection)}, timeout=10)
+        # Invia la lista di gacha_name
+        payload = {'gacha_name': ','.join(gacha_collection)}
+        headers = {'Content-Type': 'application/json'}
+        response = requests.get(url, json=payload, headers=headers, timeout=10)
+        
         # Verifica se la risposta è andata a buon fine
         response.raise_for_status()
 
         # Estrai i dati dal servizio e restituisci la risposta
         response_data = response.json()
         return jsonify(response_data), 200
-    except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
     except requests.exceptions.RequestException as e:
         return jsonify({'Error': 'Gacha service is down', 'details': str(e)}), 500
 
@@ -176,14 +173,12 @@ def info_gacha_collection():
         "gacha_name": gacha_name
         }
 
-    url = "http://gachasystem:5004/get_gacha_collection"
+    url="http://gachasystem_service:5005/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
     try:
-        x=requests.get(url,gacha, timeout=10)
+        x=requests.get(url,gacha)
         x.raise_for_status()
         response_data = x.json()
         return jsonify(response_data), 200
-    except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
     except ConnectionError:
             return jsonify({'Error':'Gacha service is down'}),404
     except HTTPError:
@@ -316,4 +311,4 @@ def deleteGacha():
 
 if __name__ == '__main__':
     db.create_all()
-    app.run(host='0.0.0.0', port=5003)
+    app.run(host='0.0.0.0', port=5002)
