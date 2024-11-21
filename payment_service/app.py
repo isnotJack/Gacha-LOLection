@@ -113,7 +113,7 @@ def buycurrency():
     if not amount:
         return jsonify({'Error': 'Invalid amount'}), 400
     if not method:
-        return jsonify({'Error': 'Invalid method'}), 400
+        return jsonify({'Error': f'Invalid method {method}'}), 400
 
     # Conversion from string to float
     try:
