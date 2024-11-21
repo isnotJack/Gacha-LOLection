@@ -85,6 +85,10 @@ def create_auction():
  #   current_user = get_jwt_identity()
     # Legge i dati dalla richiesta JSON
     data = request.get_json()
+    if data is None:
+        return jsonify({"error": "Invalid JSON or missing Content-Type header"}), 400
+
+    
     
     # Recupera i parametri dall'oggetto JSON
     seller_username = data.get('seller_username')
@@ -92,7 +96,7 @@ def create_auction():
     base_price = data.get('basePrice')
     end_date = data.get('endDate')
 
-    existing_auction = Auction.query.filter_by(gatcha_name=gacha_name, seller_username=seller_username, status='active').first()
+    existing_auction = Auction.query.filter_by(gacha_name=gacha_name, seller_username=seller_username, status='active').first()
     if existing_auction:
         return jsonify({"error": "An active auction already exists for this gatcha"}), 400
 
