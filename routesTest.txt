@@ -117,9 +117,7 @@ curl -X PATCH "http://localhost:5008/bid?username=player1&auction_id=1&newBid=70
 curl -X POST "http://localhost:5008/gacha_receive" \
 -H "Content-Type: application/json" \
 -d '{
-    "auction_id": 1,
-    "winner_username": "player1",
-    "gacha_name": "doge"
+    "auction_id": 1
 }'
 
 // auction lost 

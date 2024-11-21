@@ -378,7 +378,7 @@ def auction_terminated():
 
     # Controlla se l'asta ha un current_bid di 0
     if auction.current_bid == 0:
-        return jsonify({"error": "Auction has no valid bids to transfer, no money sento from system to seller :()"}), 400
+        return jsonify({"error": "Auction has no valid bids to transfer, no money sent from system to seller :("}), 400
 
     # Recupera i dettagli per la transazione
     payment_service_url = "http://payment_service:5006/pay"
