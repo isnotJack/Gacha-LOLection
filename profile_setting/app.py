@@ -52,7 +52,7 @@ def modify_profile():
 
     # Controlla che il campo username sia fornito
     if not username:
-        return jsonify({"error": "Missing required 'username' field"}), 
+        return jsonify({"error": "Missing required 'username' field"}), 400
 
     # Controlla che il campo non sia 'currency_balance'
     if field == 'currency_balance':
