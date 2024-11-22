@@ -39,6 +39,57 @@ GACHAROLL_URL = 'http://gacha_roll:5007/gacharoll'
 PROFILE_IMAGE_URL = 'http://profile_setting:5003/uploads/'
 
 BUYCURRENCY_URL = 'http://payment_service:5006/buycurrency'
+
+
+class CircuitBreaker:
+    def __init__(self, failure_threshold=3, recovery_timeout=5, reset_timeout=10):
+        self.failure_threshold = failure_threshold  # Soglia di fallimento
+        self.recovery_timeout = recovery_timeout      # Tempo di recupero tra i tentativi
+        self.reset_timeout = reset_timeout          # Tempo massimo di attesa prima di ripristinare il circuito
+        self.failure_count = 0                      # Numero di fallimenti consecutivi
+        self.last_failure_time = 0                  # Ultimo tempo in cui si è verificato un fallimento
+        self.state = 'CLOSED'                       # Stato iniziale del circuito (CLOSED)
+
+    def call(self, method, url, params=None, headers=None, json=True):
+        if self.state == 'OPEN':
+            # Se il circuito è aperto, controlla se è il momento di provare di nuovo
+            if time.time() - self.last_failure_time > self.reset_timeout:
+                print("Circuito mezzo aperto, tentando...")
+                self.state = 'HALF_OPEN'
+            else:
+                return jsonify({'Error' : 'Open circuit, try again later'})
+
+        try:
+            # Usa requests.request per specificare il metodo dinamicamente
+            if json:
+                response = requests.request(method, url, json=params, headers=headers)
+            else:
+                response = requests.request(method, url, data=params, headers=headers)
+            
+            response.raise_for_status()  # Solleva un'eccezione per errori HTTP (4xx, 5xx)
+            self._reset()  # Se la chiamata ha successo, resetta il contatore degli errori
+            return response.json()  # Ritorna il contenuto JSON
+        except Exception as e:
+            self._fail()
+            return jsonify({'Error':f'Error calling the service {e}'})
+
+    
+    def _fail(self):
+        
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            print("Circuito aperto a causa di troppi errori consecutivi.")
+            self.state = 'OPEN'
+
+    def _reset(self):
+        
+        self.failure_count = 0
+        self.state = 'CLOSED'
+
+auth_circuit_breaker = CircuitBreaker()
+
+
 #Per gestione immagini
 def get_mime_type(extension):
     mime_types = {
@@ -95,36 +146,27 @@ def auth(op):
         }
     try:
         if(op == 'login' or op=='signup'):
-            x = requests.post(url, json=params, timeout=10)
+            #x = requests.post(url, json=params, timeout=10)
+            x=auth_circuit_breaker.call('post', url, params, {}, True)
         elif (op == 'logout'):
-            x = requests.delete(url, headers=headers, timeout=10)
+            # x = requests.delete(url, headers=headers, timeout=10)
+            x=auth_circuit_breaker.call('delete', url, {}, headers, False)
         else:
-            x = requests.delete(url, json=params, timeout=10)
-        x.raise_for_status()
-        res = x.json()
-        return res
-    except requests.exceptions.Timeout:
-        return jsonify({"Error": "Time out expired"}), 408
-    except ConnectionError:
-        try:
-            if(op == 'login' or op=='signup'):
-                x = requests.post(url, json=params, timeout=10)
-            elif (op == 'logout'):
-                x = requests.delete(url, headers=headers, timeout=10)
-            else:
-                x = requests.delete(url, json=params, timeout=10)
-            x.raise_for_status()
-            res = x.json()
-            return res
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except ConnectionError:
-            return make_response("Authentication Service is down\n",404)
-        except HTTPError:
-            return make_response(x.content, x.status_code)
-        return res
-    except HTTPError:
-        return make_response(x.content, x.status_code)
+            # x = requests.delete(url, json=params, timeout=10)
+            x=auth_circuit_breaker.call('delete', url, params, {}, True)
+        #x.raise_for_status()
+        # res = x.json()
+      # Gestione della risposta
+        return x
+    except requests.ConnectionError:
+        return make_response("Authentication Service is unreachable. Please try again later.", 500)
+    except requests.HTTPError as e:
+        # Ritorna il contenuto e lo status code dell'errore
+        return make_response(e.response.text, e.response.status_code)
+    except Exception as e:
+        # Gestione di errori generici
+        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+
 
 @app.route('/profile_setting/<op>', methods=['GET', 'PATCH'])
 def profile_setting(op):
