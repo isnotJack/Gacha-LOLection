@@ -141,7 +141,7 @@ def retrieve_gacha_collection():
     gacha_collection = [item.gacha_name for item in profile.gacha_collection]
 
     if not gacha_collection:
-        return jsonify({"error": "User has no gachas"}), 404
+        return jsonify({"message": "User has no gachas"}), 200
 
     url="http://gachasystem:5004/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
      # Se l'utente ha dei gachas nella collezione, li inviamo al servizio come parametro
@@ -174,13 +174,13 @@ def info_gacha_collection():
     if not profile:
         return jsonify({"error": "User not found"}), 401
 
-    # Costruisci i parametri per la richiesta GET
+    # Costruisci i parametri per la richiesta
     params = {"gacha_name": gacha_name}
     url = "http://gachasystem:5004/get_gacha_collection"
 
     try:
         # Invia la richiesta al servizio Gacha
-        x = requests.get(url, params=params)
+        x = requests.get(url, json=params)
         x.raise_for_status()  # Solleva un'eccezione per errori HTTP
 
         # Decodifica i dati JSON restituiti dal servizio
