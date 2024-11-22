@@ -458,6 +458,46 @@ def auction_terminated():
         }
     }), 200
 
+@app.route('/close_auction', methods=['POST'])
+def close_auction():
+    data = request.get_json()
+    auction_id = data.get('auction_id')
+
+    # Controllo se l'ID dell'asta è fornito
+    if not auction_id:
+        return jsonify({"error": "Auction ID is required"}), 400
+
+    # Recupero l'asta dal database
+    auction = Auction.query.get(auction_id)
+
+    if not auction:
+        return jsonify({"error": "Auction not found"}), 404
+
+    # Controllo se l'asta è già chiusa
+    if auction.status != 'active':
+        return jsonify({"error": "Auction is already closed or inactive"}), 400
+
+    # Verifico se ci sono offerte associate all'asta
+    bids = Bid.query.filter_by(auction_id=auction_id).all()
+
+    if bids:
+        return jsonify({"error": "Auction cannot be closed because it has bids"}), 400
+
+    # Nessuna offerta: chiudo l'asta
+    auction.status = 'closed'
+
+    # Restituisco l'oggetto gacha al proprietario chiamando l'API gacha_receive
+    payload = {"auction_id": auction.id}
+    try:
+        response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        return jsonify({"error": "Failed to return gacha to seller", "details": str(e)}), 500
+
+    # Salvo i cambiamenti nel database
+    db.session.commit()
+
+    return jsonify({"message": "Auction closed successfully", "auction_id": auction.id}), 200
 
 
 if __name__ == '__main__':
