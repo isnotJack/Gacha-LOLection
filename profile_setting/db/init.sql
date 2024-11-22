@@ -17,5 +17,5 @@ INSERT INTO profiles (username, profile_image, currency_balance) VALUES ('player
 INSERT INTO profiles (username, profile_image, currency_balance) VALUES ('player2', 'default_image_url', 100);
 
 
-INSERT INTO gacha_items (gacha_name, collected_date, username) VALUES ('doge', '2024-12-31 23:59:59', 'player1');
+INSERT INTO gacha_items (gacha_name, collected_date, username) VALUES ('Trial gacha Doge-meme.jpg', '2024-12-31 23:59:59', 'player1');
 INSERT INTO gacha_items (gacha_name, collected_date, username) VALUES ('dog', '2024-12-31 23:59:59', 'player2');

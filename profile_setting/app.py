@@ -52,7 +52,11 @@ def modify_profile():
 
     # Controlla che il campo username sia fornito
     if not username:
-        return jsonify({"error": "Missing required 'username' field"}), 400
+        return jsonify({"error": "Missing required 'username' field"}), 
+
+    # Controlla che il campo non sia 'currency_balance'
+    if field == 'currency_balance':
+        return jsonify({"error": "Modifying 'currency_balance' field is not allowed"}), 400
 
     # Recupera il profilo da modificare
     profile = Profile.query.filter_by(username=username).first()
@@ -160,29 +164,35 @@ def retrieve_gacha_collection():
 
 # Endpoint per visualizzare i dettagli di un oggetto gacha specifico
 @app.route('/info_gachacollection', methods=['GET'])
-@jwt_required()
+#@jwt_required()
 def info_gacha_collection():
     username = request.args.get('username')
     gacha_name = request.args.get('gacha_name')
-    profile = Profile.query.filter_by(username=username).first()
 
+    # Verifica che il profilo utente esista
+    profile = Profile.query.filter_by(username=username).first()
     if not profile:
         return jsonify({"error": "User not found"}), 401
 
-    gacha ={
-        "gacha_name": gacha_name
-        }
+    # Costruisci i parametri per la richiesta GET
+    params = {"gacha_name": gacha_name}
+    url = "http://gachasystem:5004/get_gacha_collection"
 
-    url="http://gachasystem_service:5005/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
     try:
-        x=requests.get(url,gacha)
-        x.raise_for_status()
+        # Invia la richiesta al servizio Gacha
+        x = requests.get(url, params=params)
+        x.raise_for_status()  # Solleva un'eccezione per errori HTTP
+
+        # Decodifica i dati JSON restituiti dal servizio
         response_data = x.json()
         return jsonify(response_data), 200
-    except ConnectionError:
-            return jsonify({'Error':'Gacha service is down'}),404
-    except HTTPError:
-            return jsonify(x.content, x.status_code)
+    except requests.ConnectionError:
+        return jsonify({'Error': 'Gacha service is down'}), 404
+    except requests.HTTPError:
+        return jsonify({"error": x.text}), x.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 # route che serve le immagini
 @app.route('/uploads/<filename>')
@@ -263,15 +273,47 @@ def delete_profile():
 
 @app.route('/insertGacha', methods=['POST'])
 def insertGacha():
+    # Recupera il JSON dalla richiesta
     data = request.get_json()
+
+    # Controlla che i dati non siano nulli
+    if not data:
+        return jsonify({"error": "Missing request data"}), 400
+
+    # Controlla che tutti i parametri obbligatori siano presenti
     username = data.get('username')
-    gacha_name=data.get('gacha_name')
-    collected_date_str=data.get('collected_date')
-    collected_date = datetime.fromisoformat(collected_date_str)
-    newGacha = GachaItem(gacha_name=gacha_name, collected_date=collected_date, username=username)
-    db.session.add(newGacha)
-    db.session.commit()
-    return jsonify({"message": f"Gacha '{gacha_name}' added to collection"}), 200
+    gacha_name = data.get('gacha_name')
+    collected_date_str = data.get('collected_date')
+
+    if not username:
+        return jsonify({"error": "Missing 'username' parameter"}), 400
+    if not gacha_name:
+        return jsonify({"error": "Missing 'gacha_name' parameter"}), 400
+    if not collected_date_str:
+        return jsonify({"error": "Missing 'collected_date' parameter"}), 400
+
+    # Verifica che la data sia in un formato valido
+    try:
+        collected_date = datetime.fromisoformat(collected_date_str)
+    except ValueError:
+        return jsonify({"error": "Invalid 'collected_date' format. Use ISO format (e.g., 'YYYY-MM-DDTHH:MM:SS')"}), 400
+
+    # Verifica che l'utente esista nel database
+    profile = Profile.query.filter_by(username=username).first()
+    if not profile:
+        return jsonify({"error": f"User '{username}' not found"}), 404
+
+    # Aggiungi il nuovo Gacha alla collezione
+    try:
+        newGacha = GachaItem(gacha_name=gacha_name, collected_date=collected_date, username=username)
+        db.session.add(newGacha)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"An error occurred while adding Gacha: {str(e)}"}), 500
+
+    return jsonify({"message": f"Gacha '{gacha_name}' added to collection for user '{username}'"}), 200
+
 
 @app.route('/deleteGacha', methods=['DELETE'])
 def deleteGacha():
