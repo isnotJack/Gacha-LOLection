@@ -8,6 +8,8 @@ from sqlalchemy import func
 #from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
+from apscheduler.schedulers.background import BackgroundScheduler
+
 
 
 
@@ -59,8 +61,58 @@ class Bid(db.Model):
 
     auction = db.relationship('Auction', backref=db.backref('bids', cascade='all, delete'))
 
+# Definizione di check_and_close_auctions
+def check_and_close_auctions():
+    with app.app_context():
+        # Trova tutte le aste attive la cui data di fine è scaduta
+        expired_auctions = Auction.query.filter(Auction.status == 'active', Auction.end_date <= datetime.now()).all()
 
+        for auction in expired_auctions:
+            if auction.current_bid == 0:
+                # Nessun partecipante: chiamare solo gacha_receive
+                payload = {"auction_id": auction.id}
+                try:
+                    response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
+                    response.raise_for_status()
+                except requests.RequestException as e:
+                    app.logger.error(f"Errore durante gacha_receive per l'asta {auction.id}: {str(e)}")
+            else:
+                # Con partecipanti: chiamare tutte le funzioni
+                payload = {"auction_id": auction.id}
+                try:
+                    # Gacha Receive per trasferire il gacha al vincitore
+                    gacha_response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
+                    gacha_response.raise_for_status()
+                except requests.RequestException as e:
+                    app.logger.error(f"Errore durante gacha_receive per l'asta {auction.id}: {str(e)}")
 
+                try:
+                    # Refund dei partecipanti perdenti
+                    lost_response = requests.post(f"http://auction_service:5008/auction_lost", json=payload, timeout=10)
+                    lost_response.raise_for_status()
+                except requests.RequestException as e:
+                    app.logger.error(f"Errore durante auction_lost per l'asta {auction.id}: {str(e)}")
+
+                try:
+                    # Trasferire i fondi al venditore
+                    terminated_response = requests.post(f"http://auction_service:5008/auction_terminated", json=payload, timeout=10)
+                    terminated_response.raise_for_status()
+                except requests.RequestException as e:
+                    app.logger.error(f"Errore durante auction_terminated per l'asta {auction.id}: {str(e)}")
+
+            # Cambia lo stato dell'asta a 'closed'
+            auction.status = 'closed'
+            db.session.commit()
+            app.logger.info(f"Asta {auction.id} chiusa correttamente.")
+
+# Configurazione dello Scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=check_and_close_auctions, trigger="interval", seconds=60)  # Controlla ogni minuto
+
+@app.before_first_request
+def start_scheduler():
+    if not scheduler.running:
+        scheduler.start()
 
 @app.route('/see', methods=['GET'])
 def see_auctions():
@@ -85,6 +137,10 @@ def create_auction():
  #   current_user = get_jwt_identity()
     # Legge i dati dalla richiesta JSON
     data = request.get_json()
+    if data is None:
+        return jsonify({"error": "Invalid JSON or missing Content-Type header"}), 400
+
+    
     
     # Recupera i parametri dall'oggetto JSON
     seller_username = data.get('seller_username')
@@ -92,7 +148,7 @@ def create_auction():
     base_price = data.get('basePrice')
     end_date = data.get('endDate')
 
-    existing_auction = Auction.query.filter_by(gatcha_name=gacha_name, seller_username=seller_username, status='active').first()
+    existing_auction = Auction.query.filter_by(gacha_name=gacha_name, seller_username=seller_username, status='active').first()
     if existing_auction:
         return jsonify({"error": "An active auction already exists for this gatcha"}), 400
 
@@ -256,18 +312,23 @@ def gacha_receive():
     # Recupera i parametri dall'oggetto JSON
     data = request.get_json()
     auction_id = data.get('auction_id')
-    winner_username = data.get('winner_username')
-    gacha_name = data.get('gacha_name')
 
-    # Verifica che i parametri siano validi
-    if not auction_id or not winner_username or not gacha_name:
-        return jsonify({"error": "Invalid input"}), 400
+    # Verifica che auction_id sia fornito
+    if not auction_id:
+        return jsonify({"error": "Invalid input: auction_id is required"}), 400
 
     # Recupera l'asta dal database usando l'ID
-    auction = Auction.query.filter_by(id=auction_id, winner_username=winner_username, gacha_name=gacha_name).first()
+    auction = Auction.query.get(auction_id)
 
     if not auction:
-        return jsonify({"error": "Auction not found or no winner assigned"}), 404
+        return jsonify({"error": "Auction not found"}), 404
+
+    # Verifica che l'asta abbia un vincitore e un nome gacha associato
+    if not auction.winner_username or not auction.gacha_name:
+        return jsonify({"error": "Auction has no winner or gacha_name"}), 400
+
+    winner_username = auction.winner_username
+    gacha_name = auction.gacha_name
 
     # Crea il payload per la chiamata al servizio di profile_setting
     profile_service_url = "http://profile_setting:5003/insertGacha"
@@ -369,7 +430,7 @@ def auction_terminated():
 
     # Controlla se l'asta ha un current_bid di 0
     if auction.current_bid == 0:
-        return jsonify({"error": "Auction has no valid bids to transfer, no money sento from system to seller :()"}), 400
+        return jsonify({"error": "Auction has no valid bids to transfer, no money sent from system to seller :("}), 400
 
     # Recupera i dettagli per la transazione
     payment_service_url = "http://payment_service:5006/pay"
