@@ -41,6 +41,10 @@ PROFILE_IMAGE_URL = 'http://profile_setting:5003/uploads/'
 BUYCURRENCY_URL = 'http://payment_service:5006/buycurrency'
 
 
+import time
+import requests
+from flask import Flask, jsonify, make_response, request
+
 class CircuitBreaker:
     def __init__(self, failure_threshold=3, recovery_timeout=5, reset_timeout=10):
         self.failure_threshold = failure_threshold  # Soglia di fallimento
@@ -50,32 +54,36 @@ class CircuitBreaker:
         self.last_failure_time = 0                  # Ultimo tempo in cui si è verificato un fallimento
         self.state = 'CLOSED'                       # Stato iniziale del circuito (CLOSED)
 
-    def call(self, method, url, params=None, headers=None, json=True):
+    def call(self, method, url, params=None, headers=None, files=None, json=True):
         if self.state == 'OPEN':
             # Se il circuito è aperto, controlla se è il momento di provare di nuovo
             if time.time() - self.last_failure_time > self.reset_timeout:
                 print("Circuito mezzo aperto, tentando...")
                 self.state = 'HALF_OPEN'
             else:
-                return jsonify({'Error' : 'Open circuit, try again later'})
+                return jsonify({'Error': 'Open circuit, try again later'}), 503  # ritorna un errore 503
 
         try:
             # Usa requests.request per specificare il metodo dinamicamente
             if json:
                 response = requests.request(method, url, json=params, headers=headers)
             else:
-                response = requests.request(method, url, data=params, headers=headers)
+                response = requests.request(method, url, data=params, headers=headers, files=files)
             
             response.raise_for_status()  # Solleva un'eccezione per errori HTTP (4xx, 5xx)
-            self._reset()  # Se la chiamata ha successo, resetta il contatore degli errori
-            return response.json()  # Ritorna il contenuto JSON
-        except Exception as e:
-            self._fail()
-            return jsonify({'Error':f'Error calling the service {e}'})
 
-    
+            # Verifica se la risposta è un'immagine
+            if 'image' in response.headers.get('Content-Type', ''):
+                return response.content, response.status_code  # Restituisce il contenuto dell'immagine
+
+            return response.json(), response.status_code  # Restituisce il corpo della risposta come JSON
+
+        except requests.exceptions.RequestException as e:
+            # Se ci sono errori nella richiesta, incrementa il contatore di fallimento
+            self._fail()
+            return jsonify({'Error': f'Error calling the service: {e}'}), 500
+
     def _fail(self):
-        
         self.failure_count += 1
         self.last_failure_time = time.time()
         if self.failure_count >= self.failure_threshold:
@@ -83,14 +91,20 @@ class CircuitBreaker:
             self.state = 'OPEN'
 
     def _reset(self):
-        
         self.failure_count = 0
         self.state = 'CLOSED'
 
+
+# Inizializzazione dei circuit breakers
 auth_circuit_breaker = CircuitBreaker()
+gacha_sys_circuit_breaker = CircuitBreaker()
+auction_circuit_breaker = CircuitBreaker()
+gacha_roll_circuit_breaker = CircuitBreaker()
+profile_circuit_breaker = CircuitBreaker()
+payment_circuit_breaker = CircuitBreaker()
 
 
-#Per gestione immagini
+# Per gestione immagini
 def get_mime_type(extension):
     mime_types = {
         'jpg': 'image/jpeg',
@@ -102,66 +116,56 @@ def get_mime_type(extension):
     }
     return mime_types.get(extension.lower(), 'application/octet-stream')  # Tipo predefinito se non trovato
 
+
 app = Flask(__name__, instance_relative_config=True)
+
 def create_app():
     return app
 
 @app.route('/auth_service/<op>', methods=['POST', 'DELETE'])
 def auth(op):
     if op not in ALLOWED_AUTH_OP:
-        return make_response(f'Invalid operation {op}'),400
+        return make_response(f'Invalid operation {op}'), 400
+    
+    # Preparazione dei parametri in base all'operazione
     if op == 'signup':
-        #Dati che arrivano al gateway da un form lato client
         username = request.form.get('username')
         password = request.form.get('password')
         email = request.form.get('email')
         url = SINGUP_URL
-        params = { 
-            'username' : username,
-            'password' : password,
-            'email' : email
-            }
-    elif op =='login':
+        params = {'username': username, 'password': password, 'email': email}
+    elif op == 'login':
         username = request.form.get('username')
         password = request.form.get('password')
         url = LOGIN_URL
-        params = { 
-            'username' : username,
-            'password' : password,
-            }
+        params = {'username': username, 'password': password}
     elif op == 'delete':
         username = request.form.get('username')
         password = request.form.get('password')
         url = DELETE_URL
-        params = { 
-            'username' : username,
-            'password' : password,
-            }
+        params = {'username': username, 'password': password}
     elif op == 'logout':
         url = LOGOUT_URL
         params = {}
         jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
-        headers = {
-            'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
-        }
+        headers = {'Authorization': jwt_token}  # Usa il token JWT ricevuto nell'header della richiesta
+
     try:
-        if(op == 'login' or op=='signup'):
-            #x = requests.post(url, json=params, timeout=10)
-            x=auth_circuit_breaker.call('post', url, params, {}, True)
-        elif (op == 'logout'):
-            # x = requests.delete(url, headers=headers, timeout=10)
-            x=auth_circuit_breaker.call('delete', url, {}, headers, False)
+        # Chiamata al servizio in base all'operazione
+        if op in ['login', 'signup']:
+            x, status_code = auth_circuit_breaker.call('POST', url, params, {}, {}, True)
+        elif op == 'logout':
+            x, status_code = auth_circuit_breaker.call('DELETE', url, {}, headers, {}, False)
         else:
-            # x = requests.delete(url, json=params, timeout=10)
-            x=auth_circuit_breaker.call('delete', url, params, {}, True)
-        #x.raise_for_status()
-        # res = x.json()
-      # Gestione della risposta
-        return x
+            x, status_code = auth_circuit_breaker.call('DELETE', url, params, {}, {}, True)
+
+        # Restituisci la risposta del servizio con il codice di stato appropriato
+        return make_response(jsonify(x), status_code)
+
     except requests.ConnectionError:
         return make_response("Authentication Service is unreachable. Please try again later.", 500)
     except requests.HTTPError as e:
-        # Ritorna il contenuto e lo status code dell'errore
+        # Gestione di errori HTTP specifici
         return make_response(e.response.text, e.response.status_code)
     except Exception as e:
         # Gestione di errori generici
@@ -171,391 +175,241 @@ def auth(op):
 @app.route('/profile_setting/<op>', methods=['GET', 'PATCH'])
 def profile_setting(op):
     if op not in ALLOWED_PROF_OP:
-        return make_response(f'Invalid operation {op}'),400
-    if op == 'modify_profile':
-        #Dati che arrivano al gateway da un form lato client
-        username = request.form.get('username')
-        value = request.form.get('value')
-        field = request.form.get('field')
-        file = request.files['image']
-        files = {'image': (file.filename, file.stream, file.mimetype)}
-        url = MODIFY_URL
-        params = { 
-            'username' : username,
-            'field' : field,
-            'value' : value
-            }
-    elif op =='checkprofile':
-        username = request.args.get('username')
-        url = CHECK_URL + f"?username={username}"
-        jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
-        headers = {
-            'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
-        }
-    elif op == 'retrieve_gachacollection':
-        username = request.args.get('username')
-        url = RETRIEVE_URL + f"?username={username}"
-        jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
-        headers = {
-            'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
-        }
-    elif op == 'info_gachacollection':
-        username = request.args.get('username')
-        gacha_id = request.args.get('gacha_id')
-        url = RETRIEVE_URL + f"?username={username}&gacha_id={gacha_id}"
-        jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
-        headers = {
-            'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
-        }
+        return make_response(f'Invalid operation {op}'), 400
     try:
-        if(op == 'modify_profile'):
-            x = requests.patch(url, data=params, files=files, timeout=10)
+        if op == 'modify_profile':
+            # Dati che arrivano al gateway da un form lato client
+            username = request.form.get('username')
+            value = request.form.get('value')
+            field = request.form.get('field')
+            file = request.files['image']
+            files = {'image': (file.filename, file.stream, file.mimetype)}
+            url = MODIFY_URL
+            params = {
+                'username': username,
+                'field': field,
+                'value': value
+            }
+            response, status_code = profile_circuit_breaker.call('PATCH', url, params, {}, files, False)
+        elif op == 'checkprofile':
+            username = request.args.get('username')
+            url = CHECK_URL + f"?username={username}"
+            jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
+            headers = {
+                'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
+            }
+            response, status_code = profile_circuit_breaker.call('GET', url, {}, headers, {}, False)
+        elif op == 'retrieve_gachacollection':
+            username = request.args.get('username')
+            url = RETRIEVE_URL + f"?username={username}"
+            jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
+            headers = {
+                'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
+            }
+            response, status_code = profile_circuit_breaker.call('GET', url, {}, headers, {}, False)
+        elif op == 'info_gachacollection':
+            username = request.args.get('username')
+            gacha_id = request.args.get('gacha_id')
+            url = RETRIEVE_URL + f"?username={username}&gacha_id={gacha_id}"
+            jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
+            headers = {
+                'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
+            }
+            response, status_code = profile_circuit_breaker.call('GET', url, {}, headers, {}, False)
         else:
-            x = requests.get(url, headers=headers, timeout=10)
-        x.raise_for_status()
-        res = x.json()
-        return res
-    except requests.exceptions.Timeout:
-        return jsonify({"Error": "Time out expired"}), 408
-    except ConnectionError:
-        try:
-            if(op == 'modify_profile'):
-                x = requests.patch(url, data=params, files=files, timeout=10)
-            else:
-                x = requests.get(url, headers=headers, timeout=10)
-            x.raise_for_status()
-            res = x.json()
-            return res
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except ConnectionError:
-            return make_response("Profile Service is down\n",404)
-        except HTTPError:
-            return make_response(x.content, x.status_code)
-        return res
-    except HTTPError:
-        return make_response(x.content, x.status_code)
+            return make_response(f'Invalid operation {op}'), 400
+
+        # Restituisci la risposta del servizio con il codice di stato appropriato
+        return make_response(jsonify(response), status_code)
+    
+    except requests.ConnectionError:
+        return make_response("Profile Service is unreachable. Please try again later.", 500)
+    except requests.HTTPError as e:
+        # Ritorna il contenuto e lo status code dell'errore
+        return make_response(e.response.text, e.response.status_code)
+    except Exception as e:
+        # Gestione di errori generici
+        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+
 
 @app.route('/auction_service/<op>', methods=['GET', 'POST', 'PATCH'])
 def auction_service(op):
     if op not in ALLOWED_AUCTION_OP:
         return jsonify({"error": f"Invalid operation '{op}'"}), 400
 
-    # Operazione "see"
-    if op == 'see':
-        auction_id = request.args.get('auction_id')  # Recupera auction_id dai parametri della query
-        status = request.args.get('status', 'active')  # Status predefinito a 'active'
+    try:
+        # Operazione "see"
+        if op == 'see':
+            auction_id = request.args.get('auction_id')  # Recupera auction_id dai parametri della query
+            status = request.args.get('status', 'active')  # Status predefinito a 'active'
 
-        # Costruisce l'URL con i parametri corretti
-        url = f'{SEE_AUCTION_URL}?status={status}'
-        if auction_id:
-            url += f'&auction_id={auction_id}'
+            # Costruisce l'URL con i parametri corretti
+            url = f'{SEE_AUCTION_URL}?status={status}'
+            if auction_id:
+                url += f'&auction_id={auction_id}'
 
-        try:
-            response = requests.get(url, timeout=10)
-            response.raise_for_status()
-            return jsonify(response.json())  # Wrappa la lista in jsonify
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except ConnectionError:
-            return jsonify({"error": "Auction Service is down"}), 404
-        except HTTPError as e:
-            return jsonify({"error": str(e)}), response.status_code
+            response, status_code = auction_circuit_breaker.call('get', url, {}, {}, {}, False)
+            return make_response(jsonify(response), status_code)
 
-    # Operazione "create"
-    elif op == 'create':
-        try:
+        # Operazione "create"
+        elif op == 'create':
             data = request.get_json()  # Recupera i parametri dal corpo JSON
-            seller_username = data.get('seller_username')  # Corretto da seller_id a seller_username
-            gacha_name = data.get('gacha_name')  # Corretto da gacha_id a gacha_name
+            seller_username = data.get('seller_username')
+            gacha_name = data.get('gacha_name')
             base_price = data.get('basePrice')
             end_date = data.get('endDate')
 
-            # Verifica che tutti i parametri richiesti siano presenti
             if not all([seller_username, gacha_name, base_price, end_date]):
                 return jsonify({"error": "Missing required parameters"}), 400
 
             url = CREATE_AUCTION_URL
-            response = requests.post(url, json=data, timeout=10)
-            response.raise_for_status()
-            return jsonify(response.json())  # Wrappa la risposta in jsonify
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except ConnectionError:
-            return jsonify({"error": "Auction Service is down"}), 404
-        except HTTPError as e:
-            return jsonify({"error": str(e)}), response.status_code
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            response, status_code = auction_circuit_breaker.call('post', url, data, {}, {}, True)
+            return make_response(jsonify(response), status_code)
 
-    elif op == 'modify':
-        # Recupera i parametri dal JSON del client
-        data = request.get_json()  
-        auction_id = data.get('auction_id')
-        seller_username = data.get('seller_username')  # Corretto da seller_id a seller_username
-        gacha_name = data.get('gacha_name')         # Corretto da gacha_id a gacha_name
-        base_price = data.get('basePrice')
-        end_date = data.get('endDate')
+        # Operazione "modify"
+        elif op == 'modify':
+            data = request.get_json()
+            auction_id = data.get('auction_id')
+            seller_username = data.get('seller_username')
+            gacha_name = data.get('gacha_name')
+            base_price = data.get('basePrice')
+            end_date = data.get('endDate')
 
-        # Controlla che auction_id sia presente
-        if not auction_id:
-            return jsonify({"error": "Auction ID is required"}), 400
+            if not auction_id:
+                return jsonify({"error": "Auction ID is required"}), 400
 
-        # Costruisce l'URL con i parametri come query string
-        url = f'{MODIFY_AUCTION_URL}?auction_id={auction_id}'
-        if seller_username:
-            url += f'&seller_username={seller_username}'
-        if gacha_name:
-            url += f'&gacha_name={gacha_name}'
-        if base_price:
-            url += f'&basePrice={base_price}'
-        if end_date:
-            url += f'&endDate={end_date}'
+            url = f'{MODIFY_AUCTION_URL}?auction_id={auction_id}'
+            if seller_username:
+                url += f'&seller_username={seller_username}'
+            if gacha_name:
+                url += f'&gacha_name={gacha_name}'
+            if base_price:
+                url += f'&basePrice={base_price}'
+            if end_date:
+                url += f'&endDate={end_date}'
 
-        try:
-            response = requests.patch(url, timeout=10)  # Nessun JSON, tutto passa come query string
-            response.raise_for_status()
-            return jsonify(response.json())  # Wrappa la risposta in jsonify    
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except ConnectionError:
-            return jsonify({"error": "Auction Service is down"}), 404
-        except HTTPError as e:
-            return jsonify({"error": str(e)}), response.status_code
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            response, status_code = auction_circuit_breaker.call('patch', url, {}, {}, {}, False)
+            return make_response(jsonify(response), status_code)
 
+        # Operazione "bid"
+        elif op == 'bid':
+            username = request.args.get('username')
+            auction_id = request.args.get('auction_id')
+            new_bid = request.args.get('newBid', type=float)
 
-    # Operazione "bid"
-    elif op == 'bid':
-        # Recupera i parametri dalla query string
-        username = request.args.get('username')
-        auction_id = request.args.get('auction_id')
-        new_bid = request.args.get('newBid', type=float)
+            if not all([username, auction_id, new_bid]):
+                return jsonify({"error": "Missing required parameters"}), 400
 
-        # Verifica che tutti i parametri richiesti siano presenti
-        if not all([username, auction_id, new_bid]):
-            return jsonify({"error": "Missing required parameters"}), 400
+            url = f'{AUCTION_BASE_URL}/bid?username={username}&auction_id={auction_id}&newBid={new_bid}'
+            response, status_code = auction_circuit_breaker.call('patch', url, {}, {}, {}, False)
+            return make_response(jsonify(response), status_code)
 
-        # Costruisce l'URL con i parametri della query string
-        url = f'{AUCTION_BASE_URL}/bid?username={username}&auction_id={auction_id}&newBid={new_bid}'
-
-        try:
-            # Effettua la richiesta PATCH all’Auction Service
-            response = requests.patch(url, timeout=10)
-            response.raise_for_status()
-            return jsonify(response.json())  # Wrappa la risposta in jsonify
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except requests.ConnectionError:
-            return jsonify({"error": "Auction Service is down"}), 404
-        except requests.HTTPError as e:
-            return jsonify({"error": f"HTTP Error: {str(e)}"}), response.status_code
-        except Exception as e:
-            return jsonify({"error": f"Unexpected Error: {str(e)}"}), 500
-
-        
         # Operazione "gacha_receive"
-    elif op == 'gacha_receive':
-        try:
-            # Recupera i parametri dal corpo JSON della richiesta
+        elif op == 'gacha_receive':
             data = request.get_json()
             auction_id = data.get('auction_id')
             winner_username = data.get('winner_username')
             gacha_name = data.get('gacha_name')
 
-            # Controlla che tutti i parametri richiesti siano presenti
             if not all([auction_id, winner_username, gacha_name]):
                 return jsonify({"error": "Missing required parameters"}), 400
 
-            # Effettua la richiesta al servizio Auction
             url = f'{AUCTION_BASE_URL}/gacha_receive'
-            response = requests.post(url, json=data, timeout=10)
-            response.raise_for_status()
-            return jsonify(response.json())  # Wrappa la risposta in jsonify
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except requests.ConnectionError:
-            return jsonify({"error": "Auction Service is down"}), 404
-        except requests.HTTPError as e:
-            return jsonify({"error": f"HTTP Error: {str(e)}"}), response.status_code
-        except Exception as e:
-            return jsonify({"error": f"Unexpected Error: {str(e)}"}), 500
+            response, status_code = auction_circuit_breaker.call('post', url, data, {}, {}, True)
+            return make_response(jsonify(response), status_code)
 
-    # Operazione "auction_lost"
-    elif op == 'auction_lost':
-        try:
-            # Recupera i parametri dal corpo JSON della richiesta
+        # Operazione "auction_lost"
+        elif op == 'auction_lost':
             data = request.get_json()
             auction_id = data.get('auction_id')
 
-            # Controlla che l'ID dell'asta sia presente
             if not auction_id:
                 return jsonify({"error": "Missing auction_id"}), 400
 
-            # Effettua la richiesta al servizio Auction
             url = f'{AUCTION_BASE_URL}/auction_lost'
-            response = requests.post(url, json=data, timeout=10)
-            response.raise_for_status()
-            return jsonify(response.json())  # Wrappa la risposta in jsonify
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except requests.ConnectionError:
-            return jsonify({"error": "Auction Service is down"}), 404
-        except requests.HTTPError as e:
-            return jsonify({"error": f"HTTP Error: {str(e)}"}), response.status_code
-        except Exception as e:
-            return jsonify({"error": f"Unexpected Error: {str(e)}"}), 500
-        
+            response, status_code = auction_circuit_breaker.call('post', url, data, {}, {}, True)
+            return make_response(jsonify(response), status_code)
+
         # Operazione "auction_terminated"
-    elif op == 'auction_terminated':
-        try:
-            # Recupera i parametri dal corpo JSON della richiesta
+        elif op == 'auction_terminated':
             data = request.get_json()
             auction_id = data.get('auction_id')
 
-            # Verifica che auction_id sia presente
             if not auction_id:
                 return jsonify({"error": "Missing auction_id"}), 400
 
-            # Costruisce l'URL per il servizio Auction
             url = f'{AUCTION_BASE_URL}/auction_terminated'
+            response, status_code = auction_circuit_breaker.call('post', url, data, {}, {}, True)
+            return make_response(jsonify(response), status_code)
 
-            # Effettua la richiesta al servizio Auction
-            response = requests.post(url, json=data, timeout=10)
-            response.raise_for_status()
-            return jsonify(response.json())  # Wrappa la risposta in jsonify
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except requests.ConnectionError:
-            return jsonify({"error": "Auction Service is down"}), 404
-        except requests.HTTPError as e:
-            return jsonify({"error": f"HTTP Error: {str(e)}"}), response.status_code
-        except Exception as e:
-            return jsonify({"error": f"Unexpected Error: {str(e)}"}), 500
-    
+        else:
+            return jsonify({"error": f"Unknown operation '{op}'"}), 400
+
+    except requests.ConnectionError:
+        return make_response("Auction Service is unreachable. Please try again later.", 500)
+    except requests.HTTPError as e:
+        return make_response(e.response.text, e.response.status_code)
+    except Exception as e:
+        return make_response(f"An unexpected error occurred: {str(e)}", 500)
 
 
 @app.route('/gacha_roll/<op>', methods=['POST'])
 def gacha_roll(op):
     if op != 'gacharoll':
-        return make_response(f'Invalid operation {op}'),400
+        return make_response(f'Invalid operation {op}', 400)
     data = request.get_json()
-    #Dati che arrivano al gateway da un form lato client
     username = data.get('username')
     level = data.get('level')
     url = GACHAROLL_URL
-    params = { 
-        'username' : username,
-        'level' : level
-        }
+    params = {
+        'username': username,
+        'level': level
+    }
     try:
-        x = requests.post(url, json=params, timeout=10)
-        x.raise_for_status()
-        res = x.json()
-        return res
-    except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
+        response, status = gacha_roll_circuit_breaker.call('post', url, params, {}, {}, True)
+        return jsonify(response), status
     except ConnectionError:
-        try:
-            x = requests.post(url, json=params, timeout=10)
-            x.raise_for_status()
-            res = x.json()
-            return res
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except ConnectionError:
-            return make_response("Gacha Roll Service is down\n",404)
-        except HTTPError:
-            return make_response(x.content, x.status_code)
-        return res
-    except HTTPError:
-        return make_response(x.content, x.status_code)
-    
+        return make_response("Gacha Roll Service is unreachable. Please try again later.", 500)
+    except Exception as e:
+        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+
+
 @app.route('/image_gacha/uploads/<name>', methods=['GET'])
 def gacha_image(name):
     url = GACHA_IMAGE_URL + name
-    file_extension = os.path.splitext(name)[1][1:]  # Rimuovi il punto e ottieni l'estensione
-    # Determina il tipo MIME in base all'estensione
+    file_extension = os.path.splitext(name)[1][1:]
     mime_type = get_mime_type(file_extension)
     try:
-        x = requests.get(url, timeout=10)
-        if x.status_code == 200:
-            # Create an in-memory file object
-            file = BytesIO(x.content)
-            
-            # Return the file to the client (forward the file)
+        content, status = gacha_sys_circuit_breaker.call('get', url, {}, {}, {}, False)
+        if status == 200:
+            file = BytesIO(content)
             return send_file(file, mimetype=mime_type)
-        
         else:
-            # Return a 404 if the file was not found in the service
             return jsonify({"error": "File not found"}), 404
-    except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
     except ConnectionError as e:
-        try:
-            x = requests.get(url, timeout=10)
-            if x.status_code == 200:
-                # Create an in-memory file object
-                file = BytesIO(x.content)
-                
-                # Return the file to the client (forward the file)
-                return send_file(file, mimetype=mime_type)
-            else:
-                # Return a 404 if the file was not found in the service
-                return jsonify({"error": "File not found"}), 404
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except ConnectionError as e:
-            # Handle any error that occurs while contacting the service
-            return jsonify({"error": str(e)}), 500
-        except HTTPError:
-            return make_response(x.content, x.status_code)
-    except HTTPError:
-        return make_response(x.content, x.status_code)
-    
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+
+
 @app.route('/image_profile/uploads/<name>', methods=['GET'])
 def profile_image(name):
     url = PROFILE_IMAGE_URL + name
-    file_extension = os.path.splitext(name)[1][1:]  # Rimuovi il punto e ottieni l'estensione
-    # Determina il tipo MIME in base all'estensione
+    file_extension = os.path.splitext(name)[1][1:]
     mime_type = get_mime_type(file_extension)
     try:
-        x = requests.get(url, timeout=10)
-        if x.status_code == 200:
-            # Create an in-memory file object
-            file = BytesIO(x.content)
-            
-            # Return the file to the client (forward the file)
+        content, status = profile_circuit_breaker.call('get', url, {}, {}, {}, False)
+        if status == 200:
+            file = BytesIO(content)
             return send_file(file, mimetype=mime_type)
-        
         else:
-            # Return a 404 if the file was not found in the service
             return jsonify({"error": "File not found"}), 404
-    except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
     except ConnectionError as e:
-        try:
-            x = requests.get(url, timeout=10)
-            if x.status_code == 200:
-                # Create an in-memory file object
-                file = BytesIO(x.content)
-                
-                # Return the file to the client (forward the file)
-                return send_file(file, mimetype=mime_type)
-            else:
-                # Return a 404 if the file was not found in the service
-                return jsonify({"error": "File not found"}), 404
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except ConnectionError as e:
-            # Handle any error that occurs while contacting the service
-            return jsonify({"error": str(e)}), 500
-        except HTTPError:
-            return make_response(x.content, x.status_code)
-    except HTTPError:
-        return make_response(x.content, x.status_code)
-    
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+
+
 @app.route('/payment_service/buycurrency', methods=['POST'])
 def buycurrency():
     username = request.form.get('username')
@@ -563,110 +417,67 @@ def buycurrency():
     method = request.form.get('payment_method')
 
     url = BUYCURRENCY_URL
-    params ={
-        'username' : username,
-        'amount' : amount,
-        'payment_method' : method
+    params = {
+        'username': username,
+        'amount': amount,
+        'payment_method': method
     }
     try:
-        x = requests.post(url, json=params, timeout=10)
-        x.raise_for_status()
-        res = x.json()
-        return res
-    except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
+        response, status = payment_circuit_breaker.call('post', url, params, {}, {}, True)
+        return jsonify(response), status
     except ConnectionError:
-        try:
-            x = requests.post(url, json=params, timeout=10)
-            x.raise_for_status()
-            res = x.json()
-            return res
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except ConnectionError:
-            return make_response("Gacha Roll Service is down\n",404)
-        except HTTPError:
-            return make_response(x.content, x.status_code)
-        return res
-    except HTTPError:
-        return make_response(x.content, x.status_code)
-    
-@app.route('/gachasystem_service/<op>', methods=['POST', 'DELETE', 'PATCH','GET'])
+        return make_response("Payment Service is unreachable. Please try again later.", 500)
+    except Exception as e:
+        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+
+
+@app.route('/gachasystem_service/<op>', methods=['POST', 'DELETE', 'PATCH', 'GET'])
 def gachasystem(op):
     if op not in ALLOWED_GACHA_SYS_OP:
-        return make_response(f'Invalid operation {op}'),400
+        return make_response(f'Invalid operation {op}', 400)
+
     if op == 'add_gacha':
-        #Dati che arrivano al gateway da un form lato client
         gacha_name = request.form.get('gacha_name')
         rarity = request.form.get('rarity')
         description = request.form.get('description')
         file = request.files['image']
         files = {'image': (file.filename, file.stream, file.mimetype)}
         url = ADD_URL
-        params = { 
-            'gacha_name' : gacha_name,
-            'rarity' : rarity,
-            'description' : description
-            }
-    elif op =='delete_gacha':
+        params = {
+            'gacha_name': gacha_name,
+            'rarity': rarity,
+            'description': description
+        }
+    elif op == 'delete_gacha':
         gacha_name = request.form.get('gacha_name')
         url = DELETE_GACHA_URL
-        params={
-            'gacha_name': gacha_name
-        }
+        params = {'gacha_name': gacha_name}
     elif op == 'update_gacha':
-        #Dati che arrivano al gateway da un form lato client
         gacha_name = request.form.get('gacha_name')
         rarity = request.form.get('rarity')
         description = request.form.get('description')
         url = UPDATE_GACHA_URL
-        params = { 
-            'gacha_name' : gacha_name,
-            'rarity' : rarity,
-            'description' : description
-            }
+        params = {
+            'gacha_name': gacha_name,
+            'rarity': rarity,
+            'description': description
+        }
     elif op == 'get_gacha_collection':
-        params={}
-        url= GET_GACHA_COLL_URL
+        params = {}
+        url = GET_GACHA_COLL_URL
+
     try:
-        if(op == 'add_gacha'):
-            x = requests.post(url, data=params, files=files, timeout=10)
-        elif(op == 'delete_gacha'):
-            x = requests.delete(url, json=params, timeout=10)
-        elif(op == 'update_gacha'):
-            x = requests.patch(url, json=params, timeout=10)
-        elif(op == 'get_gacha_collection'):
-            x = requests.get(url, json=params, timeout=10)
-            x.raise_for_status()
-            res = x.json()
-            return jsonify(res)
-        x.raise_for_status()
-        res = x.json()
-        return res
-    except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
+        if op == 'add_gacha':
+            response, status = gacha_sys_circuit_breaker.call('post', url, params, {}, files, False)
+        elif op == 'delete_gacha':
+            response, status = gacha_sys_circuit_breaker.call('delete', url, params, {}, {}, True)
+        elif op == 'update_gacha':
+            response, status = gacha_sys_circuit_breaker.call('patch', url, params, {}, {}, True)
+        elif op == 'get_gacha_collection':
+            response, status = gacha_sys_circuit_breaker.call('get', url, params, {}, {}, True)
+            return jsonify(response), status
+        return jsonify(response), status
     except ConnectionError:
-        try:
-            if(op == 'add_gacha'):
-                x = requests.post(url, data=params, files=files, timeout=10)
-            elif(op == 'delete_gacha'):
-                x = requests.delete(url, json=params, timeout=10)
-            elif(op == 'update_gacha'):
-                x = requests.patch(url, json=params, timeout=10)
-            elif(op == 'get_gacha_collection'):
-                x = requests.get(url, json=params, timeout=10)
-                x.raise_for_status()
-                res = x.json()
-                return jsonify(res)
-            x.raise_for_status()
-            res = x.json()
-            return res
-        except requests.exceptions.Timeout:
-            return jsonify({"Error": "Time out expired"}), 408
-        except ConnectionError:
-            return make_response("Gacha System Service is down\n",404)
-        except HTTPError:
-            return make_response(x.content, x.status_code)
-        return res
-    except HTTPError:
-        return make_response(x.content, x.status_code)
+        return make_response("Gacha System Service is unreachable. Please try again later.", 500)
+    except Exception as e:
+        return make_response(f"An unexpected error occurred: {str(e)}", 500)
