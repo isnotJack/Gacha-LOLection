@@ -8,6 +8,8 @@ from sqlalchemy import func
 #from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
+from apscheduler.schedulers.background import BackgroundScheduler
+
 
 
 
@@ -59,8 +61,58 @@ class Bid(db.Model):
 
     auction = db.relationship('Auction', backref=db.backref('bids', cascade='all, delete'))
 
+# Definizione di check_and_close_auctions
+def check_and_close_auctions():
+    with app.app_context():
+        # Trova tutte le aste attive la cui data di fine è scaduta
+        expired_auctions = Auction.query.filter(Auction.status == 'active', Auction.end_date <= datetime.now()).all()
 
+        for auction in expired_auctions:
+            if auction.current_bid == 0:
+                # Nessun partecipante: chiamare solo gacha_receive
+                payload = {"auction_id": auction.id}
+                try:
+                    response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
+                    response.raise_for_status()
+                except requests.RequestException as e:
+                    app.logger.error(f"Errore durante gacha_receive per l'asta {auction.id}: {str(e)}")
+            else:
+                # Con partecipanti: chiamare tutte le funzioni
+                payload = {"auction_id": auction.id}
+                try:
+                    # Gacha Receive per trasferire il gacha al vincitore
+                    gacha_response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
+                    gacha_response.raise_for_status()
+                except requests.RequestException as e:
+                    app.logger.error(f"Errore durante gacha_receive per l'asta {auction.id}: {str(e)}")
 
+                try:
+                    # Refund dei partecipanti perdenti
+                    lost_response = requests.post(f"http://auction_service:5008/auction_lost", json=payload, timeout=10)
+                    lost_response.raise_for_status()
+                except requests.RequestException as e:
+                    app.logger.error(f"Errore durante auction_lost per l'asta {auction.id}: {str(e)}")
+
+                try:
+                    # Trasferire i fondi al venditore
+                    terminated_response = requests.post(f"http://auction_service:5008/auction_terminated", json=payload, timeout=10)
+                    terminated_response.raise_for_status()
+                except requests.RequestException as e:
+                    app.logger.error(f"Errore durante auction_terminated per l'asta {auction.id}: {str(e)}")
+
+            # Cambia lo stato dell'asta a 'closed'
+            auction.status = 'closed'
+            db.session.commit()
+            app.logger.info(f"Asta {auction.id} chiusa correttamente.")
+
+# Configurazione dello Scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=check_and_close_auctions, trigger="interval", seconds=60)  # Controlla ogni minuto
+
+@app.before_first_request
+def start_scheduler():
+    if not scheduler.running:
+        scheduler.start()
 
 @app.route('/see', methods=['GET'])
 def see_auctions():
