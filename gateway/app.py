@@ -58,8 +58,9 @@ class CircuitBreaker:
         if self.state == 'OPEN':
             # Se il circuito è aperto, controlla se è il momento di provare di nuovo
             if time.time() - self.last_failure_time > self.reset_timeout:
-                print("Circuito mezzo aperto, tentando...")
-                self.state = 'HALF_OPEN'
+                print("Closing the circuit")
+                self.state = 'CLOSED'
+                self._reset()
             else:
                 return jsonify({'Error': 'Open circuit, try again later'}), 503  # ritorna un errore 503
 
@@ -77,11 +78,17 @@ class CircuitBreaker:
                 return response.content, response.status_code  # Restituisce il contenuto dell'immagine
 
             return response.json(), response.status_code  # Restituisce il corpo della risposta come JSON
+        
+        except requests.exceptions.HTTPError as e:
+            # In caso di errore HTTP, restituisci il contenuto della risposta (se disponibile)
+            error_content = response.text if response else str(e)
+            self._fail()
+            return {'Error': error_content}, response.status_code
 
         except requests.exceptions.RequestException as e:
-            # Se ci sono errori nella richiesta, incrementa il contatore di fallimento
+            # Per errori di connessione o altri problemi
             self._fail()
-            return jsonify({'Error': f'Error calling the service: {e}'}), 500
+            return {'Error': f'Error calling the service: {str(e)}'}, response.status_code
 
     def _fail(self):
         self.failure_count += 1
@@ -150,26 +157,29 @@ def auth(op):
         jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
         headers = {'Authorization': jwt_token}  # Usa il token JWT ricevuto nell'header della richiesta
 
-    try:
-        # Chiamata al servizio in base all'operazione
-        if op in ['login', 'signup']:
-            x, status_code = auth_circuit_breaker.call('POST', url, params, {}, {}, True)
-        elif op == 'logout':
-            x, status_code = auth_circuit_breaker.call('DELETE', url, {}, headers, {}, False)
-        else:
-            x, status_code = auth_circuit_breaker.call('DELETE', url, params, {}, {}, True)
+    # try:
+    # Chiamata al servizio in base all'operazione
+    if op in ['login', 'signup']:
+        x, status_code = auth_circuit_breaker.call('POST', url, params, {}, {}, True)
+    elif op == 'logout':
+        x, status_code = auth_circuit_breaker.call('DELETE', url, {}, headers, {}, False)
+    else:
+        x, status_code = auth_circuit_breaker.call('DELETE', url, params, {}, {}, True)
 
+    if status_code == 200:
         # Restituisci la risposta del servizio con il codice di stato appropriato
         return make_response(jsonify(x), status_code)
+    else:
+        return jsonify({'Error' : f'Error during signup {x}'}), status_code
 
-    except requests.ConnectionError:
-        return make_response("Authentication Service is unreachable. Please try again later.", 500)
-    except requests.HTTPError as e:
-        # Gestione di errori HTTP specifici
-        return make_response(e.response.text, e.response.status_code)
-    except Exception as e:
-        # Gestione di errori generici
-        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+    # except requests.ConnectionError:
+    #     return make_response("Authentication Service is unreachable. Please try again later.", 500)
+    # except requests.HTTPError as e:
+    #     # Gestione di errori HTTP specifici
+    #     return make_response(e.response.text, e.response.status_code)
+    # except Exception as e:
+    #     # Gestione di errori generici
+    #     return jsonify({'Error': f'{str(e)}'}), status_code
 
 
 @app.route('/profile_setting/<op>', methods=['GET', 'PATCH'])
@@ -374,7 +384,7 @@ def gacha_roll(op):
         return make_response(f"An unexpected error occurred: {str(e)}", 500)
 
 
-@app.route('/image_gacha/uploads/<name>', methods=['GET'])
+@app.route('/images_gacha/uploads/<name>', methods=['GET'])
 def gacha_image(name):
     url = GACHA_IMAGE_URL + name
     file_extension = os.path.splitext(name)[1][1:]
@@ -392,7 +402,7 @@ def gacha_image(name):
         return make_response(f"An unexpected error occurred: {str(e)}", 500)
 
 
-@app.route('/image_profile/uploads/<name>', methods=['GET'])
+@app.route('/images_profile/uploads/<name>', methods=['GET'])
 def profile_image(name):
     url = PROFILE_IMAGE_URL + name
     file_extension = os.path.splitext(name)[1][1:]

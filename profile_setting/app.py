@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 import requests
-import os
+import os, time
 from requests.exceptions import ConnectionError, HTTPError
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -21,6 +21,67 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+
+class CircuitBreaker:
+    def __init__(self, failure_threshold=3, recovery_timeout=5, reset_timeout=10):
+        self.failure_threshold = failure_threshold  # Soglia di fallimento
+        self.recovery_timeout = recovery_timeout      # Tempo di recupero tra i tentativi
+        self.reset_timeout = reset_timeout          # Tempo massimo di attesa prima di ripristinare il circuito
+        self.failure_count = 0                      # Numero di fallimenti consecutivi
+        self.last_failure_time = 0                  # Ultimo tempo in cui si è verificato un fallimento
+        self.state = 'CLOSED'                       # Stato iniziale del circuito (CLOSED)
+
+    def call(self, method, url, params=None, headers=None, files=None, json=True):
+        if self.state == 'OPEN':
+            # Se il circuito è aperto, controlla se è il momento di provare di nuovo
+            if time.time() - self.last_failure_time > self.reset_timeout:
+                print("Closing the circuit")
+                self.state = 'CLOSED'
+                self._reset()
+            else:
+                return jsonify({'Error': 'Open circuit, try again later'}), 503  # ritorna un errore 503
+
+        try:
+            # Usa requests.request per specificare il metodo dinamicamente
+            if json:
+                response = requests.request(method, url, json=params, headers=headers)
+            else:
+                response = requests.request(method, url, data=params, headers=headers, files=files)
+            
+            response.raise_for_status()  # Solleva un'eccezione per errori HTTP (4xx, 5xx)
+
+            # Verifica se la risposta è un'immagine
+            if 'image' in response.headers.get('Content-Type', ''):
+                return response.content, response.status_code  # Restituisce il contenuto dell'immagine
+
+            return response.json(), response.status_code  # Restituisce il corpo della risposta come JSON
+
+        except requests.exceptions.HTTPError as e:
+            # In caso di errore HTTP, restituisci il contenuto della risposta (se disponibile)
+            error_content = response.text if response else str(e)
+            self._fail()
+            return {'Error': error_content}, response.status_code
+
+        except requests.exceptions.RequestException as e:
+            # Per errori di connessione o altri problemi
+            self._fail()
+            return {'Error': f'Error calling the service: {str(e)}'}, response.status_code
+
+
+    def _fail(self):
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            print("Circuito aperto a causa di troppi errori consecutivi.")
+            self.state = 'OPEN'
+
+    def _reset(self):
+        self.failure_count = 0
+        self.state = 'CLOSED'
+
+
+# Inizializzazione dei circuit breakers
+profile_circuit_breaker = CircuitBreaker()
 
 # Modello per il profilo utente
 class Profile(db.Model):
@@ -145,23 +206,17 @@ def retrieve_gacha_collection():
 
     url="http://gachasystem:5004/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
      # Se l'utente ha dei gachas nella collezione, li inviamo al servizio come parametro
-    try:
+    
         # Invia la lista di gacha_name come query string
         #response = requests.get(url, params={'gacha_name': ','.join(gacha_collection)}, timeout=10)
         # Invia la lista di gacha_name
-        payload = {'gacha_name': ','.join(gacha_collection)}
-        headers = {'Content-Type': 'application/json'}
-        response = requests.get(url, json=payload, headers=headers, timeout=10)
-        
-        # Verifica se la risposta è andata a buon fine
-        response.raise_for_status()
-
-        # Estrai i dati dal servizio e restituisci la risposta
-        response_data = response.json()
-        return jsonify(response_data), 200
-    except requests.exceptions.RequestException as e:
-        return jsonify({'Error': 'Gacha service is down', 'details': str(e)}), 500
-
+    payload = {'gacha_name': ','.join(gacha_collection)}
+    headers = {'Content-Type': 'application/json'}
+    # response = requests.get(url, json=payload, headers=headers, timeout=10)
+    res, status = profile_circuit_breaker.call('get', url , payload, headers, {}, True)
+    if status != 200:
+        return jsonify({'Error': 'Gacha service is down', 'details': res}), 500
+    return res, 200
 # Endpoint per visualizzare i dettagli di un oggetto gacha specifico
 @app.route('/info_gachacollection', methods=['GET'])
 #@jwt_required()
@@ -178,20 +233,16 @@ def info_gacha_collection():
     params = {"gacha_name": gacha_name}
     url = "http://gachasystem:5004/get_gacha_collection"
 
-    try:
         # Invia la richiesta al servizio Gacha
-        x = requests.get(url, json=params)
-        x.raise_for_status()  # Solleva un'eccezione per errori HTTP
+        # x = requests.get(url, json=params)
+        # x.raise_for_status()  # Solleva un'eccezione per errori HTTP
 
-        # Decodifica i dati JSON restituiti dal servizio
-        response_data = x.json()
-        return jsonify(response_data), 200
-    except requests.ConnectionError:
-        return jsonify({'Error': 'Gacha service is down'}), 404
-    except requests.HTTPError:
-        return jsonify({"error": x.text}), x.status_code
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        # # Decodifica i dati JSON restituiti dal servizio
+        # response_data = x.json()
+    res, status = profile_circuit_breaker.call('get', url, params, {},{}, True)
+    if status == 200:
+        return jsonify(res), 200
+    return jsonify({"error": res}), 500
 
 
 # route che serve le immagini

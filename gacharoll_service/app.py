@@ -1,4 +1,4 @@
-import requests
+import requests,time
 from flask import Flask, request, jsonify
 from datetime import datetime
 
@@ -8,6 +8,65 @@ app = Flask(__name__)
 GACHA_SYSTEM_URL = "http://gachasystem:5004/get_gacha_roll"  # Nome del container nel docker-compose
 PAYMENT_SERVICE_URL = "http://payment_service:5006/pay"  # Nome del container nel docker-compose
 PROFILE_SETTING_URL = "http://profile_setting:5003/insertGacha"  # Nome del container nel docker-compose
+
+class CircuitBreaker:
+    def __init__(self, failure_threshold=3, recovery_timeout=5, reset_timeout=10):
+        self.failure_threshold = failure_threshold  # Soglia di fallimento
+        self.recovery_timeout = recovery_timeout      # Tempo di recupero tra i tentativi
+        self.reset_timeout = reset_timeout          # Tempo massimo di attesa prima di ripristinare il circuito
+        self.failure_count = 0                      # Numero di fallimenti consecutivi
+        self.last_failure_time = 0                  # Ultimo tempo in cui si è verificato un fallimento
+        self.state = 'CLOSED'                       # Stato iniziale del circuito (CLOSED)
+
+    def call(self, method, url, params=None, headers=None, files=None, json=True):
+        if self.state == 'OPEN':
+            # Se il circuito è aperto, controlla se è il momento di provare di nuovo
+            if time.time() - self.last_failure_time > self.reset_timeout:
+                print("Closing the circuit")
+                self.state = 'CLOSED'
+                self._reset()
+            else:
+                return jsonify({'Error': 'Open circuit, try again later'}), 503  # ritorna un errore 503
+
+        try:
+            # Usa requests.request per specificare il metodo dinamicamente
+            if json:
+                response = requests.request(method, url, json=params, headers=headers)
+            else:
+                response = requests.request(method, url, data=params, headers=headers, files=files)
+            
+            response.raise_for_status()  # Solleva un'eccezione per errori HTTP (4xx, 5xx)
+
+            # Verifica se la risposta è un'immagine
+            if 'image' in response.headers.get('Content-Type', ''):
+                return response.content, response.status_code  # Restituisce il contenuto dell'immagine
+
+            return response.json(), response.status_code  # Restituisce il corpo della risposta come JSON
+
+        except requests.exceptions.HTTPError as e:
+            # In caso di errore HTTP, restituisci il contenuto della risposta (se disponibile)
+            error_content = response.text if response else str(e)
+            self._fail()
+            return {'Error': error_content}, response.status_code
+
+        except requests.exceptions.RequestException as e:
+            # Per errori di connessione o altri problemi
+            self._fail()
+            return {'Error': f'Error calling the service: {str(e)}'}, response.status_code
+
+    def _fail(self):
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            print("Circuito aperto a causa di troppi errori consecutivi.")
+            self.state = 'OPEN'
+
+    def _reset(self):
+        self.failure_count = 0
+        self.state = 'CLOSED'
+
+# Inizializzazione dei circuit breakers
+gacha_roll_circuit_breaker = CircuitBreaker()
 
 @app.route('/gacharoll', methods=['POST'])
 def gacharoll():
@@ -37,24 +96,22 @@ def gacharoll():
         "receiver_us": "system",
         "amount": amount
     }
-    try: 
-        payment_response = requests.post(PAYMENT_SERVICE_URL, data=payment_data, timeout=10)
-    except requests.exceptions.Timeout:
-        return jsonify({"Error": "Time out expired"}), 408
-    
-    if payment_response.status_code != 200:
-        return jsonify({"error": "Payment failed"}), 500
-
-    try:
-        # Step 2: Fai una chiamata al servizio Gacha System per ottenere il Gacha (roll)
-        response = requests.get(GACHA_SYSTEM_URL, params={'level': level}, timeout=10)
-    except requests.exceptions.Timeout:
-        return jsonify({"Error": "Time out expired"}), 408
-    if response.status_code != 200:
-        return jsonify({"error": "Failed to fetch gacha from gachasystem"}), 500
+    payment_response,status = gacha_roll_circuit_breaker.call('post', PAYMENT_SERVICE_URL, payment_data, {},{}, False)
+    # try: 
+    #     payment_response = requests.post(PAYMENT_SERVICE_URL, data=payment_data, timeout=10)
+    if status != 200:
+        return jsonify({"error": f"Payment failed , details : {payment_response}"}), status
+    # params={'level': level}
+    url = GACHA_SYSTEM_URL + f'?level={level}'
+    response,status = gacha_roll_circuit_breaker.call('get', url, {}, {},{}, False)
+    # try:
+    #     # Step 2: Fai una chiamata al servizio Gacha System per ottenere il Gacha (roll)
+    #     response = requests.get(GACHA_SYSTEM_URL, params={'level': level}, timeout=10)
+    if status != 200:
+        return jsonify({"error": f"Failed to fetch gacha from gachasystem, details : {response}"}), status
 
     # Estrai il gacha dal servizio Gacha System
-    gacha = response.json()
+    gacha = response
 
     # Step 3: Ottieni la data attuale (collected_date) come oggetto datetime
     collected_date = datetime.now()  # Oggetto datetime, non stringa
@@ -66,13 +123,11 @@ def gacharoll():
         "collected_date": collected_date.isoformat()  # Passiamo l'oggetto datetime
     }
 
-    try:
-        profile_response = requests.post(PROFILE_SETTING_URL, json=gacha_data, timeout=10)
-    except requests.exceptions.Timeout:
-        return jsonify({"Error": "Time out expired"}), 408
-    
-    if profile_response.status_code != 200:
-        return jsonify({"error": "Failed to insert gacha into user profile"}), 500
+    profile_response = gacha_roll_circuit_breaker.call('post', PROFILE_SETTING_URL, gacha_data,{},{}, True)
+    # try:
+    #     profile_response = requests.post(PROFILE_SETTING_URL, json=gacha_data, timeout=10)
+    if status != 200:
+        return jsonify({"error": f"Failed to insert gacha into user profile , details {profile_response}"}), status
 
     # Ritorna il risultato del gacha
     return jsonify({

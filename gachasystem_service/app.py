@@ -1,6 +1,6 @@
 import os
 import random
-import requests
+import requests, time
 from flask import Flask, request, jsonify , url_for, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
@@ -22,6 +22,66 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
 #bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+
+class CircuitBreaker:
+    def __init__(self, failure_threshold=3, recovery_timeout=5, reset_timeout=10):
+        self.failure_threshold = failure_threshold  # Soglia di fallimento
+        self.recovery_timeout = recovery_timeout      # Tempo di recupero tra i tentativi
+        self.reset_timeout = reset_timeout          # Tempo massimo di attesa prima di ripristinare il circuito
+        self.failure_count = 0                      # Numero di fallimenti consecutivi
+        self.last_failure_time = 0                  # Ultimo tempo in cui si è verificato un fallimento
+        self.state = 'CLOSED'                       # Stato iniziale del circuito (CLOSED)
+
+    def call(self, method, url, params=None, headers=None, files=None, json=True):
+        if self.state == 'OPEN':
+            # Se il circuito è aperto, controlla se è il momento di provare di nuovo
+            if time.time() - self.last_failure_time > self.reset_timeout:
+                print("Closing the circuit")
+                self.state = 'CLOSED'
+                self._reset()
+            else:
+                return jsonify({'Error': 'Open circuit, try again later'}), 503  # ritorna un errore 503
+
+        try:
+            # Usa requests.request per specificare il metodo dinamicamente
+            if json:
+                response = requests.request(method, url, json=params, headers=headers)
+            else:
+                response = requests.request(method, url, data=params, headers=headers, files=files)
+            
+            response.raise_for_status()  # Solleva un'eccezione per errori HTTP (4xx, 5xx)
+
+            # Verifica se la risposta è un'immagine
+            if 'image' in response.headers.get('Content-Type', ''):
+                return response.content, response.status_code  # Restituisce il contenuto dell'immagine
+
+            return response.json(), response.status_code  # Restituisce il corpo della risposta come JSON
+
+        except requests.exceptions.HTTPError as e:
+            # In caso di errore HTTP, restituisci il contenuto della risposta (se disponibile)
+            error_content = response.text if response else str(e)
+            self._fail()
+            return {'Error': error_content}, response.status_code
+
+        except requests.exceptions.RequestException as e:
+            # Per errori di connessione o altri problemi
+            self._fail()
+            return {'Error': f'Error calling the service: {str(e)}'}, response.status_code
+
+
+    def _fail(self):
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            print("Circuito aperto a causa di troppi errori consecutivi.")
+            self.state = 'OPEN'
+
+    def _reset(self):
+        self.failure_count = 0
+        self.state = 'CLOSED'
+
+# Inizializzazione dei circuit breakers
+gacha_sys_circuit_breaker = CircuitBreaker()
 
 # Modello Utente
 # 
@@ -131,33 +191,32 @@ def delete_gacha():
     if not gacha:
         return jsonify({"error": f"Gacha with name '{gacha_name}' not found."}), 404
 
-    try:
+    # try:
         # Elimina l'immagine dal filesystem
-        if gacha.image_path and os.path.exists(gacha.image_path):
-            os.remove(gacha.image_path)
-        
-        # Rimuove il record dal database
-        db.session.delete(gacha)
-        db.session.commit()
+    if gacha.image_path and os.path.exists(gacha.image_path):
+        os.remove(gacha.image_path)
+    
+    # Rimuove il record dal database
+    db.session.delete(gacha)
+    db.session.commit()
 
-        # Chiamata al servizio profile_setting per rimuovere il gacha
-        payload = {
-            "username": "null",
-            "gacha_name": gacha_name,
-            "all": True
-        }
-        response = requests.delete(PROFILE_SETTING_URL, json=payload, timeout=10)
-        # Verifica se la richiesta è andata a buon fine
-        if response.status_code != 200 and response.status_code != 404:
-            return jsonify({
-                "error": "Gacha deleted locally, but failed to delete from user profiles.",
-                "details": response.text
-            }), response.status_code
-    except requests.exceptions.Timeout:
-        return jsonify({"Error": "Time out expired"}), 408
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": f"Failed to delete gacha: {str(e)}"}), 500
+    # Chiamata al servizio profile_setting per rimuovere il gacha
+    payload = {
+        "username": "null",
+        "gacha_name": gacha_name,
+        "all": True
+    }
+    response,status = gacha_sys_circuit_breaker.call('delete', PROFILE_SETTING_URL, payload, {},{}, True)
+    # response = requests.delete(PROFILE_SETTING_URL, json=payload, timeout=10)
+    # Verifica se la richiesta è andata a buon fine
+    if status != 200 and status != 404:
+        return jsonify({
+            "error": "Gacha deleted locally, but failed to delete from user profiles.",
+            "details": response.text
+        }), status
+# except Exception as e:
+#     db.session.rollback()
+#     return jsonify({"error": f"Failed to delete gacha: {str(e)}"}), 500
 
     return jsonify({"message": f"Gacha with name '{gacha_name}' deleted successfully."}), 200
 
