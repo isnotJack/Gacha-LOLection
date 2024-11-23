@@ -58,13 +58,13 @@ class CircuitBreaker:
         except requests.exceptions.HTTPError as e:
             # In caso di errore HTTP, restituisci il contenuto della risposta (se disponibile)
             error_content = response.text if response else str(e)
-            self._fail()
+            # self._fail()
             return {'Error': error_content}, response.status_code
 
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.ConnectionError as e:
             # Per errori di connessione o altri problemi
             self._fail()
-            return {'Error': f'Error calling the service: {str(e)}'}, response.status_code
+            return {'Error': f'Error calling the service: {str(e)}'}, 503
 
     def _fail(self):
         self.failure_count += 1
