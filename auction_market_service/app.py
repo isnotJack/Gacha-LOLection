@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, jsonify , url_for, send_from_directory
-import requests
+import requests, time
 from datetime import datetime
 from requests.exceptions import HTTPError, ConnectionError
 from flask_sqlalchemy import SQLAlchemy
@@ -20,6 +20,65 @@ app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
+
+class CircuitBreaker:
+    def __init__(self, failure_threshold=3, recovery_timeout=5, reset_timeout=10):
+        self.failure_threshold = failure_threshold  # Soglia di fallimento
+        self.recovery_timeout = recovery_timeout      # Tempo di recupero tra i tentativi
+        self.reset_timeout = reset_timeout          # Tempo massimo di attesa prima di ripristinare il circuito
+        self.failure_count = 0                      # Numero di fallimenti consecutivi
+        self.last_failure_time = 0                  # Ultimo tempo in cui si è verificato un fallimento
+        self.state = 'CLOSED'                       # Stato iniziale del circuito (CLOSED)
+
+    def call(self, method, url, params=None, headers=None, files=None, json=True):
+        if self.state == 'OPEN':
+            # Se il circuito è aperto, controlla se è il momento di provare di nuovo
+            if time.time() - self.last_failure_time > self.reset_timeout:
+                print("Circuito mezzo aperto, tentando...")
+                self.state = 'HALF_OPEN'
+            else:
+                return jsonify({'Error': 'Open circuit, try again later'}), 503  # ritorna un errore 503
+
+        try:
+            # Usa requests.request per specificare il metodo dinamicamente
+            if json:
+                response = requests.request(method, url, json=params, headers=headers)
+            else:
+                response = requests.request(method, url, data=params, headers=headers, files=files)
+            
+            response.raise_for_status()  # Solleva un'eccezione per errori HTTP (4xx, 5xx)
+
+            # Verifica se la risposta è un'immagine
+            if 'image' in response.headers.get('Content-Type', ''):
+                return response.content, response.status_code  # Restituisce il contenuto dell'immagine
+
+            return response.json(), response.status_code  # Restituisce il corpo della risposta come JSON
+
+        except requests.exceptions.HTTPError as e:
+            # In caso di errore HTTP, restituisci il contenuto della risposta (se disponibile)
+            error_content = response.text if response else str(e)
+            self._fail()
+            return {'Error': error_content}, response.status_code
+
+        except requests.exceptions.RequestException as e:
+            # Per errori di connessione o altri problemi
+            self._fail()
+            return {'Error': f'Error calling the service: {str(e)}'}, response.status_code
+
+    def _fail(self):
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            print("Circuito aperto a causa di troppi errori consecutivi.")
+            self.state = 'OPEN'
+
+    def _reset(self):
+        self.failure_count = 0
+        self.state = 'CLOSED'
+
+# Inizializzazione dei circuit breakers
+auction_circuit_breaker = CircuitBreaker()
+
 
 # Modello Auction
 class Auction(db.Model):
@@ -71,34 +130,34 @@ def check_and_close_auctions():
             if auction.current_bid == 0:
                 # Nessun partecipante: chiamare solo gacha_receive
                 payload = {"auction_id": auction.id}
-                try:
-                    response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
-                    response.raise_for_status()
-                except requests.RequestException as e:
-                    app.logger.error(f"Errore durante gacha_receive per l'asta {auction.id}: {str(e)}")
+                # response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
+                # response.raise_for_status()
+                response, status = auction_circuit_breaker.call('post', 'http://auction_service:5008/gacha_receive', payload, {},{}, True )
+                if status != 200:
+                    app.logger.error(f"Errore durante gacha_receive per l'asta {auction.id}: {response}")
             else:
                 # Con partecipanti: chiamare tutte le funzioni
                 payload = {"auction_id": auction.id}
-                try:
                     # Gacha Receive per trasferire il gacha al vincitore
-                    gacha_response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
-                    gacha_response.raise_for_status()
-                except requests.RequestException as e:
-                    app.logger.error(f"Errore durante gacha_receive per l'asta {auction.id}: {str(e)}")
+                    # gacha_response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
+                    # gacha_response.raise_for_status()
+                response, status = auction_circuit_breaker.call('post', 'http://auction_service:5008/gacha_receive', payload, {},{}, True )
+                if status != 200:
+                    app.logger.error(f"Errore durante gacha_receive per l'asta {auction.id}: {response}")
 
-                try:
+                
                     # Refund dei partecipanti perdenti
-                    lost_response = requests.post(f"http://auction_service:5008/auction_lost", json=payload, timeout=10)
-                    lost_response.raise_for_status()
-                except requests.RequestException as e:
-                    app.logger.error(f"Errore durante auction_lost per l'asta {auction.id}: {str(e)}")
-
-                try:
+                    # lost_response = requests.post(f"http://auction_service:5008/auction_lost", json=payload, timeout=10)
+                    # lost_response.raise_for_status()
+                lost_response, status = auction_circuit_breaker.call('post', 'http://auction_service:5008/auction_lost', payload, {},{}, True )
+                if status != 200:
+                    app.logger.error(f"Errore durante auction_lost per l'asta {auction.id}: {lost_response}")
                     # Trasferire i fondi al venditore
-                    terminated_response = requests.post(f"http://auction_service:5008/auction_terminated", json=payload, timeout=10)
-                    terminated_response.raise_for_status()
-                except requests.RequestException as e:
-                    app.logger.error(f"Errore durante auction_terminated per l'asta {auction.id}: {str(e)}")
+                # terminated_response = requests.post(f"http://auction_service:5008/auction_terminated", json=payload, timeout=10)
+                # terminated_response.raise_for_status()
+                terminated_response, status = auction_circuit_breaker.call('post', 'http://auction_service:5008/auction_terminated', payload, {},{}, True )
+                if status != 200:
+                    app.logger.error(f"Errore durante auction_terminated per l'asta {auction.id}: {terminated_response}")
 
             # Cambia lo stato dell'asta a 'closed'
             auction.status = 'closed'
@@ -184,15 +243,12 @@ def create_auction():
         "gacha_name": gacha_name
     }
 
-    try:
-        response = requests.delete(profile_service_url, json=payload, timeout=10)
-        response.raise_for_status()
-    except requests.exceptions.Timeout:
-        return jsonify({"Error": "Time out expired"}), 408
-    except ConnectionError:
-        return jsonify({"error": "Profile Service is down"}), 404
-    except HTTPError as e:
-        return jsonify({"error": f"Error removing gacha from profile: {str(e)}"}), response.status_code
+
+        # response = requests.delete(profile_service_url, json=payload, timeout=10)
+        # response.raise_for_status()
+    response, status = auction_circuit_breaker.call('delete', profile_service_url, payload, {},{}, True )
+    if status != 200:
+        return jsonify({"error": f"Error removing gacha from profile: {response}"}), status
 
     db.session.add(new_auction)
     db.session.commit()
@@ -281,15 +337,17 @@ def bid_for_auction():
         "amount": bid_difference
     }
 
-    try:
-        payment_response = requests.post(payment_service_url, data=payload, timeout=10)
-        payment_response.raise_for_status()
-    except requests.exceptions.Timeout:
-        return jsonify({"Error": "Time out expired"}), 408
-    except requests.ConnectionError:
-        return jsonify({"error": "Payment Service is down"}), 404
-    except requests.HTTPError as e:
-        return jsonify({"error": f"Payment failed: {str(e)}"}), payment_response.status_code
+    
+    #     payment_response = requests.post(payment_service_url, data=payload, timeout=10)
+    #     payment_response.raise_for_status()
+    # except requests.exceptions.Timeout:
+    #     return jsonify({"Error": "Time out expired"}), 408
+    # except requests.ConnectionError:
+    #     return jsonify({"error": "Payment Service is down"}), 404
+    # except requests.HTTPError as e:
+    payment_response, status = auction_circuit_breaker.call('post', payload, {},{}, False)
+    if status != 200:
+        return jsonify({"error": f"Payment failed: {payment_response}"}), status
 
     # Aggiorna o crea l'offerta dell'utente nella tabella `bids`
     if previous_bid:
@@ -338,18 +396,21 @@ def gacha_receive():
         "collected_date": datetime.now().isoformat()  # Usa il formato ISO per la data
     }
 
-    try:
-        response = requests.post(profile_service_url, json=payload, timeout=10)
-        # Controlla la risposta del servizio profile_setting
-        if response.status_code == 200:
-            return jsonify({"message": "Gacha correctly received"}), 200
-        else:
-            return jsonify({"error": "Profile service failed", "details": response.text}), 404
-    except requests.exceptions.Timeout:
-        return jsonify({"Error": "Time out expired"}), 408
-    except requests.exceptions.RequestException as e:
+    # try:
+    #     response = requests.post(profile_service_url, json=payload, timeout=10)
+    #     # Controlla la risposta del servizio profile_setting
+    #     if response.status_code == 200:
+    #         return jsonify({"message": "Gacha correctly received"}), 200
+    #     else:
+    #         return jsonify({"error": "Profile service failed", "details": response.text}), 404
+    # except requests.exceptions.Timeout:
+    #     return jsonify({"Error": "Time out expired"}), 408
+    # except requests.exceptions.RequestException as e:
         # Gestisce errori di rete o problemi con il servizio profile_setting
-        return jsonify({"error": "Profile service is down", "details": str(e)}), 404
+    payment_response, status = auction_circuit_breaker.call('post', payload, {},{}, True)
+    if status != 200:
+        return jsonify({f"error": "Profile service failed", "details": {payment_response}}), status
+    return jsonify({"message": "Gacha correctly received"}), 200
 
 @app.route('/auction_lost', methods=['POST'])
 def auction_lost():
@@ -389,19 +450,17 @@ def auction_lost():
                 "amount": bid.bid_amount      # Refund del totale offerto
             }
 
-            try:
-                payment_response = requests.post(payment_service_url, data=refund_payload, timeout=10)
-                payment_response.raise_for_status()
+            # try:
+            #     payment_response = requests.post(payment_service_url, data=refund_payload, timeout=10)
+            #     payment_response.raise_for_status()
+            payment_response , status = auction_circuit_breaker.call('post', payment_service_url, refund_payload, {},{}, False)
+            if status != 200:
+                failed_refunds.append({"username": bid.username, "error": f"Payment failed: {payment_response}"})
+            else:
                 successful_refunds.append({
                     "username": bid.username,
                     "amount": bid.bid_amount
                 })
-            except requests.exceptions.Timeout:
-                return jsonify({"Error": "Time out expired"}), 408
-            except requests.ConnectionError:
-                failed_refunds.append({"username": bid.username, "error": "Payment service down"})
-            except requests.HTTPError as e:
-                failed_refunds.append({"username": bid.username, "error": f"Payment failed: {str(e)}"})
 
     # Ritorna i dettagli delle transazioni
     return jsonify({
@@ -440,13 +499,16 @@ def auction_terminated():
         "amount": auction.current_bid  # L'importo totale offerto dal vincitore
     }
 
-    try:
-        payment_response = requests.post(payment_service_url, data=transfer_payload, timeout=10)
-        payment_response.raise_for_status()
-    except requests.ConnectionError:
-        return jsonify({"error": "Payment Service is down"}), 404
-    except requests.HTTPError as e:
-        return jsonify({"error": f"Payment failed: {str(e)}"}), payment_response.status_code
+    payment_response , status = auction_circuit_breaker.call('post', payment_service_url, transfer_payload, {},{}, False)
+    if status != 200:
+    # try:
+    #     payment_response = requests.post(payment_service_url, data=transfer_payload, timeout=10)
+    #     payment_response.raise_for_status()
+
+    # except requests.ConnectionError:
+    #     return jsonify({"error": "Payment Service is down"}), 404
+    # except requests.HTTPError as e:
+        return jsonify({"error": f"Payment failed: {payment_response}"}), status
 
     # Ritorna i dettagli della transazione completata
     return jsonify({
@@ -488,11 +550,13 @@ def close_auction():
 
     # Restituisco l'oggetto gacha al proprietario chiamando l'API gacha_receive
     payload = {"auction_id": auction.id}
-    try:
-        response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        return jsonify({"error": "Failed to return gacha to seller", "details": str(e)}), 500
+    response , status = auction_circuit_breaker.call('post', "http://auction_service:5008/gacha_receive", payload, {},{}, True)
+    if status != 200:
+    # try:
+    #     response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
+    #     response.raise_for_status()
+    # except requests.RequestException as e:
+        return jsonify({"error": "Failed to return gacha to seller", f"details": {response}}), 500
 
     # Salvo i cambiamenti nel database
     db.session.commit()
