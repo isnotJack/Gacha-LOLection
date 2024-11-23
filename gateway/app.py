@@ -186,60 +186,63 @@ def auth(op):
 def profile_setting(op):
     if op not in ALLOWED_PROF_OP:
         return make_response(f'Invalid operation {op}'), 400
-    try:
-        if op == 'modify_profile':
-            # Dati che arrivano al gateway da un form lato client
-            username = request.form.get('username')
-            value = request.form.get('value')
-            field = request.form.get('field')
-            file = request.files['image']
-            files = {'image': (file.filename, file.stream, file.mimetype)}
-            url = MODIFY_URL
-            params = {
-                'username': username,
-                'field': field,
-                'value': value
-            }
-            response, status_code = profile_circuit_breaker.call('PATCH', url, params, {}, files, False)
-        elif op == 'checkprofile':
-            username = request.args.get('username')
-            url = CHECK_URL + f"?username={username}"
-            jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
-            headers = {
-                'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
-            }
-            response, status_code = profile_circuit_breaker.call('GET', url, {}, headers, {}, False)
-        elif op == 'retrieve_gachacollection':
-            username = request.args.get('username')
-            url = RETRIEVE_URL + f"?username={username}"
-            jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
-            headers = {
-                'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
-            }
-            response, status_code = profile_circuit_breaker.call('GET', url, {}, headers, {}, False)
-        elif op == 'info_gachacollection':
-            username = request.args.get('username')
-            gacha_id = request.args.get('gacha_id')
-            url = RETRIEVE_URL + f"?username={username}&gacha_id={gacha_id}"
-            jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
-            headers = {
-                'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
-            }
-            response, status_code = profile_circuit_breaker.call('GET', url, {}, headers, {}, False)
-        else:
-            return make_response(f'Invalid operation {op}'), 400
+    # try:
+    if op == 'modify_profile':
+        # Dati che arrivano al gateway da un form lato client
+        username = request.form.get('username')
+        value = request.form.get('value')
+        field = request.form.get('field')
+        file = request.files['image']
+        files = {'image': (file.filename, file.stream, file.mimetype)}
+        url = MODIFY_URL
+        params = {
+            'username': username,
+            'field': field,
+            'value': value
+        }
+        response, status_code = profile_circuit_breaker.call('PATCH', url, params, {}, files, False)
+    elif op == 'checkprofile':
+        username = request.args.get('username')
+        url = CHECK_URL + f"?username={username}"
+        jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
+        headers = {
+            'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
+        }
+        response, status_code = profile_circuit_breaker.call('GET', url, {}, headers, {}, False)
+    elif op == 'retrieve_gachacollection':
+        username = request.args.get('username')
+        url = RETRIEVE_URL + f"?username={username}"
+        jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
+        headers = {
+            'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
+        }
+        response, status_code = profile_circuit_breaker.call('GET', url, {}, headers, {}, False)
+    elif op == 'info_gachacollection':
+        username = request.args.get('username')
+        gacha_id = request.args.get('gacha_id')
+        url = RETRIEVE_URL + f"?username={username}&gacha_id={gacha_id}"
+        jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
+        headers = {
+            'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
+        }
+        response, status_code = profile_circuit_breaker.call('GET', url, {}, headers, {}, False)
+        if status_code != 200:
+            return jsonify({'Error' : f'Error with profile setting {response}'}), status_code
+    else:
+        return make_response(f'Invalid operation {op}'), 400
 
-        # Restituisci la risposta del servizio con il codice di stato appropriato
-        return make_response(jsonify(response), status_code)
+    # Restituisci la risposta del servizio con il codice di stato appropriato
+    return make_response(jsonify(response), status_code)
     
-    except requests.ConnectionError:
-        return make_response("Profile Service is unreachable. Please try again later.", 500)
-    except requests.HTTPError as e:
-        # Ritorna il contenuto e lo status code dell'errore
-        return make_response(e.response.text, e.response.status_code)
-    except Exception as e:
-        # Gestione di errori generici
-        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+    # except requests.ConnectionError:
+    #     return make_response("Profile Service is unreachable. Please try again later.", 500)
+    # except requests.HTTPError as e:
+    #     # Ritorna il contenuto e lo status code dell'errore
+    #     return make_response(e.response.text, e.response.status_code)
+    # except Exception as e:
+    #     # Gestione di errori generici
+    #     return make_response(f"An unexpected error occurred: {str(e)}", 500)
+    
 
 
 @app.route('/auction_service/<op>', methods=['GET', 'POST', 'PATCH'])
@@ -247,120 +250,135 @@ def auction_service(op):
     if op not in ALLOWED_AUCTION_OP:
         return jsonify({"error": f"Invalid operation '{op}'"}), 400
 
-    try:
+    # try:
         # Operazione "see"
-        if op == 'see':
-            auction_id = request.args.get('auction_id')  # Recupera auction_id dai parametri della query
-            status = request.args.get('status', 'active')  # Status predefinito a 'active'
+    if op == 'see':
+        auction_id = request.args.get('auction_id')  # Recupera auction_id dai parametri della query
+        status = request.args.get('status', 'active')  # Status predefinito a 'active'
 
-            # Costruisce l'URL con i parametri corretti
-            url = f'{SEE_AUCTION_URL}?status={status}'
-            if auction_id:
-                url += f'&auction_id={auction_id}'
+        # Costruisce l'URL con i parametri corretti
+        url = f'{SEE_AUCTION_URL}?status={status}'
+        if auction_id:
+            url += f'&auction_id={auction_id}'
 
-            response, status_code = auction_circuit_breaker.call('get', url, {}, {}, {}, False)
-            return make_response(jsonify(response), status_code)
+        response, status_code = auction_circuit_breaker.call('get', url, {}, {}, {}, False)
+        if status_code != 200:
+            return jsonify({'Error' : f'Error during see op {response}'}), status_code
 
-        # Operazione "create"
-        elif op == 'create':
-            data = request.get_json()  # Recupera i parametri dal corpo JSON
-            seller_username = data.get('seller_username')
-            gacha_name = data.get('gacha_name')
-            base_price = data.get('basePrice')
-            end_date = data.get('endDate')
+        return make_response(jsonify(response), status_code)
 
-            if not all([seller_username, gacha_name, base_price, end_date]):
-                return jsonify({"error": "Missing required parameters"}), 400
+    # Operazione "create"
+    elif op == 'create':
+        data = request.get_json()  # Recupera i parametri dal corpo JSON
+        seller_username = data.get('seller_username')
+        gacha_name = data.get('gacha_name')
+        base_price = data.get('basePrice')
+        end_date = data.get('endDate')
 
-            url = CREATE_AUCTION_URL
-            response, status_code = auction_circuit_breaker.call('post', url, data, {}, {}, True)
-            return make_response(jsonify(response), status_code)
+        if not all([seller_username, gacha_name, base_price, end_date]):
+            return jsonify({"error": "Missing required parameters"}), 400
 
-        # Operazione "modify"
-        elif op == 'modify':
-            data = request.get_json()
-            auction_id = data.get('auction_id')
-            seller_username = data.get('seller_username')
-            gacha_name = data.get('gacha_name')
-            base_price = data.get('basePrice')
-            end_date = data.get('endDate')
+        url = CREATE_AUCTION_URL
+        response, status_code = auction_circuit_breaker.call('post', url, data, {}, {}, True)
+        if status_code != 200:
+            return jsonify({'Error' : f'Error during create op {response}'}), status_code
 
-            if not auction_id:
-                return jsonify({"error": "Auction ID is required"}), 400
+        return make_response(jsonify(response), status_code)
 
-            url = f'{MODIFY_AUCTION_URL}?auction_id={auction_id}'
-            if seller_username:
-                url += f'&seller_username={seller_username}'
-            if gacha_name:
-                url += f'&gacha_name={gacha_name}'
-            if base_price:
-                url += f'&basePrice={base_price}'
-            if end_date:
-                url += f'&endDate={end_date}'
+    # Operazione "modify"
+    elif op == 'modify':
+        data = request.get_json()
+        auction_id = data.get('auction_id')
+        seller_username = data.get('seller_username')
+        gacha_name = data.get('gacha_name')
+        base_price = data.get('basePrice')
+        end_date = data.get('endDate')
 
-            response, status_code = auction_circuit_breaker.call('patch', url, {}, {}, {}, False)
-            return make_response(jsonify(response), status_code)
+        if not auction_id:
+            return jsonify({"error": "Auction ID is required"}), 400
 
-        # Operazione "bid"
-        elif op == 'bid':
-            username = request.args.get('username')
-            auction_id = request.args.get('auction_id')
-            new_bid = request.args.get('newBid', type=float)
+        url = f'{MODIFY_AUCTION_URL}?auction_id={auction_id}'
+        if seller_username:
+            url += f'&seller_username={seller_username}'
+        if gacha_name:
+            url += f'&gacha_name={gacha_name}'
+        if base_price:
+            url += f'&basePrice={base_price}'
+        if end_date:
+            url += f'&endDate={end_date}'
 
-            if not all([username, auction_id, new_bid]):
-                return jsonify({"error": "Missing required parameters"}), 400
+        response, status_code = auction_circuit_breaker.call('patch', url, {}, {}, {}, False)
+        if status_code != 200:
+            return jsonify({'Error' : f'Error during modify op {response}'}), status_code
+        return make_response(jsonify(response), status_code)
 
-            url = f'{AUCTION_BASE_URL}/bid?username={username}&auction_id={auction_id}&newBid={new_bid}'
-            response, status_code = auction_circuit_breaker.call('patch', url, {}, {}, {}, False)
-            return make_response(jsonify(response), status_code)
+    # Operazione "bid"
+    elif op == 'bid':
+        username = request.args.get('username')
+        auction_id = request.args.get('auction_id')
+        new_bid = request.args.get('newBid', type=float)
 
-        # Operazione "gacha_receive"
-        elif op == 'gacha_receive':
-            data = request.get_json()
-            auction_id = data.get('auction_id')
-            winner_username = data.get('winner_username')
-            gacha_name = data.get('gacha_name')
+        if not all([username, auction_id, new_bid]):
+            return jsonify({"error": "Missing required parameters"}), 400
 
-            if not all([auction_id, winner_username, gacha_name]):
-                return jsonify({"error": "Missing required parameters"}), 400
+        url = f'{AUCTION_BASE_URL}/bid?username={username}&auction_id={auction_id}&newBid={new_bid}'
+        response, status_code = auction_circuit_breaker.call('patch', url, {}, {}, {}, False)
+        if status_code != 200:
+            return jsonify({'Error' : f'Error during bid op {response}'}), status_code
+        return make_response(jsonify(response), status_code)
 
-            url = f'{AUCTION_BASE_URL}/gacha_receive'
-            response, status_code = auction_circuit_breaker.call('post', url, data, {}, {}, True)
-            return make_response(jsonify(response), status_code)
+    # Operazione "gacha_receive"
+    elif op == 'gacha_receive':
+        data = request.get_json()
+        auction_id = data.get('auction_id')
+        winner_username = data.get('winner_username')
+        gacha_name = data.get('gacha_name')
 
-        # Operazione "auction_lost"
-        elif op == 'auction_lost':
-            data = request.get_json()
-            auction_id = data.get('auction_id')
+        if not all([auction_id, winner_username, gacha_name]):
+            return jsonify({"error": "Missing required parameters"}), 400
 
-            if not auction_id:
-                return jsonify({"error": "Missing auction_id"}), 400
+        url = f'{AUCTION_BASE_URL}/gacha_receive'
+        response, status_code = auction_circuit_breaker.call('post', url, data, {}, {}, True)
+        if status_code != 200:
+            return jsonify({'Error' : f'Error during gacha receive op {response}'}), status_code
+        return make_response(jsonify(response), status_code)
 
-            url = f'{AUCTION_BASE_URL}/auction_lost'
-            response, status_code = auction_circuit_breaker.call('post', url, data, {}, {}, True)
-            return make_response(jsonify(response), status_code)
+    # Operazione "auction_lost"
+    elif op == 'auction_lost':
+        data = request.get_json()
+        auction_id = data.get('auction_id')
 
-        # Operazione "auction_terminated"
-        elif op == 'auction_terminated':
-            data = request.get_json()
-            auction_id = data.get('auction_id')
+        if not auction_id:
+            return jsonify({"error": "Missing auction_id"}), 400
 
-            if not auction_id:
-                return jsonify({"error": "Missing auction_id"}), 400
+        url = f'{AUCTION_BASE_URL}/auction_lost'
+        response, status_code = auction_circuit_breaker.call('post', url, data, {}, {}, True)
+        if status_code != 200:
+            return jsonify({'Error' : f'Error during auction lost op {response}'}), status_code
+        return make_response(jsonify(response), status_code)
 
-            url = f'{AUCTION_BASE_URL}/auction_terminated'
-            response, status_code = auction_circuit_breaker.call('post', url, data, {}, {}, True)
-            return make_response(jsonify(response), status_code)
+    # Operazione "auction_terminated"
+    elif op == 'auction_terminated':
+        data = request.get_json()
+        auction_id = data.get('auction_id')
 
-        else:
-            return jsonify({"error": f"Unknown operation '{op}'"}), 400
+        if not auction_id:
+            return jsonify({"error": "Missing auction_id"}), 400
 
-    except requests.ConnectionError:
-        return make_response("Auction Service is unreachable. Please try again later.", 500)
-    except requests.HTTPError as e:
-        return make_response(e.response.text, e.response.status_code)
-    except Exception as e:
-        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+        url = f'{AUCTION_BASE_URL}/auction_terminated'
+        response, status_code = auction_circuit_breaker.call('post', url, data, {}, {}, True)
+        if status_code != 200:
+            return jsonify({'Error' : f'Error during auction terminated op {response}'}), status_code
+        return make_response(jsonify(response), status_code)
+    else:
+        return jsonify({"error": f"Unknown operation '{op}'"}), 400
+
+    # except requests.ConnectionError:
+    #     return make_response("Auction Service is unreachable. Please try again later.", 500)
+    # except requests.HTTPError as e:
+    #     return make_response(e.response.text, e.response.status_code)
+    # except Exception as e:
+    #     return make_response(f"An unexpected error occurred: {str(e)}", 500)
 
 
 @app.route('/gacha_roll/<op>', methods=['POST'])
@@ -375,13 +393,15 @@ def gacha_roll(op):
         'username': username,
         'level': level
     }
-    try:
-        response, status = gacha_roll_circuit_breaker.call('post', url, params, {}, {}, True)
-        return jsonify(response), status
-    except ConnectionError:
-        return make_response("Gacha Roll Service is unreachable. Please try again later.", 500)
-    except Exception as e:
-        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+    # try:
+    response, status = gacha_roll_circuit_breaker.call('post', url, params, {}, {}, True)
+    if status != 200:
+            return jsonify({'Error' : f'Error during gacha roll op {response}'}), status
+    return jsonify(response), status
+    # except ConnectionError:
+    #     return make_response("Gacha Roll Service is unreachable. Please try again later.", 500)
+    # except Exception as e:
+    #     return make_response(f"An unexpected error occurred: {str(e)}", 500)
 
 
 @app.route('/images_gacha/uploads/<name>', methods=['GET'])
@@ -389,17 +409,17 @@ def gacha_image(name):
     url = GACHA_IMAGE_URL + name
     file_extension = os.path.splitext(name)[1][1:]
     mime_type = get_mime_type(file_extension)
-    try:
-        content, status = gacha_sys_circuit_breaker.call('get', url, {}, {}, {}, False)
-        if status == 200:
-            file = BytesIO(content)
-            return send_file(file, mimetype=mime_type)
-        else:
-            return jsonify({"error": "File not found"}), 404
-    except ConnectionError as e:
-        return jsonify({"error": str(e)}), 500
-    except Exception as e:
-        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+    # try:
+    content, status = gacha_sys_circuit_breaker.call('get', url, {}, {}, {}, False)
+    if status == 200:
+        file = BytesIO(content)
+        return send_file(file, mimetype=mime_type)
+    else:
+        return jsonify({'Error' : f'Error during gacha image op '}), status
+    # except ConnectionError as e:
+    #     return jsonify({"error": str(e)}), 500
+    # except Exception as e:
+    #     return make_response(f"An unexpected error occurred: {str(e)}", 500)
 
 
 @app.route('/images_profile/uploads/<name>', methods=['GET'])
@@ -407,17 +427,17 @@ def profile_image(name):
     url = PROFILE_IMAGE_URL + name
     file_extension = os.path.splitext(name)[1][1:]
     mime_type = get_mime_type(file_extension)
-    try:
-        content, status = profile_circuit_breaker.call('get', url, {}, {}, {}, False)
-        if status == 200:
-            file = BytesIO(content)
-            return send_file(file, mimetype=mime_type)
-        else:
-            return jsonify({"error": "File not found"}), 404
-    except ConnectionError as e:
-        return jsonify({"error": str(e)}), 500
-    except Exception as e:
-        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+    # try:
+    content, status = profile_circuit_breaker.call('get', url, {}, {}, {}, False)
+    if status == 200:
+        file = BytesIO(content)
+        return send_file(file, mimetype=mime_type)
+    else:
+        return jsonify({'Error' : f'Error during profile image op '}), status
+    # except ConnectionError as e:
+    #     return jsonify({"error": str(e)}), 500
+    # except Exception as e:
+    #     return make_response(f"An unexpected error occurred: {str(e)}", 500)
 
 
 @app.route('/payment_service/buycurrency', methods=['POST'])
@@ -432,13 +452,15 @@ def buycurrency():
         'amount': amount,
         'payment_method': method
     }
-    try:
-        response, status = payment_circuit_breaker.call('post', url, params, {}, {}, True)
-        return jsonify(response), status
-    except ConnectionError:
-        return make_response("Payment Service is unreachable. Please try again later.", 500)
-    except Exception as e:
-        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+    # try:
+    response, status = payment_circuit_breaker.call('post', url, params, {}, {}, True)
+    if status != 200:
+        return jsonify({'Error' : f'Error during buy currency op {response}'}), status
+    return jsonify(response), status
+    # except ConnectionError:
+    #     return make_response("Payment Service is unreachable. Please try again later.", 500)
+    # except Exception as e:
+    #     return make_response(f"An unexpected error occurred: {str(e)}", 500)
 
 
 @app.route('/gachasystem_service/<op>', methods=['POST', 'DELETE', 'PATCH', 'GET'])
@@ -476,18 +498,22 @@ def gachasystem(op):
         params = {}
         url = GET_GACHA_COLL_URL
 
-    try:
-        if op == 'add_gacha':
-            response, status = gacha_sys_circuit_breaker.call('post', url, params, {}, files, False)
-        elif op == 'delete_gacha':
-            response, status = gacha_sys_circuit_breaker.call('delete', url, params, {}, {}, True)
-        elif op == 'update_gacha':
-            response, status = gacha_sys_circuit_breaker.call('patch', url, params, {}, {}, True)
-        elif op == 'get_gacha_collection':
-            response, status = gacha_sys_circuit_breaker.call('get', url, params, {}, {}, True)
-            return jsonify(response), status
+    # try:
+    if op == 'add_gacha':
+        response, status = gacha_sys_circuit_breaker.call('post', url, params, {}, files, False)
+    elif op == 'delete_gacha':
+        response, status = gacha_sys_circuit_breaker.call('delete', url, params, {}, {}, True)
+    elif op == 'update_gacha':
+        response, status = gacha_sys_circuit_breaker.call('patch', url, params, {}, {}, True)
+    elif op == 'get_gacha_collection':
+        response, status = gacha_sys_circuit_breaker.call('get', url, params, {}, {}, True)
+        if status != 200:
+            return jsonify({'Error' : f'Error during get gacha collection op {response}'}), status
         return jsonify(response), status
-    except ConnectionError:
-        return make_response("Gacha System Service is unreachable. Please try again later.", 500)
-    except Exception as e:
-        return make_response(f"An unexpected error occurred: {str(e)}", 500)
+    if status != 200:
+        return jsonify({'Error' : f'Error in gacha system op {response}'}), status
+    return jsonify(response), status
+    # except ConnectionError:
+    #     return make_response("Gacha System Service is unreachable. Please try again later.", 500)
+    # except Exception as e:
+    #     return make_response(f"An unexpected error occurred: {str(e)}", 500)

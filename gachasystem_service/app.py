@@ -81,7 +81,7 @@ class CircuitBreaker:
         self.state = 'CLOSED'
 
 # Inizializzazione dei circuit breakers
-gacha_sys_circuit_breaker = CircuitBreaker()
+profile_circuit_breaker = CircuitBreaker()
 
 # Modello Utente
 # 
@@ -206,7 +206,7 @@ def delete_gacha():
         "gacha_name": gacha_name,
         "all": True
     }
-    response,status = gacha_sys_circuit_breaker.call('delete', PROFILE_SETTING_URL, payload, {},{}, True)
+    response,status = profile_circuit_breaker.call('delete', PROFILE_SETTING_URL, payload, {},{}, True)
     # response = requests.delete(PROFILE_SETTING_URL, json=payload, timeout=10)
     # Verifica se la richiesta è andata a buon fine
     if status != 200 and status != 404:
