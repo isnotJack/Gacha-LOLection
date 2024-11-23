@@ -135,22 +135,26 @@ def auth(op):
         return make_response(f'Invalid operation {op}'), 400
     
     # Preparazione dei parametri in base all'operazione
+    # FORSE SOLO USER NORMALE
     if op == 'signup':
         username = request.form.get('username')
         password = request.form.get('password')
         email = request.form.get('email')
         url = SINGUP_URL
         params = {'username': username, 'password': password, 'email': email}
+    # ENTRAMBI
     elif op == 'login':
         username = request.form.get('username')
         password = request.form.get('password')
         url = LOGIN_URL
         params = {'username': username, 'password': password}
+    # ENTRAMBI
     elif op == 'delete':
         username = request.form.get('username')
         password = request.form.get('password')
         url = DELETE_URL
         params = {'username': username, 'password': password}
+    # ENTRAMBI
     elif op == 'logout':
         url = LOGOUT_URL
         params = {}
@@ -187,6 +191,7 @@ def profile_setting(op):
     if op not in ALLOWED_PROF_OP:
         return make_response(f'Invalid operation {op}'), 400
     # try:
+    # SOLO USER
     if op == 'modify_profile':
         # Dati che arrivano al gateway da un form lato client
         username = request.form.get('username')
@@ -201,6 +206,7 @@ def profile_setting(op):
             'value': value
         }
         response, status_code = profile_circuit_breaker.call('PATCH', url, params, {}, files, False)
+    # SOLO USER
     elif op == 'checkprofile':
         username = request.args.get('username')
         url = CHECK_URL + f"?username={username}"
@@ -209,6 +215,7 @@ def profile_setting(op):
             'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
         }
         response, status_code = profile_circuit_breaker.call('GET', url, {}, headers, {}, False)
+    # SOLO USER
     elif op == 'retrieve_gachacollection':
         username = request.args.get('username')
         url = RETRIEVE_URL + f"?username={username}"
@@ -217,6 +224,7 @@ def profile_setting(op):
             'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
         }
         response, status_code = profile_circuit_breaker.call('GET', url, {}, headers, {}, False)
+    # ENTRAMBI
     elif op == 'info_gachacollection':
         username = request.args.get('username')
         gacha_id = request.args.get('gacha_id')
@@ -252,6 +260,7 @@ def auction_service(op):
 
     # try:
         # Operazione "see"
+    # ENTRAMBI
     if op == 'see':
         auction_id = request.args.get('auction_id')  # Recupera auction_id dai parametri della query
         status = request.args.get('status', 'active')  # Status predefinito a 'active'
@@ -268,6 +277,7 @@ def auction_service(op):
         return make_response(jsonify(response), status_code)
 
     # Operazione "create"
+    # SOLO USER
     elif op == 'create':
         data = request.get_json()  # Recupera i parametri dal corpo JSON
         seller_username = data.get('seller_username')
@@ -286,6 +296,7 @@ def auction_service(op):
         return make_response(jsonify(response), status_code)
 
     # Operazione "modify"
+    # SOLO ADMIN
     elif op == 'modify':
         data = request.get_json()
         auction_id = data.get('auction_id')
@@ -313,6 +324,7 @@ def auction_service(op):
         return make_response(jsonify(response), status_code)
 
     # Operazione "bid"
+    # SOLO USER
     elif op == 'bid':
         username = request.args.get('username')
         auction_id = request.args.get('auction_id')
@@ -382,6 +394,7 @@ def auction_service(op):
 
 
 @app.route('/gacha_roll/<op>', methods=['POST'])
+# SOLO USER
 def gacha_roll(op):
     if op != 'gacharoll':
         return make_response(f'Invalid operation {op}', 400)
@@ -405,6 +418,7 @@ def gacha_roll(op):
 
 
 @app.route('/images_gacha/uploads/<name>', methods=['GET'])
+# ENTRAMBI
 def gacha_image(name):
     url = GACHA_IMAGE_URL + name
     file_extension = os.path.splitext(name)[1][1:]
@@ -423,6 +437,7 @@ def gacha_image(name):
 
 
 @app.route('/images_profile/uploads/<name>', methods=['GET'])
+# SOLO USER
 def profile_image(name):
     url = PROFILE_IMAGE_URL + name
     file_extension = os.path.splitext(name)[1][1:]
@@ -441,6 +456,7 @@ def profile_image(name):
 
 
 @app.route('/payment_service/buycurrency', methods=['POST'])
+# SOLO USER
 def buycurrency():
     username = request.form.get('username')
     amount = request.form.get('amount')
@@ -467,7 +483,7 @@ def buycurrency():
 def gachasystem(op):
     if op not in ALLOWED_GACHA_SYS_OP:
         return make_response(f'Invalid operation {op}', 400)
-
+    # SOLO ADMIN
     if op == 'add_gacha':
         gacha_name = request.form.get('gacha_name')
         rarity = request.form.get('rarity')
@@ -480,10 +496,12 @@ def gachasystem(op):
             'rarity': rarity,
             'description': description
         }
+    # SOLO ADMIN
     elif op == 'delete_gacha':
         gacha_name = request.form.get('gacha_name')
         url = DELETE_GACHA_URL
         params = {'gacha_name': gacha_name}
+    # SOLO ADMIN
     elif op == 'update_gacha':
         gacha_name = request.form.get('gacha_name')
         rarity = request.form.get('rarity')
@@ -494,6 +512,7 @@ def gachasystem(op):
             'rarity': rarity,
             'description': description
         }
+    # ENTRAMBI
     elif op == 'get_gacha_collection':
         params = {}
         url = GET_GACHA_COLL_URL

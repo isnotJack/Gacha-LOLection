@@ -101,6 +101,7 @@ class Gacha(db.Model):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# SOLO ADMIN
 @app.route('/add_gacha', methods=['POST'])
 #@jwt_required() # Richiede un token JWT valido per accedere a questa funzione
 def add_gacha():
@@ -167,6 +168,7 @@ def add_gacha():
                         #,"collected_date": new_gacha.collected_date  # Restituisci anche la data di raccolta
                     }}), 200
 
+# SOLO ADMIN
 @app.route('/delete_gacha', methods=['DELETE'])
 # @jwt_required()  # Sblocca questa linea se vuoi proteggere l'endpoint con JWT
 def delete_gacha():
@@ -220,6 +222,7 @@ def delete_gacha():
 
     return jsonify({"message": f"Gacha with name '{gacha_name}' deleted successfully."}), 200
 
+# SOLO ADMIN
 @app.route('/update_gacha', methods=['PATCH'])
 # @jwt_required()  # Sblocca questa linea se vuoi proteggere l'endpoint con JWT
 def update_gacha():
@@ -319,7 +322,6 @@ def get_gacha_collection():
         gacha_list.append(gacha_details)
 
     return jsonify(gacha_list), 200
-
 
 @app.route('/get_gacha_roll', methods=['GET'])
 def get_gacha_roll():
