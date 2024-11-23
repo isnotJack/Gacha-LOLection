@@ -36,8 +36,9 @@ class CircuitBreaker:
         if self.state == 'OPEN':
             # Se il circuito è aperto, controlla se è il momento di provare di nuovo
             if time.time() - self.last_failure_time > self.reset_timeout:
-                print("Circuito mezzo aperto, tentando...")
-                self.state = 'HALF_OPEN'
+                print("Closing the circuit")
+                self.state = 'CLOSED'
+                self._reset()
             else:
                 return jsonify({'Error': 'Open circuit, try again later'}), 503  # ritorna un errore 503
 
