@@ -70,7 +70,8 @@ class CircuitBreaker:
 
 
 # Inizializzazione dei circuit breakers
-auth_circuit_breaker = CircuitBreaker()
+profile_circuit_breaker = CircuitBreaker()
+payment_circuit_breaker = CircuitBreaker()
 
 
 # Modello Utente
@@ -109,7 +110,7 @@ def signup():
     }
     url = 'http://profile_setting:5003/create_profile'
     # x = requests.post(url, json=params, timeout=10)
-    res, status = auth_circuit_breaker.call('post', url, params, {},{}, True )
+    res, status = profile_circuit_breaker.call('post', url, params, {},{}, True )
     # x.raise_for_status()
     # res = x.json()
     if status != 200:
@@ -123,7 +124,7 @@ def signup():
         # y = requests.post(url, json=params, timeout=10)
         # y.raise_for_status()
         # res = x.json()
-    x , status = auth_circuit_breaker.call('post', url, params, {},{},True)
+    x , status = payment_circuit_breaker.call('post', url, params, {},{},True)
     if status != 200:
         # Ritorna un errore se la chiamata al `profile_setting` fallisce
         return jsonify({'Error': f'Failed to create profile: {x}'}), 500 
@@ -176,7 +177,7 @@ def delete_account():
             # x = requests.delete(url, json=params, timeout=10)
             # x.raise_for_status()
             # res = x.json()
-        res, status = auth_circuit_breaker.call('delete', url, params, {},{}, True)
+        res, status = profile_circuit_breaker.call('delete', url, params, {},{}, True)
         if status != 200:
             # Ritorna un errore se la chiamata al `profile_setting` fallisce
             return jsonify({'Error': f'Failed to delete profile: {res}'}), 500
@@ -184,7 +185,7 @@ def delete_account():
             # x = requests.delete(url, json=params, timeout=10)
             # x.raise_for_status()
             # res = x.json()
-        res, status = auth_circuit_breaker.call('delete', url, params, {},{}, True)
+        res, status = payment_circuit_breaker.call('delete', url, params, {},{}, True)
         if status != 200:
             return jsonify({'Error': f'Failed to delete balance: {res}'}), 500
         return jsonify({"msg": "Account deleted successfully"}), 200

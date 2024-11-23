@@ -81,7 +81,7 @@ class CircuitBreaker:
 
 
 # Inizializzazione dei circuit breakers
-profile_circuit_breaker = CircuitBreaker()
+gacha_sys_circuit_breaker = CircuitBreaker()
 
 # Modello per il profilo utente
 class Profile(db.Model):
@@ -213,7 +213,7 @@ def retrieve_gacha_collection():
     payload = {'gacha_name': ','.join(gacha_collection)}
     headers = {'Content-Type': 'application/json'}
     # response = requests.get(url, json=payload, headers=headers, timeout=10)
-    res, status = profile_circuit_breaker.call('get', url , payload, headers, {}, True)
+    res, status = gacha_sys_circuit_breaker.call('get', url , payload, headers, {}, True)
     if status != 200:
         return jsonify({'Error': 'Gacha service is down', 'details': res}), 500
     return res, 200
@@ -239,7 +239,7 @@ def info_gacha_collection():
 
         # # Decodifica i dati JSON restituiti dal servizio
         # response_data = x.json()
-    res, status = profile_circuit_breaker.call('get', url, params, {},{}, True)
+    res, status =  gacha_sys_circuit_breaker.call('get', url, params, {},{}, True)
     if status == 200:
         return jsonify(res), 200
     return jsonify({"error": res}), 500

@@ -66,7 +66,9 @@ class CircuitBreaker:
         self.state = 'CLOSED'
 
 # Inizializzazione dei circuit breakers
-gacha_roll_circuit_breaker = CircuitBreaker()
+gacha_sys_circuit_breaker = CircuitBreaker()
+profile_circuit_breaker = CircuitBreaker()
+payment_circuit_breaker = CircuitBreaker()
 
 @app.route('/gacharoll', methods=['POST'])
 def gacharoll():
@@ -96,14 +98,14 @@ def gacharoll():
         "receiver_us": "system",
         "amount": amount
     }
-    payment_response,status = gacha_roll_circuit_breaker.call('post', PAYMENT_SERVICE_URL, payment_data, {},{}, False)
+    payment_response,status = payment_circuit_breaker.call('post', PAYMENT_SERVICE_URL, payment_data, {},{}, False)
     # try: 
     #     payment_response = requests.post(PAYMENT_SERVICE_URL, data=payment_data, timeout=10)
     if status != 200:
         return jsonify({"error": f"Payment failed , details : {payment_response}"}), status
     # params={'level': level}
     url = GACHA_SYSTEM_URL + f'?level={level}'
-    response,status = gacha_roll_circuit_breaker.call('get', url, {}, {},{}, False)
+    response,status = gacha_sys_circuit_breaker.call('get', url, {}, {},{}, False)
     # try:
     #     # Step 2: Fai una chiamata al servizio Gacha System per ottenere il Gacha (roll)
     #     response = requests.get(GACHA_SYSTEM_URL, params={'level': level}, timeout=10)
@@ -123,7 +125,7 @@ def gacharoll():
         "collected_date": collected_date.isoformat()  # Passiamo l'oggetto datetime
     }
 
-    profile_response = gacha_roll_circuit_breaker.call('post', PROFILE_SETTING_URL, gacha_data,{},{}, True)
+    profile_response = profile_circuit_breaker.call('post', PROFILE_SETTING_URL, gacha_data,{},{}, True)
     # try:
     #     profile_response = requests.post(PROFILE_SETTING_URL, json=gacha_data, timeout=10)
     if status != 200:

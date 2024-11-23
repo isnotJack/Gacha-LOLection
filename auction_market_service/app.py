@@ -79,7 +79,8 @@ class CircuitBreaker:
 
 # Inizializzazione dei circuit breakers
 auction_circuit_breaker = CircuitBreaker()
-
+payment_circuit_breaker = CircuitBreaker()
+profile_circuit_breaker = CircuitBreaker()
 
 # Modello Auction
 class Auction(db.Model):
@@ -247,7 +248,7 @@ def create_auction():
 
         # response = requests.delete(profile_service_url, json=payload, timeout=10)
         # response.raise_for_status()
-    response, status = auction_circuit_breaker.call('delete', profile_service_url, payload, {},{}, True )
+    response, status = profile_circuit_breaker.call('delete', profile_service_url, payload, {},{}, True )
     if status != 200:
         return jsonify({"error": f"Error removing gacha from profile: {response}"}), status
 
@@ -346,7 +347,7 @@ def bid_for_auction():
     # except requests.ConnectionError:
     #     return jsonify({"error": "Payment Service is down"}), 404
     # except requests.HTTPError as e:
-    payment_response, status = auction_circuit_breaker.call('post', payload, {},{}, False)
+    payment_response, status = payment_circuit_breaker.call('post', payload, {},{}, False)
     if status != 200:
         return jsonify({"error": f"Payment failed: {payment_response}"}), status
 
@@ -408,7 +409,7 @@ def gacha_receive():
     #     return jsonify({"Error": "Time out expired"}), 408
     # except requests.exceptions.RequestException as e:
         # Gestisce errori di rete o problemi con il servizio profile_setting
-    payment_response, status = auction_circuit_breaker.call('post', payload, {},{}, True)
+    payment_response, status = profile_circuit_breaker.call('post', profile_service_url,payload, {},{}, True)
     if status != 200:
         return jsonify({f"error": "Profile service failed", "details": {payment_response}}), status
     return jsonify({"message": "Gacha correctly received"}), 200
@@ -454,7 +455,7 @@ def auction_lost():
             # try:
             #     payment_response = requests.post(payment_service_url, data=refund_payload, timeout=10)
             #     payment_response.raise_for_status()
-            payment_response , status = auction_circuit_breaker.call('post', payment_service_url, refund_payload, {},{}, False)
+            payment_response , status = payment_circuit_breaker.call('post', payment_service_url, refund_payload, {},{}, False)
             if status != 200:
                 failed_refunds.append({"username": bid.username, "error": f"Payment failed: {payment_response}"})
             else:
@@ -500,7 +501,7 @@ def auction_terminated():
         "amount": auction.current_bid  # L'importo totale offerto dal vincitore
     }
 
-    payment_response , status = auction_circuit_breaker.call('post', payment_service_url, transfer_payload, {},{}, False)
+    payment_response , status = payment_circuit_breaker.call('post', payment_service_url, transfer_payload, {},{}, False)
     if status != 200:
     # try:
     #     payment_response = requests.post(payment_service_url, data=transfer_payload, timeout=10)
