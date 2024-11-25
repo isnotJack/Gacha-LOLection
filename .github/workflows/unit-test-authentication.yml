@@ -1,0 +1,50 @@
+name: Unit Test - Authentication Service
+
+on:
+  push:
+    branches:
+      - main  # Esegui i test solo sui push nel branch principale
+
+jobs:
+  test-authentication:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Scarica il codice del repository
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 2. Configura l'ambiente Node.js per usare Newman
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    # 3. Installa Newman (CLI di Postman)
+    - name: Install Newman
+      run: npm install -g newman
+
+    # 4. Costruisci l'immagine Docker per il microservizio authentication
+    - name: Build Docker image for authentication service
+      run: |
+        docker build -t authentication_service ./authentication_service
+
+    # 5. Avvia il container del microservizio authentication
+    - name: Run authentication service container
+      run: |
+        docker run -d --name authentication_service -p 5002:5002 authentication_service
+
+    # 6. Esegui tutti i test di Postman con Newman per authentication
+    - name: Run Postman tests with Newman
+      run: |
+        newman run tests/sse-project.postman_collection.json \
+          --folder authentication \
+          --reporters cli,html \
+          --reporter-html-export newman-report.html
+
+    # 7. Ferma e rimuovi il container Docker
+    - name: Stop and clean up Docker container
+      run: |
+        docker stop authentication_service
+        docker rm authentication_service
+
