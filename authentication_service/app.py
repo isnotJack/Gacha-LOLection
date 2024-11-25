@@ -86,7 +86,7 @@ class User(db.Model):
 # Endpoint per la creazione di un account
 @app.route('/signup', methods=['POST'])
 def signup():
-    #Dati arrivano in formato JSON dal gateway
+
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')

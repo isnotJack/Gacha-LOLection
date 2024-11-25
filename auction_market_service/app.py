@@ -347,7 +347,7 @@ def bid_for_auction():
     # except requests.ConnectionError:
     #     return jsonify({"error": "Payment Service is down"}), 404
     # except requests.HTTPError as e:
-    payment_response, status = payment_circuit_breaker.call('post', payload, {},{}, False)
+    payment_response, status = payment_circuit_breaker.call('post',payment_service_url, payload, {},{}, False)
     if status != 200:
         return jsonify({"error": f"Payment failed: {payment_response}"}), status
 
