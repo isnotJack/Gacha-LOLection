@@ -1,4 +1,19 @@
 services:
+
+  admin_gateway:
+    build: ./admin_gateway
+    ports:
+      - 5009:5009
+    depends_on:
+      - auth_service
+      - auth_db
+      - profile_setting
+      - profile_db
+      - db_gachasystem
+      - gachasystem
+      - auction_db
+      - auction_service
+
   gateway:
     build: ./gateway
     ports:

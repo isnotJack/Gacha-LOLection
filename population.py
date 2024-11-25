@@ -5,6 +5,7 @@ import os
 #REGISTRO 3 UTENTI
 url = 'http://localhost:5001/auth_service/signup'
 
+admin_url = 'http://localhost:5009/auth_service/signup'
 data={
     'username' : 'system',
     'password' : '1234'
@@ -28,8 +29,9 @@ data3 = {
     'password' : '1234'
     ,'email' : 'user3@gmail.com'
 }
+
 # Invia la richiesta POST
-response = requests.post(url, data=data)
+response = requests.post(admin_url, data=data)
 # Verifica la risposta
 if response.status_code == 200:
     print('Successo:', response.json())  # Se la risposta è in formato JSON
@@ -62,7 +64,7 @@ else:
 
 # Imposta il percorso della cartella contenente le immagini
 images_folder = "./meme images"
-url = "http://localhost:5001/gachasystem_service/add_gacha"
+url = "http://localhost:5009/gachasystem_service/add_gacha"
 # url = "http://localhost:5004/add_gacha"
 
 count = 0
