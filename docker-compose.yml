@@ -47,9 +47,13 @@ services:
     build: ./authentication_service
     ports:
       - "5002:5002"
+    volumes:
+      - ./RSAkeys:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
     environment:
       - DATABASE_URI=postgresql://user:password@auth_db:5432/auth_db
       - JWT_SECRET_KEY=super-secret-key
+      - PRIVATE_KEY_PATH=/app/RSAkeys/private_key.pem
+      - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
     depends_on:
       - auth_db
 
@@ -69,11 +73,13 @@ services:
     build: ./profile_setting
     volumes:
       - profile_images:/app/static/uploads  # Monta il volume nella cartella del server per contenere le immagini dei memes
+      - ./RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
     ports:
       - "5003:5003"
     environment:
       - DATABASE_URI=postgresql://user:password@profile_db:5432/profile_db
       - JWT_SECRET_KEY=super-secret-key
+      - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
     depends_on:
       - profile_db
   
@@ -95,10 +101,12 @@ services:
     restart: always   # policy on failure
     volumes:
       - meme_images:/app/static/uploads  # Monta il volume nella cartella del server per contenere le immagini dei memes
+      - ./RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
     ports:
       - "5004:5004" # mappa la porta del container 5001 (destra) sulla stessa porta dell'host
     environment:
       - DATABASE_URI=postgresql://user:password@db_gachasystem:5432/memes_db   # variabile d'ambiente che specifica l'uri per connettersi al db
+      - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
       #- JWT_SECRET_KEY=super-secret-key
     depends_on:
       - db_gachasystem
@@ -119,8 +127,11 @@ services:
     build: ./payment_service
     ports:
       - "5006:5006"
+    volumes:
+      - ./RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
     environment:
       - DATABASE_URI=postgresql://user:password@db_payment:5432/trans_db
+      - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
       - JWT_SECRET_KEY=super-secret-key
     depends_on:
       - db_payment
@@ -131,6 +142,10 @@ services:
       restart: always
       ports:
         - "5007:5007"
+      volumes:
+        - ./RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
+      environment:
+        - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
       depends_on:
         - gachasystem
         - payment_service
@@ -151,8 +166,11 @@ services:
     build: ./auction_market_service
     ports:
       - "5008:5008"
+    volumes:
+      - ./RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
     environment:
       - DATABASE_URI=postgresql://user:password@auction_db:5432/auction_db
+      - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
       - JWT_SECRET_KEY=super-secret-key
     depends_on:
       - auction_db

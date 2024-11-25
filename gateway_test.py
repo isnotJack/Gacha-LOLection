@@ -21,22 +21,7 @@ data1 = {
 #     ,'email' : 'user3@gmail.com'
 # }
 
-# Invia la richiesta POST
-response = requests.post(url, data=data1)
-# Verifica la risposta
-if response.status_code == 200:
-    print('Successo:', response.json())  # Se la risposta è in formato JSON
-else:
-    print(f'Errore {response.status_code}: {response.text}')
 
-
-print('Sending request to roll')
-url = 'http://localhost:5001/gacha_roll/gacharoll'
-
-data1 = {
-    'username' : 'user1',
-    'level':'medium'
-}
 
 # data2 = {
 #     'username' : 'user2',
@@ -207,44 +192,62 @@ except Exception as e:
     print(f'Errore generico durante il login: {e}')
     exit(1)
 
-# Logout
-try:
-    url = 'http://localhost:5001/auth_service/logout'
-    headers = {
-        'Authorization': f'Bearer {jwt_token}'  # Aggiungi il token JWT nell'header
-    }
-
-    # Effettua la richiesta DELETE per il logout
-    response = requests.delete(url, headers=headers)
-
-    if response.status_code == 200:
-        print('Logout avvenuto con successo.')
-    else:
-        print(f'Errore {response.status_code} durante il logout: {response.text}')
-except requests.ConnectionError as e:
-    print(f'Errore di connessione durante il logout: {e}')
-except Exception as e:
-    print(f'Errore generico durante il logout: {e}')
-
-#Delete
-# Logout
-try:
-    url = 'http://localhost:5001/auth_service/delete'
-    params= {
-        'username' : 'user1',
-        'password' : '1234'
-    }
-
-    # Effettua la richiesta DELETE per il logout
-    response = requests.delete(url, data=params)
-
-    if response.status_code == 200:
-        print('Delete avvenuto con successo.')
-    else:
-        print(f'Errore {response.status_code} durante il logout: {response.text}')
-except requests.ConnectionError as e:
-    print(f'Errore di connessione durante il logout: {e}')
-except Exception as e:
-    print(f'Errore generico durante il logout: {e}')
+print('Sending request to roll')
+url = 'http://localhost:5007/gacharoll'
+ 
+data1 = {
+    'username' : 'user1',
+    'level':'medium'
+}
+ 
+headers = {
+    'Authorization' : f"Bearer {jwt_token}"
+}
+# Invia la richiesta POST
+response = requests.post(url, json=data1, headers=headers)
+# Verifica la risposta
+if response.status_code == 200:
+    print('Successo:', response.json())  # Se la risposta è in formato JSON
+else:
+    print(f'Errore {response.status_code}: {response.text}')
 
 
+# # Logout
+# try:
+#     url = 'http://localhost:5001/auth_service/logout'
+#     headers = {
+#         'Authorization': f'Bearer {jwt_token}'  # Aggiungi il token JWT nell'header
+#     }
+
+#     # Effettua la richiesta DELETE per il logout
+#     response = requests.delete(url, headers=headers)
+
+#     if response.status_code == 200:
+#         print('Logout avvenuto con successo.')
+#     else:
+#         print(f'Errore {response.status_code} durante il logout: {response.text}')
+# except requests.ConnectionError as e:
+#     print(f'Errore di connessione durante il logout: {e}')
+# except Exception as e:
+#     print(f'Errore generico durante il logout: {e}')
+
+# #Delete
+# # Logout
+# try:
+#     url = 'http://localhost:5001/auth_service/delete'
+#     params= {
+#         'username' : 'user1',
+#         'password' : '1234'
+#     }
+
+#     # Effettua la richiesta DELETE per il logout
+#     response = requests.delete(url, data=params)
+
+#     if response.status_code == 200:
+#         print('Delete avvenuto con successo.')
+#     else:
+#         print(f'Errore {response.status_code} durante il logout: {response.text}')
+# except requests.ConnectionError as e:
+#     print(f'Errore di connessione durante il logout: {e}')
+# except Exception as e:
+#     print(f'Errore generico durante il logout: {e}')

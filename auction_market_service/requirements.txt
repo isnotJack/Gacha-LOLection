@@ -7,5 +7,5 @@ Werkzeug==2.0.3
 SQLAlchemy==1.4.46
 requests==2.28.1
 APScheduler==3.10.1
-
+cryptography
 

@@ -3,15 +3,22 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 import requests , time
+import os
+import datetime
+import uuid
+import jwt
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@auth_db:5432/auth_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 
+private_key_path = os.getenv("PRIVATE_KEY_PATH")
+public_key_path = os.getenv("PUBLIC_KEY_PATH")
+
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
-jwt = JWTManager(app)
+#jwt = JWTManager(app)
 class CircuitBreaker:
     def __init__(self, failure_threshold=3, recovery_timeout=5, reset_timeout=10):
         self.failure_threshold = failure_threshold  # Soglia di fallimento
@@ -144,7 +151,34 @@ def login():
     
     user = User.query.filter_by(username=username).first()
     if user and bcrypt.check_password_hash(user.password, password):
-        access_token = create_access_token(identity={'username': username, 'role': 'user'})
+
+        # Legge la chiave privata
+        with open(private_key_path, "r") as key_file:
+            private_key = key_file.read()
+
+        if user.role == "user":
+            scope = "user"
+        else:
+            scope = "admin" 
+
+        jti = str(uuid.uuid4())  # Genera un UUID univoco per il jti
+
+        header = { 
+            "alg": "RS256",
+            "typ": "JWT"
+        } 
+        payload = {
+            "iss": "http://auth_service:5002",      # Emittente
+            "sub": user.username,              # Soggetto
+            "aud": ["profile_setting", "gachasystem", "payment_service", "gacha_roll", "auction_service"],         
+            "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
+            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1),  # Expiration
+            "scope": scope,                   # Scopi
+            "jti": jti              # JWT ID
+        }
+
+        access_token = jwt.encode(payload, private_key, algorithm="RS256", headers=header)
+
         return jsonify(access_token=access_token), 200
     return jsonify({"Error": "Invalid credentials"}), 422
 
