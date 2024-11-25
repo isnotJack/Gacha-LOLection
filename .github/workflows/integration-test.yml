@@ -27,7 +27,7 @@ jobs:
     # 4. Avvia tutti i microservizi con Docker Compose
     - name: Start Docker Compose
       run: |
-        docker-compose up -d
+        docker compose up -d
 
     # 5. Attendi che i servizi siano attivi
     - name: Wait for services to start
@@ -44,7 +44,7 @@ jobs:
     # 7. Ferma e rimuovi i container Docker
     - name: Stop Docker Compose
       run: |
-        docker-compose down
+        docker compose down
 
     # 8. Carica il report HTML (opzionale)
     - name: Upload HTML report
