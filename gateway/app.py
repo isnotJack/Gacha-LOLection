@@ -232,9 +232,6 @@ def profile_setting(op):
     # Restituisci la risposta del servizio con il codice di stato appropriato
     return make_response(jsonify(response), status_code)
     
-    
-
-
 @app.route('/auction_service/<op>', methods=['GET', 'POST', 'PATCH'])
 def auction_service(op):
     if op not in ALLOWED_AUCTION_OP:

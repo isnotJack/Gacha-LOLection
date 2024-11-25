@@ -1,6 +1,9 @@
 import requests,time
 from flask import Flask, request, jsonify
 from datetime import datetime
+import jwt
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
+import os
 
 app = Flask(__name__)
 
@@ -8,6 +11,8 @@ app = Flask(__name__)
 GACHA_SYSTEM_URL = "http://gachasystem:5004/get_gacha_roll"  # Nome del container nel docker-compose
 PAYMENT_SERVICE_URL = "http://payment_service:5006/pay"  # Nome del container nel docker-compose
 PROFILE_SETTING_URL = "http://profile_setting:5003/insertGacha"  # Nome del container nel docker-compose
+
+public_key_path = os.getenv("PUBLIC_KEY_PATH")
 
 class CircuitBreaker:
     def __init__(self, failure_threshold=3, recovery_timeout=5, reset_timeout=10):
@@ -78,9 +83,26 @@ def gacharoll():
     # Controlla che i parametri siano presenti
     if 'username' not in data or 'level' not in data:                               
         return jsonify({"error": "Missing 'username' or 'level' parameter"}), 400
-
+    
     username = data['username']
     level = data['level']
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="gacha_roll")  
+        #print(f"Token verificato! Dati decodificati: {decoded_token}")
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
 
     # Determina l'importo in base al livello
     if level == "standard":
@@ -133,6 +155,7 @@ def gacharoll():
 
     # Ritorna il risultato del gacha
     return jsonify({
+        "Token": decoded_token,
         "gacha_name": gacha['gacha_name'],
         "description": gacha['description'],
         "rarity": gacha['rarity'],
