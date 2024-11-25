@@ -1,0 +1,54 @@
+name: Integration Test - All Microservices
+
+on:
+  push:
+    branches:
+      - main  # Esegui i test solo sui push al branch principale
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout del codice
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 2. Configura Node.js per Newman
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    # 3. Installa Newman (CLI di Postman)
+    - name: Install Newman
+      run: npm install -g newman
+
+    # 4. Avvia tutti i microservizi con Docker Compose
+    - name: Start Docker Compose
+      run: |
+        docker-compose up -d
+
+    # 5. Attendi che i servizi siano attivi
+    - name: Wait for services to start
+      run: |
+        sleep 30  # Attendi 30 secondi per assicurarti che tutti i servizi siano attivi
+
+    # 6. Esegui i test con Newman
+    - name: Run integration tests with Newman
+      run: |
+        newman run tests/sse-project.postman_collection.json \
+          --reporters cli,html \
+          --reporter-html-export newman-report.html
+
+    # 7. Ferma e rimuovi i container Docker
+    - name: Stop Docker Compose
+      run: |
+        docker-compose down
+
+    # 8. Carica il report HTML (opzionale)
+    - name: Upload HTML report
+      uses: actions/upload-artifact@v3
+      with:
+        name: newman-report
+        path: newman-report.html
