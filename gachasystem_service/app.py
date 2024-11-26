@@ -7,11 +7,15 @@ from sqlalchemy import func
 #from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
+import jwt
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 app = Flask(__name__)   # crea un'applicazione Flask
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@db_gachasystem:5432/memes_db'    # URL di connessione al database
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False    # disabilita il tracciamento delle modifiche per migliorare le prestazioni
 #app.config['JWT_SECRET_KEY'] = 'super-secret-key'
+
+public_key_path = os.getenv("PUBLIC_KEY_PATH")
 
 UPLOAD_FOLDER = '/app/static/uploads'  # Percorso dove Docker monta il volume
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}  # Estensioni permesse
@@ -21,7 +25,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 db = SQLAlchemy(app)
 #bcrypt = Bcrypt(app)
-jwt = JWTManager(app)
+#jwt = JWTManager(app)
 
 class CircuitBreaker:
     def __init__(self, failure_threshold=3, recovery_timeout=5, reset_timeout=10):
@@ -106,12 +110,24 @@ def allowed_file(filename):
 #@jwt_required() # Richiede un token JWT valido per accedere a questa funzione
 def add_gacha():
 
-    #current_user = get_jwt_identity()
-    #username = current_user['username']
-    #role = current_user['role']
-    # Controlla che l'utente abbia il ruolo di 'admin'
-    #if role != 'admin':
-    #    return jsonify({"error": "You are not authorized to perform this action"}), 403 # forbidden
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="gachasystem")  
+        if decoded_token.get("scope") == "user":
+            return jsonify({"error": "Unauthorized action for the user"}), 403
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
 
     name = request.form.get('gacha_name')
     rarity = request.form.get('rarity')
@@ -173,12 +189,23 @@ def add_gacha():
 # @jwt_required()  # Sblocca questa linea se vuoi proteggere l'endpoint con JWT
 def delete_gacha():
     
-    #current_user = get_jwt_identity()
-    #username = current_user['username']
-    #role = current_user['role']
-    # Controlla che l'utente abbia il ruolo di 'admin'
-    #if role != 'admin':
-    #    return jsonify({"error": "You are not authorized to perform this action"}), 403 # forbidden
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="gachasystem")  
+        if decoded_token.get("scope") == "user":
+            return jsonify({"error": "Unauthorized action for the user"}), 403
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
 
     # Recupera il nome del gacha dai parametri della query string
     data= request.get_json()
@@ -227,12 +254,23 @@ def delete_gacha():
 # @jwt_required()  # Sblocca questa linea se vuoi proteggere l'endpoint con JWT
 def update_gacha():
 
-    #current_user = get_jwt_identity()
-    #username = current_user['username']
-    #role = current_user['role']
-    # Controlla che l'utente abbia il ruolo di 'admin'
-    #if role != 'admin':
-    #    return jsonify({"error": "You are not authorized to perform this action"}), 403 # forbidden
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="gachasystem")  
+        if decoded_token.get("scope") == "user":
+            return jsonify({"error": "Unauthorized action for the user"}), 403
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
 
     # Estrai i parametri dalla query string
     data = request.get_json()
@@ -287,6 +325,22 @@ def uploaded_file(filename):
 @app.route('/get_gacha_collection', methods=['GET'])
 def get_gacha_collection():
     
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        jwt.decode(access_token, public_key, algorithms=["RS256"], audience="gachasystem")  
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+
     data= request.get_json()
     # Estrai il parametro 'gacha_name' dalla query string (facoltativo), supporta una lista separata da virgola
     gacha_names = data.get('gacha_name')
@@ -325,6 +379,23 @@ def get_gacha_collection():
 
 @app.route('/get_gacha_roll', methods=['GET'])
 def get_gacha_roll():
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        jwt.decode(access_token, public_key, algorithms=["RS256"], audience="gachasystem")  
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+
     # Estrai il parametro 'level' dalla query string
     level = request.args.get('level')
     
