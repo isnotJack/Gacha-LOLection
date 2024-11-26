@@ -1,3 +1,12 @@
+//// AUTHENTICATION /////
+//login
+curl -X POST "http://localhost:5002/login" \ 
+-H "Content-Type: application/json" \
+-d '{
+    "username": "user1",
+    "password": "1234"
+}'
+
 //// GACHASYSTEM SERVICE /////
 // add gacha
 curl -X POST http://localhost:5001/gachasystem_service/add_gacha \
@@ -93,10 +102,14 @@ curl -X POST http://localhost:5007/gacharoll \
 // see
 curl -X GET "http://localhost:5008/see"  ----------- curl -X GET "http://localhost:5001/auction_service/see"
 
+curl -X GET "http://localhost:5008/see" \
+-H "Authorization: Bearer <access_token>"
+
 
 // create
 curl -X POST "http://localhost:5001/auction_service/create" \
 curl -X POST "http://localhost:5008/create" \
+-H "Authorization: Bearer <access_token>" \
 -H "Content-Type: application/json" \
 -d '{
     "seller_username": "player1",
@@ -109,10 +122,19 @@ curl -X POST "http://localhost:5008/create" \
 curl -X PATCH "http://localhost:5008/modify?auction_id=1&seller_username=new_seller&gacha_name=new_gacha&endDate=2024-12-31T23:59:59&basePrice=15.0" \
 -H "Content-Type: application/json"
 
-// bid
+curl -X PATCH "http://localhost:5008/modify?auction_id=1&basePrice=200" \
+-H "Authorization: Bearer <admin_access_token>" \
+-H "Content-Type: application/json"
 
+
+// bid
 curl -X PATCH "http://localhost:5008/bid?username=player1&auction_id=1&newBid=70.0" \
 -H "Content-Type: application/json"
+
+curl -X PATCH "http://localhost:5008/bid?username=player1&auction_id=1&newBid=70.0" \
+-H "Authorization: Bearer <access_token>" \
+-H "Content-Type: application/json"
+
 
 // gacha receive
 curl -X POST "http://localhost:5008/gacha_receive" \
@@ -123,6 +145,7 @@ curl -X POST "http://localhost:5008/gacha_receive" \
 
 // auction lost 
 curl -X POST "http://localhost:5008/auction_lost" \
+-H "Authorization: Bearer <access_token>" \
 -H "Content-Type: application/json" \
 -d '{
     "auction_id": 1
@@ -130,6 +153,7 @@ curl -X POST "http://localhost:5008/auction_lost" \
 
 // auction terminated
 curl -X POST "http://localhost:5008/auction_terminated" \
+-H "Authorization: Bearer <access_token>" \
 -H "Content-Type: application/json" \
 -d '{
     "auction_id": 1
@@ -137,6 +161,7 @@ curl -X POST "http://localhost:5008/auction_terminated" \
 
 // close auction
 curl -X POST "http://localhost:5008/close_auction" \
+-H "Authorization: Bearer <access_token>" \
 -H "Content-Type: application/json" \
 -d '{
     "auction_id": 1

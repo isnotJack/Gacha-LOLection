@@ -6,12 +6,17 @@ from requests.exceptions import HTTPError, ConnectionError
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 #from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+#from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 from apscheduler.schedulers.background import BackgroundScheduler
+import uuid
+import jwt  # PyJWT
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 
 
+
+public_key_path = os.getenv("PUBLIC_KEY_PATH")
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@auction_db:5432/auction_db'
@@ -19,7 +24,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 
 db = SQLAlchemy(app)
-jwt = JWTManager(app)
+#jwt = JWTManager(app)
 
 class CircuitBreaker:
     def __init__(self, failure_threshold=3, recovery_timeout=5, reset_timeout=10):
@@ -177,6 +182,25 @@ def start_scheduler():
 
 @app.route('/see', methods=['GET'])
 def see_auctions():
+    # Recupera l'header Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # Leggi la chiave pubblica
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")  
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    # Token valido, procedi con la logica originale
     auction_id = request.args.get('auction_id')
     status = request.args.get('status', 'active')
 
@@ -186,7 +210,8 @@ def see_auctions():
             return jsonify(auction.to_dict()), 200
         else:
             return jsonify({"error": "Auction not found"}), 404
-    #se il valore di auction id non è fornito allora ritorna tutte le aste attive
+
+    # Se il valore di auction_id non è fornito allora ritorna tutte le aste attive
     auctions = Auction.query.filter_by(status=status).all()
     return jsonify([auction.to_dict() for auction in auctions]), 200
 
@@ -194,8 +219,25 @@ def see_auctions():
 @app.route('/create', methods=['POST'])
 #@jwt_required()
 def create_auction():
-        # Recupera l'identità dell'utente dal JWT, senza controllo del ruolo
- #   current_user = get_jwt_identity()
+    # Recupera l'header Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # Leggi la chiave pubblica
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Decodifica e verifica il token
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
     # Legge i dati dalla richiesta JSON
     data = request.get_json()
     if data is None:
@@ -245,6 +287,13 @@ def create_auction():
         "gacha_name": gacha_name
     }
 
+     # Prepara gli headers con il token
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+    #PER FARE LA CHIAMATA CON L'ACCESS TOKEN
+    #response, status = profile_circuit_breaker.call('delete', profile_service_url, payload, headers, {}, True)
+
 
         # response = requests.delete(profile_service_url, json=payload, timeout=10)
         # response.raise_for_status()
@@ -263,9 +312,30 @@ def create_auction():
 @app.route('/modify', methods=['PATCH'])
 #@jwt_required()
 def modify_auction():
-    #current_user = get_jwt_identity()
-    #if current_user['role'] != 'admin':
-    #    return jsonify({"error": "Not authorized"}), 403
+    # Recupera l'header Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # Leggi la chiave pubblica
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Decodifica e verifica il token
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")
+        
+        # Verifica che il ruolo sia admin
+        user_role = decoded_token.get("scope")
+        if user_role != "admin":
+            return jsonify({"error": "Not authorized"}), 403
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
 
     auction_id = request.args.get('auction_id')
     if not auction_id:
@@ -296,6 +366,25 @@ def modify_auction():
 
 @app.route('/bid', methods=['PATCH'])
 def bid_for_auction():
+    # Recupera l'header Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # Leggi la chiave pubblica
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Decodifica e verifica il token
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
     # Recupera i parametri dalla query string
     bidder_username = request.args.get('username') 
     auction_id = request.args.get('auction_id')
@@ -369,6 +458,25 @@ def bid_for_auction():
 
 @app.route('/gacha_receive', methods=['POST'])
 def gacha_receive():
+    # Recupera l'header Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # Leggi la chiave pubblica
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Decodifica e verifica il token
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
     # Recupera i parametri dall'oggetto JSON
     data = request.get_json()
     auction_id = data.get('auction_id')
@@ -416,6 +524,25 @@ def gacha_receive():
 
 @app.route('/auction_lost', methods=['POST'])
 def auction_lost():
+    # Recupera l'header Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # Leggi la chiave pubblica
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Decodifica e verifica il token
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
     # Recupera i parametri dal corpo JSON
     data = request.get_json()
     auction_id = data.get('auction_id')
@@ -473,6 +600,25 @@ def auction_lost():
 
 @app.route('/auction_terminated', methods=['POST'])
 def auction_terminated():
+    # Recupera l'header Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # Leggi la chiave pubblica
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Decodifica e verifica il token
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
     # Recupera i parametri dal corpo JSON
     data = request.get_json()
     auction_id = data.get('auction_id')
@@ -524,6 +670,25 @@ def auction_terminated():
 
 @app.route('/close_auction', methods=['POST'])
 def close_auction():
+        # Recupera l'header Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # Leggi la chiave pubblica
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Decodifica e verifica il token
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
     data = request.get_json()
     auction_id = data.get('auction_id')
 
