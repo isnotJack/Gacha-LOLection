@@ -7,11 +7,15 @@ import os, time
 from requests.exceptions import ConnectionError, HTTPError
 from datetime import datetime
 from werkzeug.utils import secure_filename
+import jwt
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@profile_db:5432/profile_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'
+
+public_key_path = os.getenv("PUBLIC_KEY_PATH")
 
 UPLOAD_FOLDER = '/app/static/uploads'  # Percorso dove Docker monta il volume
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}  # Estensioni permesse
@@ -20,7 +24,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
-jwt = JWTManager(app)
+#jwt = JWTManager(app)
 
 class CircuitBreaker:
     def __init__(self, failure_threshold=3, recovery_timeout=5, reset_timeout=10):
@@ -106,21 +110,41 @@ class GachaItem(db.Model):
 @app.route('/modify_profile', methods=['PATCH'])
 #@jwt_required()  # Attiva il controllo del token JWT se richiesto
 def modify_profile():
-    updated_data = request.form                     
+    updated_data = request.form
     username = updated_data.get('username')
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="profile_setting")  
+        if username and decoded_token.get("sub") != username:
+            return jsonify({"error": "Username in token does not match the request username"}), 403
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+
     field = updated_data.get('field')           # specify the text fields to be modified
     value = updated_data.get('value')           # for text fields
 
     # Controlla che il campo username sia fornito
     if not username:
         return jsonify({"error": "Missing required 'username' field"}), 400
-
+    
     # Controlla che il campo non sia 'currency_balance'
     if field == 'currency_balance':
         return jsonify({"error": "Modifying 'currency_balance' field is not allowed"}), 400
 
     # Recupera il profilo da modificare
     profile = Profile.query.filter_by(username=username).first()
+    # controllo forse inutile
     if not profile:
         return jsonify({"error": "Profile not found"}), 404
 
@@ -176,8 +200,28 @@ def modify_profile():
 #@jwt_required()
 def check_profile():
     username = request.args.get('username')
-    profile = Profile.query.filter_by(username=username).first()
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="profile_setting")  
+        if username and decoded_token.get("sub") != username:
+            return jsonify({"error": "Username in token does not match the request username"}), 403
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+
     
+    profile = Profile.query.filter_by(username=username).first()
+    # controllo forse inutile
     if not profile:
         return jsonify({"error": "User not found"}), 401
 
@@ -193,6 +237,24 @@ def check_profile():
 #@jwt_required()
 def retrieve_gacha_collection():
     username = request.args.get('username')
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="profile_setting")  
+        if username and decoded_token.get("sub") != username:
+            return jsonify({"error": "Username in token does not match the request username"}), 403
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+
     profile = Profile.query.filter_by(username=username).first()
     
     if not profile:
@@ -211,17 +273,40 @@ def retrieve_gacha_collection():
         #response = requests.get(url, params={'gacha_name': ','.join(gacha_collection)}, timeout=10)
         # Invia la lista di gacha_name
     payload = {'gacha_name': ','.join(gacha_collection)}
-    headers = {'Content-Type': 'application/json'}
+    headers = {
+        #"Content-Type": 'application/json',
+        "Authorization": f"Bearer {access_token}"
+    }
     # response = requests.get(url, json=payload, headers=headers, timeout=10)
     res, status = gacha_sys_circuit_breaker.call('get', url , payload, headers, {}, True)
     if status != 200:
         return jsonify({'Error': 'Gacha service is down', 'details': res}), 500
-    return res, 200
+    return jsonify(res), 200
+
 # Endpoint per visualizzare i dettagli di un oggetto gacha specifico
 @app.route('/info_gachacollection', methods=['GET'])
 #@jwt_required()
 def info_gacha_collection():
     username = request.args.get('username')
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="profile_setting")  
+        if username and decoded_token.get("sub") != username:
+            return jsonify({"error": "Username in token does not match the request username"}), 403
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+
     gacha_name = request.args.get('gacha_name')
 
     # Verifica che il profilo utente esista
@@ -239,10 +324,13 @@ def info_gacha_collection():
 
         # # Decodifica i dati JSON restituiti dal servizio
         # response_data = x.json()
-    res, status =  gacha_sys_circuit_breaker.call('get', url, params, {},{}, True)
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+    res, status =  gacha_sys_circuit_breaker.call('get', url, params, headers, {}, True)
     if status == 200:
         return jsonify(res), 200
-    return jsonify({"error": res}), 500
+    return jsonify({"error": res}), status
 
 
 # route che serve le immagini
@@ -315,6 +403,25 @@ def create_profile():
 def delete_profile():
     data= request.get_json()
     username = data.get('username')
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="profile_setting")  
+        if username and decoded_token.get("sub") != username:
+            return jsonify({"error": "Username in token does not match the request username"}), 403
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+
     user = Profile.query.filter_by(username=username).first()
     if not user:
         return jsonify({'Error': 'User not found'}), 400
@@ -326,16 +433,33 @@ def delete_profile():
 def insertGacha():
     # Recupera il JSON dalla richiesta
     data = request.get_json()
-
     # Controlla che i dati non siano nulli
     if not data:
         return jsonify({"error": "Missing request data"}), 400
 
-    # Controlla che tutti i parametri obbligatori siano presenti
     username = data.get('username')
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="profile_setting")  
+        if username and decoded_token.get("sub") != username:
+            return jsonify({"error": "Username in token does not match the request username"}), 403
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    
     gacha_name = data.get('gacha_name')
     collected_date_str = data.get('collected_date')
-
+    # Controlla che tutti i parametri obbligatori siano presenti
     if not username:
         return jsonify({"error": "Missing 'username' parameter"}), 400
     if not gacha_name:
@@ -370,6 +494,25 @@ def insertGacha():
 def deleteGacha():
     data = request.get_json()
     username = data.get('username')
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="profile_setting")  
+        if username and username != "null" and decoded_token.get("sub") != username:
+            return jsonify({"error": "Username in token does not match the request username"}), 403
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+
     gacha_name = data.get('gacha_name')
     all = data.get('all', False)
     #collected_date = data.get('collected_date')

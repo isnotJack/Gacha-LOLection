@@ -140,8 +140,9 @@ def auth(op):
         username = request.form.get('username')
         password = request.form.get('password')
         email = request.form.get('email')
+        role = "admin"
         url = SINGUP_URL
-        params = {'username': username, 'password': password, 'email': email}
+        params = {'username': username, 'password': password, 'email': email, 'role': role}
     # ENTRAMBI
     elif op == 'login':
         username = request.form.get('username')

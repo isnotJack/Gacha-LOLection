@@ -235,7 +235,12 @@ def delete_gacha():
         "gacha_name": gacha_name,
         "all": True
     }
-    response,status = profile_circuit_breaker.call('delete', PROFILE_SETTING_URL, payload, {},{}, True)
+
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+
+    response,status = profile_circuit_breaker.call('delete', PROFILE_SETTING_URL, payload, headers, {}, True)
     # response = requests.delete(PROFILE_SETTING_URL, json=payload, timeout=10)
     # Verifica se la richiesta è andata a buon fine
     if status != 200 and status != 404:

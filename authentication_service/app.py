@@ -105,7 +105,11 @@ def signup():
     if user:
         return jsonify({'Error': f'User {username} already present'}), 422   
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    new_user = User(username=username, password=hashed_password, email=email, role= 'user')
+    if 'role' in data and data.get('role') == "admin":
+        actual_role = "admin"
+    else:
+        actual_role = "user"
+    new_user = User(username=username, password=hashed_password, email=email, role= actual_role)
 
     db.session.add(new_user)
     db.session.commit()
