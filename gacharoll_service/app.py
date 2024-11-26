@@ -99,10 +99,13 @@ def gacharoll():
         # Verifica il token con la chiave pubblica
         decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="gacha_roll")  
         #print(f"Token verificato! Dati decodificati: {decoded_token}")
+        if decoded_token.get("sub") != username:
+            return jsonify({"error": "Username in token does not match the request username"}), 403
     except ExpiredSignatureError:
         return jsonify({"error": "Token expired"}), 401
     except InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
+    
 
     # Determina l'importo in base al livello
     if level == "standard":
@@ -120,6 +123,11 @@ def gacharoll():
         "receiver_us": "system",
         "amount": amount
     }
+
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+
     payment_response,status = payment_circuit_breaker.call('post', PAYMENT_SERVICE_URL, payment_data, {},{}, False)
     # try: 
     #     payment_response = requests.post(PAYMENT_SERVICE_URL, data=payment_data, timeout=10)
@@ -127,7 +135,7 @@ def gacharoll():
         return jsonify({"error": f"Payment failed , details : {payment_response}"}), status
     # params={'level': level}
     url = GACHA_SYSTEM_URL + f'?level={level}'
-    response,status = gacha_sys_circuit_breaker.call('get', url, {}, {},{}, False)
+    response,status = gacha_sys_circuit_breaker.call('get', url, {}, headers, {}, False)
     # try:
     #     # Step 2: Fai una chiamata al servizio Gacha System per ottenere il Gacha (roll)
     #     response = requests.get(GACHA_SYSTEM_URL, params={'level': level}, timeout=10)
@@ -155,7 +163,6 @@ def gacharoll():
 
     # Ritorna il risultato del gacha
     return jsonify({
-        "Token": decoded_token,
         "gacha_name": gacha['gacha_name'],
         "description": gacha['description'],
         "rarity": gacha['rarity'],
