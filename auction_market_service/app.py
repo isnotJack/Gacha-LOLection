@@ -436,7 +436,10 @@ def bid_for_auction():
     # except requests.ConnectionError:
     #     return jsonify({"error": "Payment Service is down"}), 404
     # except requests.HTTPError as e:
-    payment_response, status = payment_circuit_breaker.call('post',payment_service_url, payload, {},{}, False)
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+    payment_response, status = payment_circuit_breaker.call('post',payment_service_url, payload, headers,{}, False)
     if status != 200:
         return jsonify({"error": f"Payment failed: {payment_response}"}), status
 
@@ -517,7 +520,10 @@ def gacha_receive():
     #     return jsonify({"Error": "Time out expired"}), 408
     # except requests.exceptions.RequestException as e:
         # Gestisce errori di rete o problemi con il servizio profile_setting
-    payment_response, status = profile_circuit_breaker.call('post', profile_service_url,payload, {},{}, True)
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+    payment_response, status = profile_circuit_breaker.call('post', profile_service_url,payload, headers,{}, True)
     if status != 200:
         return jsonify({f"error": "Profile service failed", "details": {payment_response}}), status
     return jsonify({"message": "Gacha correctly received"}), 200
@@ -582,7 +588,10 @@ def auction_lost():
             # try:
             #     payment_response = requests.post(payment_service_url, data=refund_payload, timeout=10)
             #     payment_response.raise_for_status()
-            payment_response , status = payment_circuit_breaker.call('post', payment_service_url, refund_payload, {},{}, False)
+            headers = {
+                "Authorization": f"Bearer {access_token}"
+            }
+            payment_response , status = payment_circuit_breaker.call('post', payment_service_url, refund_payload, headers,{}, False)
             if status != 200:
                 failed_refunds.append({"username": bid.username, "error": f"Payment failed: {payment_response}"})
             else:
@@ -646,8 +655,10 @@ def auction_terminated():
         "receiver_us": auction.seller_username,  # Il creatore dell'asta riceve
         "amount": auction.current_bid  # L'importo totale offerto dal vincitore
     }
-
-    payment_response , status = payment_circuit_breaker.call('post', payment_service_url, transfer_payload, {},{}, False)
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+    payment_response , status = payment_circuit_breaker.call('post', payment_service_url, transfer_payload, headers,{}, False)
     if status != 200:
     # try:
     #     payment_response = requests.post(payment_service_url, data=transfer_payload, timeout=10)
@@ -717,7 +728,10 @@ def close_auction():
 
     # Restituisco l'oggetto gacha al proprietario chiamando l'API gacha_receive
     payload = {"auction_id": auction.id}
-    response , status = auction_circuit_breaker.call('post', "http://auction_service:5008/gacha_receive", payload, {},{}, True)
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+    response , status = auction_circuit_breaker.call('post', "http://auction_service:5008/gacha_receive", payload, headers,{}, True)
     if status != 200:
     # try:
     #     response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)

@@ -1,11 +1,13 @@
+import os
 from flask import Flask,request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
-from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+#from flask_bcrypt import Bcrypt
+#from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 import datetime
 import time
-
+import jwt  # PyJWT
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@db_payment:5432/trans_db'
@@ -14,8 +16,8 @@ app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 
 db = SQLAlchemy(app)
 # bcrypt = Bcrypt(app)
-jwt = JWTManager(app)
-
+#jwt = JWTManager(app)
+public_key_path = os.getenv("PUBLIC_KEY_PATH")
 # Transaction Model
 class Transaction(db.Model):
     __tablename__ = 'transactions'
@@ -37,6 +39,24 @@ from datetime import datetime
 
 @app.route('/pay', methods=['POST'])
 def pay():
+    # Recupera l'header Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # Verifica e decodifica del token
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="payment_service")
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+
     payer_us = request.form.get('payer_us')
     receiver_us = request.form.get('receiver_us')
     amount = request.form.get('amount')
@@ -102,7 +122,25 @@ def pay():
 
 
 @app.route('/buycurrency', methods = ['POST'])
-def buycurrency():  
+def buycurrency():
+    # Recupera l'header Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # Verifica e decodifica del token
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="payment_service")
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+  
     data = request.get_json()
     username = data.get('username')
     amount = data.get('amount')
@@ -152,6 +190,23 @@ def buycurrency():
 
 @app.route('/viewTrans', methods = ['GET'])
 def viewTrans():  
+    # Recupera l'header Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # Verifica e decodifica del token
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="payment_service")
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
     username = request.args.get('username')
     if not username:
         return jsonify({'Error' : 'Invalid parameter username'}), 400
@@ -169,6 +224,23 @@ def viewTrans():
 
 @app.route('/newBalance', methods=['POST'])
 def newBalance():
+    # # Recupera l'header Authorization
+    # auth_header = request.headers.get('Authorization')
+    # if not auth_header:
+    #     return jsonify({"error": "Missing Authorization header"}), 401
+
+    # access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # # Verifica e decodifica del token
+    # with open(public_key_path, 'r') as key_file:
+    #     public_key = key_file.read()
+
+    # try:
+    #     decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="payment_service")
+    # except jwt.ExpiredSignatureError:
+    #     return jsonify({"error": "Token expired"}), 401
+    # except jwt.InvalidTokenError:
+    #     return jsonify({"error": "Invalid token"}), 401
     data = request.get_json()
     username = data.get('username')
     if not username:
@@ -188,6 +260,23 @@ def newBalance():
 
 @app.route('/getBalance', methods=['GET'])
 def getBalance():
+        # Recupera l'header Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # Verifica e decodifica del token
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="payment_service")
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
     username = request.args.get('username')
     if not username:
         return jsonify({'Error' : 'Invalid parameter username'}), 400
@@ -199,6 +288,23 @@ def getBalance():
     
 @app.route('/deleteBalance', methods=['DELETE'])
 def deleteBalance():
+        # Recupera l'header Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    # Verifica e decodifica del token
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="payment_service")
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
     data = request.get_json()
     username = data.get('username')
     if not username:
