@@ -128,7 +128,7 @@ def gacharoll():
         "Authorization": f"Bearer {access_token}"
     }
 
-    payment_response,status = payment_circuit_breaker.call('post', PAYMENT_SERVICE_URL, payment_data, {},{}, False)
+    payment_response,status = payment_circuit_breaker.call('post', PAYMENT_SERVICE_URL, payment_data, headers,{}, False)
     # try: 
     #     payment_response = requests.post(PAYMENT_SERVICE_URL, data=payment_data, timeout=10)
     if status != 200:
@@ -155,7 +155,7 @@ def gacharoll():
         "collected_date": collected_date.isoformat()  # Passiamo l'oggetto datetime
     }
 
-    profile_response = profile_circuit_breaker.call('post', PROFILE_SETTING_URL, gacha_data,{},{}, True)
+    profile_response = profile_circuit_breaker.call('post', PROFILE_SETTING_URL, gacha_data,headers,{}, True)
     # try:
     #     profile_response = requests.post(PROFILE_SETTING_URL, json=gacha_data, timeout=10)
     if status != 200:
