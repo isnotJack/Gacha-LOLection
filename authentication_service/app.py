@@ -1,7 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
+# from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+import bcrypt
 import requests , time
 import os
 import datetime
@@ -17,7 +18,7 @@ private_key_path = os.getenv("PRIVATE_KEY_PATH")
 public_key_path = os.getenv("PUBLIC_KEY_PATH")
 
 db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
+# bcrypt = Bcrypt(app)
 #jwt = JWTManager(app)
 class CircuitBreaker:
     def __init__(self, failure_threshold=3, recovery_timeout=5, reset_timeout=10):
@@ -88,7 +89,13 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    salt = db.Column(db.String(200), nullable=False)  # Nuovo campo per il salt
     role = db.Column(db.String(50), nullable=False)
+
+class RefreshToken(db.Model):
+    __tablename__ = 'refresh_tokens'
+    jti_id = db.Column(db.String(200), primary_key=True)
+    is_revoked = db.Column(db.Boolean, nullable=False)
 
 # Endpoint per la creazione di un account
 @app.route('/signup', methods=['POST'])
@@ -107,8 +114,12 @@ def signup():
     user = User.query.filter_by(username=username).first()
     if user:
         return jsonify({'Error': f'User {username} already present'}), 422   
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    new_user = User(username=username, password=hashed_password, email=email, role= role)
+    salt = bcrypt.gensalt().decode('utf-8')  # Genera il salt
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt.encode('utf-8')).decode('utf-8')
+    
+    # Creazione del nuovo utente
+    new_user = User(username=username, password=hashed_password, email=email, role=role, salt=salt)
+
 
     db.session.add(new_user)
     db.session.commit()
@@ -153,8 +164,8 @@ def login():
          return jsonify({"Error": "Missing parameters"}), 400
     
     user = User.query.filter_by(username=username).first()
-    if user and bcrypt.check_password_hash(user.password, password):
-
+    hashed_input = bcrypt.hashpw(password.encode('utf-8'), user.salt.encode('utf-8')).decode('utf-8')
+    if user and user.password == hashed_input:
         # Legge la chiave privata
         with open(private_key_path, "r") as key_file:
             private_key = key_file.read()
@@ -163,7 +174,6 @@ def login():
             scope = "user"
         else:
             scope = "admin" 
-
         jti = str(uuid.uuid4())  # Genera un UUID univoco per il jti
 
         header = { 
@@ -175,23 +185,72 @@ def login():
             "sub": user.username,              # Soggetto
             "aud": ["profile_setting", "gachasystem", "payment_service", "gacha_roll", "auction_service"],         
             "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
-            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1),  # Expiration
+            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),  # Expiration
             "scope": scope,                   # Scopi
             "jti": jti              # JWT ID
         }
 
         access_token = jwt.encode(payload, private_key, algorithm="RS256", headers=header)
 
-        return jsonify(access_token=access_token), 200
+        refresh_jti = str(uuid.uuid4())  # Genera un UUID univoco per il jti
+
+        header = {
+            "alg": "RS256",
+            "typ": "JWT"
+        }
+
+        payload = {
+            "iss": "http://auth_service:5002",      # Emittente
+            "sub": user.username,                  # Soggetto (può essere l'ID utente o l'email)
+            "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
+            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1),  # Expiration (7 giorni)
+            "jti": refresh_jti                             # JWT ID
+        }
+
+        refresh_token = jwt.encode(payload, private_key, algorithm="RS256", headers=header)
+        new_token = RefreshToken(jti_id=refresh_jti, is_revoked = False)
+        db.session.add(new_token)
+        db.session.commit()
+        return jsonify(access_token=access_token, refresh_token = refresh_token), 200
     return jsonify({"Error": "Invalid credentials"}), 422
 
 
 # Endpoint per il logout (simulato, senza revoca token per semplicità)
 @app.route('/logout', methods=['DELETE'])
-@jwt_required()
 def logout():
+    ref_token = request.headers.get('Refresh')
+    if not ref_token:
+        return jsonify({'error': 'Refresh token not present'}), 400
+    # try:
+    # Carica la chiave pubblica
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+    
+    # Decodifica il token
+    decoded_token = jwt.decode(ref_token, public_key, algorithms=["RS256"])
+    jti = decoded_token.get("jti")  # Estrai il jti dal token
+    
+    # Cerca il token nel database
+    old_token = RefreshToken.query.filter_by(jti_id=jti).first()
+    if not old_token:
+        return jsonify({'error': 'Refresh token not found'}), 404
+
+    # Controlla se il token è già scaduto
+    if old_token.is_revoked:
+        return jsonify({"msg": "Token already revoked"}), 200
+
+    # Marca il token come scaduto
+    old_token.is_revoked = True
+    db.session.commit()
+
     return jsonify({"msg": "Logout success"}), 200
 
+    # except jwt.ExpiredSignatureError:
+    #     return jsonify({"error": "Refresh token expired"}), 401
+    # except jwt.InvalidTokenError:
+    #     return jsonify({"error": "Invalid token"}), 400
+    # except Exception as e:
+    #     return jsonify({"error": str(e)}), 500
 # Endpoint per l'eliminazione di un account
 @app.route('/delete', methods=['DELETE'])
 def delete_account():

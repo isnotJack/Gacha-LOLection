@@ -3,5 +3,11 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(100) NOT NULL,
     email VARCHAR(120) UNIQUE NOT NULL,
+    salt VARCHAR(500) NOT NULL,
     role VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE refresh_tokens (
+    jti_id VARCHAR(200) PRIMARY KEY,
+    is_revoked BOOLEAN DEFAULT FALSE
 );

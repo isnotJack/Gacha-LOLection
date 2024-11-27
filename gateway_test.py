@@ -30,6 +30,11 @@ else:
     print(f'Errore {response.status_code}: {response.text}')
 token = response.json()
 
+admin_ref_token = token.get('refresh_token')
+a_ref_headers = {
+    'Refresh' : admin_ref_token
+}
+
 admin_token = token.get('access_token')
 aheaders = {
     'Authorization' : f'Bearer {admin_token}'
@@ -47,6 +52,10 @@ user1_token = token.get('access_token')
 headers1 = {
     'Authorization' : f'Bearer {user1_token}'
 }
+user1_ref_token = token.get('refresh_token')
+user1_ref_headers = {
+    'Refresh' : user1_ref_token
+}
 
 response = requests.post(url, data=user2)
 # Verifica la risposta
@@ -60,6 +69,11 @@ user2_token = token.get('access_token')
 headers2 = {
     'Authorization' : f'Bearer {user2_token}'
 }
+user2_ref_token = token.get('refresh_token')
+user2_ref_headers = {
+    'Refresh' : user2_ref_token
+}
+
 
 print("2 clients buy currency \n")
 url = 'http://localhost:5001/payment_service/buycurrency'
@@ -189,24 +203,22 @@ else:
 
 
 
-# # Logout
-# try:
-#     url = 'http://localhost:5001/auth_service/logout'
-#     headers = {
-#         'Authorization': f'Bearer {jwt_token}'  # Aggiungi il token JWT nell'header
-#     }
 
-#     # Effettua la richiesta DELETE per il logout
-#     response = requests.delete(url, headers=headers)
+# Logout
+try:
+    url = 'http://localhost:5001/auth_service/logout'
+    
+    # Effettua la richiesta DELETE per il logout
+    response = requests.delete(url, headers=user1_ref_headers)
 
-#     if response.status_code == 200:
-#         print('Logout avvenuto con successo.')
-#     else:
-#         print(f'Errore {response.status_code} durante il logout: {response.text}')
-# except requests.ConnectionError as e:
-#     print(f'Errore di connessione durante il logout: {e}')
-# except Exception as e:
-#     print(f'Errore generico durante il logout: {e}')
+    if response.status_code == 200:
+        print('Logout avvenuto con successo.')
+    else:
+        print(f'Errore {response.status_code} durante il logout: {response.text}')
+except requests.ConnectionError as e:
+    print(f'Errore di connessione durante il logout: {e}')
+except Exception as e:
+    print(f'Errore generico durante il logout: {e}')
 
 # #Delete
 # # Logout
