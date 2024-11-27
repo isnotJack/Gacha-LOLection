@@ -268,21 +268,23 @@ def retrieve_gacha_collection():
 
     url="http://gachasystem:5004/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
      # Se l'utente ha dei gachas nella collezione, li inviamo al servizio come parametro
-    
+    jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
+    headers = {
+        'Authorization': jwt_token,  # Usa il token JWT ricevuto nell'header della richiesta
+        'Content-Type': 'application/json'
+    }
         # Invia la lista di gacha_name come query string
         #response = requests.get(url, params={'gacha_name': ','.join(gacha_collection)}, timeout=10)
         # Invia la lista di gacha_name
     payload = {'gacha_name': ','.join(gacha_collection)}
-    headers = {
-        #"Content-Type": 'application/json',
-        "Authorization": f"Bearer {access_token}"
-    }
+    # headers = {'Content-Type': 'application/json'
+    #            ''}
     # response = requests.get(url, json=payload, headers=headers, timeout=10)
     res, status = gacha_sys_circuit_breaker.call('get', url , payload, headers, {}, True)
     if status != 200:
         return jsonify({'Error': 'Gacha service is down', 'details': res}), 500
     return jsonify(res), 200
-
+ 
 # Endpoint per visualizzare i dettagli di un oggetto gacha specifico
 @app.route('/info_gachacollection', methods=['GET'])
 #@jwt_required()

@@ -93,23 +93,22 @@ class User(db.Model):
 # Endpoint per la creazione di un account
 @app.route('/signup', methods=['POST'])
 def signup():
-
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
     email = data.get('email')
-
+    auth = request.headers.get('Origin')
+    if not auth or auth != 'admin_gateway':
+        role='user'
+    else:
+        role='admin'
     if not username or not password or not email:
         return jsonify({"Error": "Missing parameters"}), 400
     user = User.query.filter_by(username=username).first()
     if user:
         return jsonify({'Error': f'User {username} already present'}), 422   
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    if 'role' in data and data.get('role') == "admin":
-        actual_role = "admin"
-    else:
-        actual_role = "user"
-    new_user = User(username=username, password=hashed_password, email=email, role= actual_role)
+    new_user = User(username=username, password=hashed_password, email=email, role= role)
 
     db.session.add(new_user)
     db.session.commit()

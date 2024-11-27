@@ -38,7 +38,6 @@ if response.status_code == 200:
 else:
     print(f'Errore {response.status_code}: {response.text}')
 
-
 # Invia la richiesta POST
 response = requests.post(url, data=data1)
 # Verifica la risposta
@@ -61,11 +60,28 @@ if response.status_code == 200:
 else:
     print(f'Errore {response.status_code}: {response.text}')
 
+    # LOGIN ADMIN #
 
+admin_url = 'http://localhost:5009/auth_service/login'
+data={
+    'username' : 'system',
+    'password' : '1234'
+    }
+response = requests.post(admin_url, data=data)
+# Verifica la risposta
+if response.status_code == 200:
+    print('Successo:', response.json())  # Se la risposta è in formato JSON
+else:
+    print(f'Errore {response.status_code}: {response.text}')
+token = response.json()
+
+admin_token = token.get('access_token')
+headers = {
+    'Authorization' : f'Bearer {admin_token}'
+}
 # Imposta il percorso della cartella contenente le immagini
 images_folder = "./meme images"
 url = "http://localhost:5009/gachasystem_service/add_gacha"
-# url = "http://localhost:5004/add_gacha"
 
 count = 0
 rarity = ['common', 'rare', 'legendary' ]
@@ -89,27 +105,9 @@ for filename in os.listdir(images_folder):
         }
         count = (count +1) % 3
         # Invia la richiesta POST
-        response = requests.post(url, files=files, data=data)
+        response = requests.post(url, files=files, data=data, headers=headers)
         
         # Mostra l'esito della richiesta
         print(f"Status Code: {response.status_code}")
         print(f"Response Text: {response.text}\n")
 
-
-
-
-# # Supponiamo che tu abbia il token JWT salvato dopo il login
-# jwt_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMTg1NTA3NCwianRpIjoiNmFkYmYzZTAtM2U1YS00YzQ2LWI2YzMtOTM3ZGYxZWEwMjg2IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJ1c2VybmFtZSI6InVzZXIxIiwicm9sZSI6InVzZXIifSwibmJmIjoxNzMxODU1MDc0LCJleHAiOjE3MzE4NTU5NzR9.CFJAzYw1dvviXkbqcDuJ1aHkDJtNWpySC1GlOIeT4vM"
-#  Header con il token JWT
-# headers = {
-#     'Authorization': f'Bearer {jwt_token}'
-# }
-
-# #  # Invia la richiesta DELETE per effettuare il logout
-# response = requests.patch(url, data,headers=headers)
-
-# Verifica la risposta
-if response.status_code == 200:
-    print('Successo:', response.json())  # Se la risposta è in formato JSON
-else:
-    print(f'Errore {response.status_code}: {response.text}')
