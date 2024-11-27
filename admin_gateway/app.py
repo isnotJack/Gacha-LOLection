@@ -140,6 +140,7 @@ def auth(op):
         username = request.form.get('username')
         password = request.form.get('password')
         email = request.form.get('email')
+        role = "admin"
         url = SINGUP_URL
         headers = {
             'Origin' : 'admin_gateway'
