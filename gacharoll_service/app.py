@@ -80,13 +80,6 @@ def gacharoll():
     # Estrai i dati dal body della richiesta
     data = request.get_json()
 
-    # Controlla che i parametri siano presenti
-    if 'username' not in data or 'level' not in data:                               
-        return jsonify({"error": "Missing 'username' or 'level' parameter"}), 400
-    
-    username = data['username']
-    level = data['level']
-
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         return jsonify({"error": "Missing Authorization header"}), 401
@@ -99,13 +92,19 @@ def gacharoll():
         # Verifica il token con la chiave pubblica
         decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="gacha_roll")  
         #print(f"Token verificato! Dati decodificati: {decoded_token}")
-        if decoded_token.get("sub") != username:
+        if 'username' in data and decoded_token.get("sub") != data['username']:
             return jsonify({"error": "Username in token does not match the request username"}), 403
     except ExpiredSignatureError:
         return jsonify({"error": "Token expired"}), 401
     except InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
+
+    # Controlla che i parametri siano presenti
+    if 'username' not in data or 'level' not in data:                               
+        return jsonify({"error": "Missing 'username' or 'level' parameter"}), 400
     
+    username = data['username']
+    level = data['level']
 
     # Determina l'importo in base al livello
     if level == "standard":
@@ -154,7 +153,6 @@ def gacharoll():
         "gacha_name": gacha['gacha_name'],  
         "collected_date": collected_date.isoformat()  # Passiamo l'oggetto datetime
     }
-
     profile_response = profile_circuit_breaker.call('post', PROFILE_SETTING_URL, gacha_data,headers,{}, True)
     # try:
     #     profile_response = requests.post(PROFILE_SETTING_URL, json=gacha_data, timeout=10)
