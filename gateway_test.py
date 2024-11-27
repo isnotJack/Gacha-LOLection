@@ -74,6 +74,7 @@ user2_ref_headers = {
     'Refresh' : user2_ref_token
 }
 
+
 print("2 clients buy currency \n")
 url = 'http://localhost:5001/payment_service/buycurrency'
 
@@ -199,6 +200,7 @@ if response.status_code == 200:
     print('Successo:', response.json())  # Se la risposta è in formato JSON
 else:
     print(f'Errore {response.status_code}: {response.text}')
+
 
 
 

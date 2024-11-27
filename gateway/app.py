@@ -162,8 +162,8 @@ def auth(op):
     elif op == 'logout':
         url = LOGOUT_URL
         params = {}
-        jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
-        headers = {'Authorization': jwt_token}  # Usa il token JWT ricevuto nell'header della richiesta
+        jwt_token = request.headers.get('Refresh')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
+        headers = {'Refresh': jwt_token}  # Usa il token JWT ricevuto nell'header della richiesta
 
     # Chiamata al servizio in base all'operazione
     if op in ['login', 'signup']:

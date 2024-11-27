@@ -221,37 +221,36 @@ def logout():
     ref_token = request.headers.get('Refresh')
     if not ref_token:
         return jsonify({'error': 'Refresh token not present'}), 400
+    # try:
+    # Carica la chiave pubblica
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+    
+    # Decodifica il token
+    decoded_token = jwt.decode(ref_token, public_key, algorithms=["RS256"])
+    jti = decoded_token.get("jti")  # Estrai il jti dal token
+    
+    # Cerca il token nel database
+    old_token = RefreshToken.query.filter_by(jti_id=jti).first()
+    if not old_token:
+        return jsonify({'error': 'Refresh token not found'}), 404
 
-    try:
-        # Carica la chiave pubblica
-        with open(public_key_path, 'r') as key_file:
-            public_key = key_file.read()
-        
-        # Decodifica il token
-        decoded_token = jwt.decode(ref_token, public_key, algorithms=["RS256"])
-        jti = decoded_token["jti"]  # Estrai il jti dal token
+    # Controlla se il token è già scaduto
+    if old_token.is_revoked:
+        return jsonify({"msg": "Token already revoked"}), 200
 
-        # Cerca il token nel database
-        old_token = RefreshToken.query.filter_by(jti=jti).first()
-        if not old_token:
-            return jsonify({'error': 'Refresh token not found'}), 404
+    # Marca il token come scaduto
+    old_token.is_revoked = True
+    db.session.commit()
 
-        # Controlla se il token è già scaduto
-        if old_token.is_expired:
-            return jsonify({"msg": "Token already revoked"}), 200
+    return jsonify({"msg": "Logout success"}), 200
 
-        # Marca il token come scaduto
-        old_token.is_expired = True
-        db.session.commit()
-
-        return jsonify({"msg": "Logout success"}), 200
-
-    except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Refresh token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"error": "Invalid token"}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    # except jwt.ExpiredSignatureError:
+    #     return jsonify({"error": "Refresh token expired"}), 401
+    # except jwt.InvalidTokenError:
+    #     return jsonify({"error": "Invalid token"}), 400
+    # except Exception as e:
+    #     return jsonify({"error": str(e)}), 500
 # Endpoint per l'eliminazione di un account
 @app.route('/delete', methods=['DELETE'])
 def delete_account():

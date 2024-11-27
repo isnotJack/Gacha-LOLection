@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE refresh_tokens (
-    jti_ID VARCHAR(200) PRIMARY KEY,
+    jti_id VARCHAR(200) PRIMARY KEY,
     is_revoked BOOLEAN DEFAULT FALSE
 );
