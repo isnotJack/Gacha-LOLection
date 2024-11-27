@@ -141,17 +141,25 @@ def auth(op):
         password = request.form.get('password')
         email = request.form.get('email')
         url = SINGUP_URL
+        headers = {
+            'Origin' : 'admin_gateway'
+        }
         params = {'username': username, 'password': password, 'email': email}
     # ENTRAMBI
     elif op == 'login':
         username = request.form.get('username')
         password = request.form.get('password')
         url = LOGIN_URL
+        headers={}
         params = {'username': username, 'password': password}
     # ENTRAMBI
     elif op == 'delete':
         username = request.form.get('username')
         password = request.form.get('password')
+        jwt_token = request.headers.get('Authorization')
+        headers = {
+            'Authorization' : jwt_token
+        }
         url = DELETE_URL
         params = {'username': username, 'password': password}
     # ENTRAMBI
@@ -163,11 +171,11 @@ def auth(op):
 
     # Chiamata al servizio in base all'operazione
     if op in ['login', 'signup']:
-        x, status_code = auth_circuit_breaker.call('POST', url, params, {}, {}, True)
+        x, status_code = auth_circuit_breaker.call('POST', url, params, headers, {}, True)
     elif op == 'logout':
         x, status_code = auth_circuit_breaker.call('DELETE', url, {}, headers, {}, False)
     else:
-        x, status_code = auth_circuit_breaker.call('DELETE', url, params, {}, {}, True)
+        x, status_code = auth_circuit_breaker.call('DELETE', url, params, headers, {}, True)
 
     if status_code == 200:
         # Restituisci la risposta del servizio con il codice di stato appropriato
@@ -209,13 +217,16 @@ def auction_service(op):
     if op == 'see':
         auction_id = request.args.get('auction_id')  # Recupera auction_id dai parametri della query
         status = request.args.get('status', 'active')  # Status predefinito a 'active'
-
+        jwt_token = request.headers.get('Authorization')
+        headers = {
+            'Authorization' : jwt_token
+        }
         # Costruisce l'URL con i parametri corretti
         url = f'{SEE_AUCTION_URL}?status={status}'
         if auction_id:
             url += f'&auction_id={auction_id}'
 
-        response, status_code = auction_circuit_breaker.call('get', url, {}, {}, {}, False)
+        response, status_code = auction_circuit_breaker.call('get', url, {}, headers, {}, False)
         if status_code != 200:
             return jsonify({'Error' : f'Error during see op {response}'}), status_code
 
@@ -233,7 +244,10 @@ def auction_service(op):
 
         if not auction_id:
             return jsonify({"error": "Auction ID is required"}), 400
-
+        jwt_token = request.headers.get('Authorization')
+        headers = {
+            'Authorization' : jwt_token
+        }
         url = f'{MODIFY_AUCTION_URL}?auction_id={auction_id}'
         if seller_username:
             url += f'&seller_username={seller_username}'
@@ -244,7 +258,7 @@ def auction_service(op):
         if end_date:
             url += f'&endDate={end_date}'
 
-        response, status_code = auction_circuit_breaker.call('patch', url, {}, {}, {}, False)
+        response, status_code = auction_circuit_breaker.call('patch', url, {}, headers, {}, False)
         if status_code != 200:
             return jsonify({'Error' : f'Error during modify op {response}'}), status_code
         return make_response(jsonify(response), status_code)
@@ -255,7 +269,11 @@ def gacha_image(name):
     url = GACHA_IMAGE_URL + name
     file_extension = os.path.splitext(name)[1][1:]
     mime_type = get_mime_type(file_extension)
-    content, status = gacha_sys_circuit_breaker.call('get', url, {}, {}, {}, False)
+    jwt_token = request.headers.get('Authorization')
+    headers = {
+        'Authorization' : jwt_token
+    }
+    content, status = gacha_sys_circuit_breaker.call('get', url, {}, headers, {}, False)
     if status == 200:
         file = BytesIO(content)
         return send_file(file, mimetype=mime_type)
@@ -279,11 +297,19 @@ def gachasystem(op):
             'rarity': rarity,
             'description': description
         }
+        jwt_token = request.headers.get('Authorization')
+        headers = {
+            'Authorization' : jwt_token
+        }
     # SOLO ADMIN
     elif op == 'delete_gacha':
         gacha_name = request.form.get('gacha_name')
         url = DELETE_GACHA_URL
         params = {'gacha_name': gacha_name}
+        jwt_token = request.headers.get('Authorization')
+        headers = {
+            'Authorization' : jwt_token
+        }
     # SOLO ADMIN
     elif op == 'update_gacha':
         gacha_name = request.form.get('gacha_name')
@@ -295,19 +321,27 @@ def gachasystem(op):
             'rarity': rarity,
             'description': description
         }
+        jwt_token = request.headers.get('Authorization')
+        headers = {
+            'Authorization' : jwt_token
+        }
     # ENTRAMBI
     elif op == 'get_gacha_collection':
         params = {}
         url = GET_GACHA_COLL_URL
+        jwt_token = request.headers.get('Authorization')
+        headers = {
+            'Authorization' : jwt_token
+        }
 
     if op == 'add_gacha':
-        response, status = gacha_sys_circuit_breaker.call('post', url, params, {}, files, False)
+        response, status = gacha_sys_circuit_breaker.call('post', url, params, headers, files, False)
     elif op == 'delete_gacha':
-        response, status = gacha_sys_circuit_breaker.call('delete', url, params, {}, {}, True)
+        response, status = gacha_sys_circuit_breaker.call('delete', url, params, headers, {}, True)
     elif op == 'update_gacha':
-        response, status = gacha_sys_circuit_breaker.call('patch', url, params, {}, {}, True)
+        response, status = gacha_sys_circuit_breaker.call('patch', url, params, headers, {}, True)
     elif op == 'get_gacha_collection':
-        response, status = gacha_sys_circuit_breaker.call('get', url, params, {}, {}, True)
+        response, status = gacha_sys_circuit_breaker.call('get', url, params, headers, {}, True)
         if status != 200:
             return jsonify({'Error' : f'Error during get gacha collection op {response}'}), status
         return jsonify(response), status
