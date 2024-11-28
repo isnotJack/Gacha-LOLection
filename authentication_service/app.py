@@ -88,7 +88,6 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
     salt = db.Column(db.String(200), nullable=False)  # Nuovo campo per il salt
     role = db.Column(db.String(50), nullable=False)
 
@@ -118,14 +117,15 @@ def signup():
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt.encode('utf-8')).decode('utf-8')
     
     # Creazione del nuovo utente
-    new_user = User(username=username, password=hashed_password, email=email, role=role, salt=salt)
-
+    new_user = User(username=username, password=hashed_password, role=role, salt=salt)
 
     db.session.add(new_user)
     db.session.commit()
+    
     # Chiamata al servizio `profile_setting` per creare il profilo
     params = {
         'username': username,
+        'email': email,
         'profile_image': 'default_image_url',
         'currency_balance': 0
     }
@@ -163,10 +163,10 @@ def login():
     if not username or not password:
          return jsonify({"Error": "Missing parameters"}), 400
     
-    
     user = User.query.filter_by(username=username).first()
     if not user:
         return jsonify({"Error": "User not found"}), 404
+    
     hashed_input = bcrypt.hashpw(password.encode('utf-8'), user.salt.encode('utf-8')).decode('utf-8')
     if user.password == hashed_input:
         # Legge la chiave privata

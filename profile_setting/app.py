@@ -91,6 +91,7 @@ gacha_sys_circuit_breaker = CircuitBreaker()
 class Profile(db.Model):
     __tablename__ = 'profiles'
     username = db.Column(db.String(50), primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
     profile_image = db.Column(db.String(200), nullable=True)
     currency_balance = db.Column(db.Integer, default=0)
     gacha_collection = db.relationship('GachaItem', backref='profile' , lazy=True)
@@ -170,7 +171,7 @@ def modify_profile():
         # Aggiorna il campo `profile_image` con il nuovo percorso
         profile.profile_image = save_path
 
-    elif field:  # Modifica di altri campi
+    if field:  # Modifica di altri campi
         # Controlla se il campo esiste nel modello Profile
         if not hasattr(profile, field):
             return jsonify({"error": f"Field '{field}' does not exist in profile"}), 400
@@ -178,7 +179,7 @@ def modify_profile():
         # Esegui la modifica del campo specificato
         setattr(profile, field, value)
 
-    else:
+    if 'image' not in request.files and not field:
         return jsonify({"error": "No valid field or image provided for update"}), 400
 
     # Salva le modifiche nel database
@@ -191,6 +192,7 @@ def modify_profile():
     return jsonify({"message": "Profile updated successfully", 
                     "profile": {
                         "username": profile.username,
+                        "email": profile.email,
                         "profile_image": f"http://localhost:5001/images_profile/uploads/{os.path.basename(profile.profile_image)}",
                         "currency_balance": profile.currency_balance
                     }}), 200
@@ -227,6 +229,7 @@ def check_profile():
 
     profile_data = {
         "username": profile.username,
+        "email": profile.email,
         "profile_image": f"http://localhost:5001/images_profile/uploads/{os.path.basename(profile.profile_image)}",
         "currency_balance": profile.currency_balance,
     }
@@ -352,10 +355,14 @@ def allowed_file(filename):
 def create_profile():
     data = request.get_json()
     username = data.get('username')
+    email = data.get('email')
     currency_balance = data.get('currency_balance', 0)
 
     if not username:
         return jsonify({"error": "Missing 'username' parameter"}), 400
+    
+    if not email:
+        return jsonify({"error": "Missing 'email' parameter"}), 400 
     
     # Percorso immagine predefinita
     default_image_path = os.path.join(app.config['UPLOAD_FOLDER'], 'DefaultProfileIcon.jpg')
@@ -390,6 +397,7 @@ def create_profile():
         # Crea un nuovo profilo
         new_profile = Profile(
             username=username,
+            email=email,
             profile_image=save_path,
             currency_balance=currency_balance
         )
