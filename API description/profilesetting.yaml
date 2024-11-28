@@ -2,129 +2,94 @@ openapi: 3.0.0
 info:
   title: Profile Setting API
   version: 1.0.0
-  description: API for the managing of the profile. It allows a player to modify its account and it allows an admin to check/modify users profile, check currency transaction history of a player and check market history of a player
+  description: API for the managing user profiles, including their gacha collections.
 
 servers:
-  - url: http://.../profsetting
+  - url: http://localhost:5003/profile_setting
 paths:
-  /modify:
+  /modify_profile:
     patch:
-      summary: Modification of account
-      description: Modification of the account is valid for both player and admin. A player can modify only their own credentials, specifying the field to modify and the new value.
+      summary: Modify a user profile
       parameters:
-        - name: username
-          in: query
+        - in: header
+          name: Authorization
           required: true
-          description: Username of the player whose information is being modified
           schema:
             type: string
-        - name: field
-          in: query
-          required: true
-          description: The profile field to be modified (e.g., 'profile_image', 'currency_balance')
-          schema:
-            type: string
-        - name: value
-          in: query
-          required: true
-          description: The new value for the specified field
-          schema:
-            type: string
+          description: Bearer token for authentication (e.g., `Bearer <token>`).
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: The username of the user.
+                field:
+                  type: string
+                  description: The profile field to be modified.
+                value:
+                  type: string
+                  description: The new value for the specified field.
+                image:
+                  type: string
+                  format: binary
+                  description: The image to be uploaded.
+              required:
+                - username
       responses:
         '200':
-          description: Information modified successfully
+          description: Profile successfully updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  profile:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+                      email:
+                        type: string
+                      profile_image:
+                        type: string
+                      currency_balance:
+                        type: number
         '400':
-          description: Error in the modification of the information, such as invalid field or missing parameters
+          description: Bad request due to invalid data.
         '401':
-          description: Unauthorized to modify this profile
+          description: Unauthorized access.
+        '403':
+          description: Forbidden due to a mismatch in the token and request data.
         '404':
-          description: Profile not found
-
+          description: Profile not found.
+        '500':
+          description: Internal server error.
 
   /checkprofile:
     get:
-      summary: Check user profile
+      summary: Retrieve user profile details
       parameters:
-        - name: username
-          in: query
+        - in: header
+          name: Authorization
           required: true
-          description: Username of the player to see its profile
           schema:
             type: string
+          description: Bearer token for authentication (e.g., `Bearer <token>`).
+        - in: query
+          name: username
+          required: true
+          schema:
+            type: string
+          description: The username of the user.
       responses:
         '200':
-          description: OK
-        '401':
-          description: User not existing
-
-  /checktransactions:
-    get:
-      summary: Check currency transaction history of a player
-      parameters:
-        - name: username
-          in: query
-          required: true
-          description: Username of the player to see its transaction history
-          schema:
-            type: string
-      responses:
-              '200':
-                description: Transactions History
-                content:
-                  application/json:
-                    schema:
-                      type: object
-                      properties:
-                        transactions:
-                          type: array
-                          transaction:
-                            type: object
-                            properties:
-                              amount:
-                                type: number
-                                format: float
-                                description: Amount of money transferred, can be positive (e.g., +10) or negative (e.g., -100)
-                              date:
-                                type: string
-                                format: date-time
-                                description: Date of the transaction   
-                              currency:
-                                type: string
-                                enum: [euro, memecoin]
-                                description: Currency type of the transaction
-              '401':
-                  description: User not existing
-          
-  /checkmarket:
-    get:
-      summary: Check market history of a player
-      parameters:
-        - name: username
-          in: query
-          required: true
-          description: Username of the player to see its market history
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: User not existing
-          
-  /retrieve_gachacollection:
-    get:
-      summary: Get the gacha collection of a player
-      description: Retrieve the gacha collection of the logged-in player to see how many gacha items they have and need to complete the collection.
-      parameters:
-        - name: username
-          in: query
-          required: true
-          description: Username of the player to retrieve their gacha collection.
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The collection of gacha is returned successfully
+          description: User profile retrieved successfully.
           content:
             application/json:
               schema:
@@ -132,73 +97,177 @@ paths:
                 properties:
                   username:
                     type: string
-                  gacha_collected:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        gacha_id:
-                          type: string
-                        gacha_name:
-                          type: string
-                        description:
-                          type: string
-                        rarity:
-                          type: string
-                        collected_date:
-                          type: string
-                        img:
-                          type: string
-                          format: uri 
-                  total_gacha:
-                    type: integer
-                  remaining_to_complete:
-                    type: integer
+                  email:
+                    type: string
+                  profile_image:
+                    type: string
+                  currency_balance:
+                    type: number
+        '400':
+          description: Bad request.
         '401':
-          description: User not found or not authorized
-          
-  /info_gachacollection:
+          description: Unauthorized access.
+        '403':
+          description: Forbidden due to token mismatch.
+        '404':
+          description: Profile not found.
+
+  /retrieve_gachacollection:
     get:
-      summary: Get the details of a specific gacha in the player's collection
-      description: Retrieve detailed information about a specific gacha item from the player's collection using the gacha ID.
+      summary: Retrieve a user's Gacha collection.
       parameters:
-        - name: username
-          in: query
+        - in: header
+          name: Authorization
           required: true
-          description: Username of the player who owns the gacha.
           schema:
             type: string
-        - name: gacha_id
-          in: query
+          description: Bearer token for authentication (e.g., `Bearer <token>`).
+        - in: query
+          name: username
           required: true
-          description: ID of the specific gacha to get its details.
           schema:
             type: string
+          description: The username of the user.
       responses:
         '200':
-          description: Gacha details retrieved successfully
+          description: Gacha collection retrieved successfully.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  gacha_id:
-                    type: string
+                  gachas:
+                    type: array
+                    items:
+                      type: string
+                    description: List of Gacha items.
+        '400':
+          description: Bad request.
+        '401':
+          description: Unauthorized access.
+        '403':
+          description: Forbidden due to token mismatch.
+        '404':
+          description: User or Gacha collection not found.
+
+  /info_gachacollection:
+    get:
+      summary: Get details of a specific Gacha item.
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: Bearer token for authentication (e.g., `Bearer <token>`).
+        - in: query
+          name: username
+          required: true
+          schema:
+            type: string
+          description: The username of the user.
+        - in: query
+          name: gacha_name
+          required: true
+          schema:
+            type: string
+          description: The name of the Gacha item.
+      responses:
+        '200':
+          description: Gacha item details retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
                   gacha_name:
                     type: string
-                  description:
-                    type: string
-                  rarity:
-                    type: string
-                  collected_date:
-                    type: string
-                  img:
-                    type: string
-                    format: uri 
+                  details:
+                    type: object
+                    description: Details of the Gacha item.
+        '400':
+          description: Bad request.
         '401':
-          description: User not found or not authorized
+          description: Unauthorized access.
+        '403':
+          description: Forbidden due to token mismatch.
         '404':
-          description: Gacha not found in the player's collection
-  
+          description: User or Gacha item not found.
+
+  /create_profile:
+    post:
+      summary: Create a new user profile.
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: Bearer token for authentication (e.g., `Bearer <token>`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: The username of the new user.
+                email:
+                  type: string
+                  description: The email address of the user.
+                currency_balance:
+                  type: number
+                  default: 0
+                  description: Initial currency balance.
+                image:
+                  type: string
+                  format: binary
+                  description: Profile image to upload.
+              required:
+                - username
+                - email
+      responses:
+        '200':
+          description: Profile created successfully.
+        '400':
+          description: Bad request or profile already exists.
+        '500':
+          description: Internal server error.
+
+  /delete_profile:
+    delete:
+      summary: Delete a user profile.
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: Bearer token for authentication (e.g., `Bearer <token>`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: The username of the user to delete.
+              required:
+                - username
+      responses:
+        '200':
+          description: Profile deleted successfully.
+        '400':
+          description: Bad request or user not found.
+        '401':
+          description: Unauthorized access.
+        '403':
+          description: Forbidden due to token mismatch.
+        '500':
+          description: Internal server error.
 
 

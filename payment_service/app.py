@@ -188,8 +188,8 @@ def viewTrans():
 
     try:
         decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="payment_service")
-        # if username and decoded_token.get("sub") != username:
-        #     return jsonify({"error": "Username in token does not match the request username"}), 403
+        if decoded_token.get("scope") == "user" and username and decoded_token.get("sub") != username:
+            return jsonify({"error": "Username in token does not match the request username"}), 403
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Token expired"}), 401
     except jwt.InvalidTokenError:
@@ -261,7 +261,7 @@ def getBalance():
 
     try:
         decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="payment_service")
-        if username and decoded_token.get("sub") != username:
+        if decoded_token.get("scope") == "user" and username and decoded_token.get("sub") != username:
             return jsonify({"error": "Username in token does not match the request username"}), 403
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Token expired"}), 401
