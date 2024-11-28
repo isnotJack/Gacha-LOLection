@@ -264,7 +264,7 @@ def delete_account():
     #Dati arrivano in formato JSON dal gateway
     auth_header = request.headers.get('Authorization')
     if not auth_header:
-        return jsonify({"error": "Missing Authorization header"}), 401
+        return jsonify({"error": "Missing Authorization header"}), 400
     access_token = auth_header.removeprefix("Bearer ").strip()
 
     with open(public_key_path, 'r') as key_file:
@@ -286,7 +286,7 @@ def delete_account():
         return jsonify({'Error': 'Missing parameters'}),400
     
     user = User.query.filter_by(username=username).first()
-    if user and bcrypt.check_password_hash(user.password, password):
+    if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
         db.session.delete(user)
         db.session.commit()
         # Chiamata al servizio `profile_setting` per eliminare il profilo
@@ -336,7 +336,7 @@ def newToken():
 
         # Controlla se il token è già scaduto
         if old_token.is_revoked:
-            return jsonify({"msg": "Token already revoked"}), 200
+            return jsonify({"msg": "Token already revoked"}), 500
         with open(private_key_path, "r") as priv_key_file:
             private_key = priv_key_file.read()
 

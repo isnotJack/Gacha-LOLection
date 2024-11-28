@@ -203,8 +203,8 @@ def profile_setting(op):
         return make_response(f'Invalid operation {op}'), 400
     if op == 'info_gachacollection':
         username = request.args.get('username')
-        gacha_id = request.args.get('gacha_id')
-        url = RETRIEVE_URL + f"?username={username}&gacha_id={gacha_id}"
+        gacha_name = request.args.get('gacha_name')
+        url = INFO_URL + f"?username={username}&gacha_name={gacha_name}"
         jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
         headers = {
             'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
