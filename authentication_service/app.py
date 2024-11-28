@@ -148,7 +148,7 @@ def signup():
     x , status = payment_circuit_breaker.call('post', url, params, {},{},True)
     if status != 200:
         # Ritorna un errore se la chiamata al `profile_setting` fallisce
-        return jsonify({'Error': f'Failed to create profile: {x}'}), 500 
+        return jsonify({'Error': f'Failed to create user balance: {x}'}), 500 
     return jsonify({"msg": "Account created successfully", "profile_message": res.get('message')}), 200
 
 

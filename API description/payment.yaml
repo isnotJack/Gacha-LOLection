@@ -1,128 +1,49 @@
 openapi: 3.0.0
 info:
-  title: Gacha System API
+  title: Payment API
   version: 1.0.0
-  description: API per la gestione del pagamento
+  description: API for handling payments, transactions, and user balances.
 
 servers:
-  - url: http://.../payment
-  
+  - url: http://localhost:5006/payment_service
+
 paths:
   /pay:
     post:
-      summary: Pays a specific amount of memecoins
-      description: Api to pay a specific amount of memecoin to someone, or to the system
+      summary: Make a payment from a user to another
+      description: Allows a user to make a payment to another user by transferring a specified amount.
       requestBody:
         required: true
         content:
-          application/json:
+          application/x-www-form-urlencoded:
             schema:
               type: object
               properties:
                 payer_us:
                   type: string
-                  description: Id of the payer or system ID.
+                  description: Username of the payer.
                 receiver_us:
                   type: string
-                  description: The receiver ID or system ID.
+                  description: Username of the receiver.
                 amount:
-                  type: integer
-                  description: The amount of memecoins payed.
+                  type: string
+                  description: Amount to be transferred (in Memecoins).
       responses:
         '200':
-          description: Succesfull Payment
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    description: The ID of the transaction
-                  message:
-                    type: string
-                    example: Payment successfully executed            
+          description: Payment successfully executed.
         '400':
-              description: Invalid Input
+          description: Invalid request data, such as missing payer or receiver, or invalid amount.
+        '401':
+          description: Unauthorized request due to missing or invalid token.
         '404':
-              description: Service down or invalid operation
-  # /receive:
-  #   post:
-  #     summary: receive a specified amount of memecoins
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               payer_id:
-  #                 type: integer
-  #                 description: Id of the payer or system ID.
-  #               receiver_id:
-  #                 type: integer
-  #                 description: The receiver ID or system ID.
-  #               amount:
-  #                 type: integer
-  #                 description: The amount of memecoins received.
-  #     responses:
-  #       '200':
-  #         description: Memecoin Received
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 id:
-  #                   type: integer
-  #                   description: The ID of the transaction
-  #                 message:
-  #                   type: string
-  #                   example: Money succesfully received                            
-  #       '400':
-  #             description: Invalid Input
-  #       '404':
-  #             description: Service down or invalid operation
-          
-  # /withdraw:
-  #   post:
-  #     summary: Convert memecoins in euro
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               user_id:
-  #                 type: integer
-  #                 description: Id of the user that is converting memecoins in euro.
-  #               amount:
-  #                 type: integer
-  #                 description: The amount of memecoins to be received.
-  #     responses:
-  #       '200':
-  #         description: Succesfull Withdraw
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 id:
-  #                   type: integer
-  #                   description: The ID of the transaction
-  #                 message:
-  #                   type: string
-  #                   example: Withdraw successfully completed                          
-  #       '400':
-  #             description: Invalid Input
-  #       '404':
-  #             description: Service down or invalid operation   
+          description: User balance not found.
+        '422':
+          description: Insufficient balance to complete the payment.
 
   /buycurrency:
     post:
-      summary: Buy in-game currency
-      description: Allows a player to purchase in-game currency, increasing their balance for future rolls or auctions.
+      summary: Purchase in-game currency (Memecoins).
+      description: Allows a user to purchase in-game currency using real money.
       requestBody:
         required: true
         content:
@@ -132,16 +53,16 @@ paths:
               properties:
                 username:
                   type: string
-                  description: The player's username making the purchase.
+                  description: The username of the user purchasing the currency.
                 amount:
-                  type: integer
-                  description: The amount of in-game currency to purchase.
+                  type: string
+                  description: The amount of money being spent to buy Memecoins.
                 payment_method:
                   type: string
-                  description: The payment method used for the transaction (e.g., credit card, PayPal, apple pay).
+                  description: The payment method used for the transaction (e.g. card).
       responses:
         '200':
-          description: Currency purchased successfully
+          description: Currency purchase completed successfully.
           content:
             application/json:
               schema:
@@ -149,51 +70,161 @@ paths:
                 properties:
                   username:
                     type: string
-                  new_balance:
-                    type: integer
-                  message:
+                    example: "user1"
+                  balance:
+                    type: number
+                    example: 100
+                  msg:
                     type: string
-                    example: "In-game currency purchased successfully."
+                    example: "In-game currency purchased successfully"
         '400':
-          description: Invalid request or payment method
+          description: Invalid request data, such as missing parameters.
+        '401':
+          description: Unauthorized request due to missing or invalid token.
+        '403':
+          description: The username in the token does not match the username in the request body.
+        '404':
+          description: User not found.
         '500':
-          description: Internal server error or payment processing issue
-  /viewTrans:
-    get:
-      summary: View the transaction history
-      parameters: 
-        - name: user_id
-          in: query
-          required: true
-          description: User ID
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Transaction history retrieved successfully
+          description: Internal server error or payment processing issue.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  transactions:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        amount:
-                          type: number
-                          format: float
-                          description: Amount of money transferred, can be positive (e.g., +10) or negative (e.g., -100)
-                        date:
-                          type: string
-                          format: date-time
-                          description: Date of the transaction
-                        currency:
-                          type: string
-                          enum: [euro, memecoin]
-                          description: Currency type of the transaction
+                  Error:
+                    type: string
+                    example: "Internal server error or payment processing issue"
+                  details:
+                    type: string
+                    example: "Details of the error"
+
+  /viewTrans:
+    get:
+      summary: View transactions for a specific user.
+      description: Fetches a list of all transactions (sent and received) for a specified user.
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: Username of the user whose transactions are being queried.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of transactions for the user.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    payer_us:
+                      type: string
+                      example: "user123"
+                    receiver_us:
+                      type: string
+                      example: "user456"
+                    amount:
+                      type: string
+                      example: "+10.0"
+                    currency:
+                      type: string
+                      example: "Memecoins"
+                    date:
+                      type: string
+                      format: date-time
+                      example: "2024-11-28T15:30:00"
         '400':
-          description: Invalid input
+          description: Invalid username parameter.
+        '401':
+          description: Unauthorized request due to missing or invalid token.
+        # '403':
+        #   description: The username in the token does not match the username in the request body.
+  
+  /newBalance:
+    post:
+      summary: Create a new balance for a user.
+      description: Creates a new balance entry for the user if it doesn't exist already.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: The username of the user for whom the balance is being created.
+      responses:
+        '200':
+          description: Balance created successfully for the user.
+        '400':
+          description: Invalid or missing username parameter.
+        '422':
+          description: The username already exists in the balance database.
+        '500':
+          description: Error committing the transaction.
+
+  /getBalance:
+    get:
+      summary: Get the balance for a specific user.
+      description: Returns the current balance of the specified user.
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: The username of the user whose balance is being queried.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved the user's balance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                    example: "user1"
+                  balance:
+                    type: number
+                    example: 50
+        '400':
+          description: Invalid username parameter.
+        '403':
+          description: The username in the token does not match the username in the request body.
         '404':
-          description: Service unavailable or invalid operation
+          description: User not found in the balance database.
+        '401':
+          description: Unauthorized request due to missing or invalid token.
+
+  /deleteBalance:
+    delete:
+      summary: Delete a user's balance.
+      description: Removes the balance entry for the specified user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: The username of the user whose balance is being deleted.
+      responses:
+        '200':
+          description: Successfully deleted the user's balance.
+        '400':
+          description: Invalid or missing username parameter.
+        '404':
+          description: The balance for the specified user does not exist.
+        '500':
+          description: Error committing the transaction.
+
