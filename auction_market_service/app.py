@@ -297,7 +297,7 @@ def create_auction():
 
         # response = requests.delete(profile_service_url, json=payload, timeout=10)
         # response.raise_for_status()
-    response, status = profile_circuit_breaker.call('delete', profile_service_url, payload, {},{}, True )
+    response, status = profile_circuit_breaker.call('delete', profile_service_url, payload, headers,{}, True )
     if status != 200:
         return jsonify({"error": f"Error removing gacha from profile: {response}"}), status
 
