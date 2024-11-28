@@ -32,8 +32,9 @@ token = response.json()
 
 admin_ref_token = token.get('refresh_token')
 a_ref_headers = {
-    'Refresh' : admin_ref_token
+    'Authorization' : f'Bearer {admin_ref_token}'
 }
+
 
 admin_token = token.get('access_token')
 aheaders = {
@@ -54,7 +55,7 @@ headers1 = {
 }
 user1_ref_token = token.get('refresh_token')
 user1_ref_headers = {
-    'Refresh' : user1_ref_token
+    'Authorization' : f'Bearer {user1_ref_token}'
 }
 
 response = requests.post(url, data=user2)
@@ -71,7 +72,7 @@ headers2 = {
 }
 user2_ref_token = token.get('refresh_token')
 user2_ref_headers = {
-    'Refresh' : user2_ref_token
+    'Authorization' : f'Bearer {user2_ref_token}'
 }
 
 
@@ -201,24 +202,28 @@ if response.status_code == 200:
 else:
     print(f'Errore {response.status_code}: {response.text}')
 
+#NEW TOKEN 
+url = 'http://localhost:5001/auth_service/newToken'
+response = requests.get(url, headers=user1_ref_headers)
 
+if response.status_code == 200:
+    print(f'Nuovo token ottenuto. {response.json()}')
+else:
+    print(f'Errore {response.status_code} durante new token: {response.text}')
 
 
 # Logout
-try:
-    url = 'http://localhost:5001/auth_service/logout'
-    
-    # Effettua la richiesta DELETE per il logout
-    response = requests.delete(url, headers=user1_ref_headers)
 
-    if response.status_code == 200:
-        print('Logout avvenuto con successo.')
-    else:
-        print(f'Errore {response.status_code} durante il logout: {response.text}')
-except requests.ConnectionError as e:
-    print(f'Errore di connessione durante il logout: {e}')
-except Exception as e:
-    print(f'Errore generico durante il logout: {e}')
+url = 'http://localhost:5001/auth_service/logout'
+
+# Effettua la richiesta DELETE per il logout
+response = requests.delete(url, headers=user1_ref_headers)
+
+if response.status_code == 200:
+    print('Logout avvenuto con successo.')
+else:
+    print(f'Errore {response.status_code} durante il logout: {response.text}')
+
 
 # #Delete
 # # Logout

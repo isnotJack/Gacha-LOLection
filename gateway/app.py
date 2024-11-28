@@ -13,11 +13,12 @@ UPDATE_GACHA_URL = 'http://gachasystem:5004/update_gacha'
 GET_GACHA_COLL_URL = 'http://gachasystem:5004/get_gacha_collection'
 GACHA_IMAGE_URL = 'http://gachasystem:5004/uploads/'
 
-ALLOWED_AUTH_OP ={'signup', 'login', 'logout', 'delete'}
+ALLOWED_AUTH_OP ={'signup', 'login', 'logout', 'delete', 'newToken'}
 SINGUP_URL = 'http://auth_service:5002/signup'
 LOGIN_URL = 'http://auth_service:5002/login'
 LOGOUT_URL = 'http://auth_service:5002/logout'
 DELETE_URL = 'http://auth_service:5002/delete'
+NEWTOKEN_URL = 'http://auth_service:5002/newToken'
 
 ALLOWED_PROF_OP ={'modify_profile','checkprofile', 'retrieve_gachacollection', 'info_gachacollection'}
 MODIFY_URL = 'http://profile_setting:5003/modify_profile'
@@ -129,7 +130,7 @@ app = Flask(__name__, instance_relative_config=True)
 def create_app():
     return app
 
-@app.route('/auth_service/<op>', methods=['POST', 'DELETE'])
+@app.route('/auth_service/<op>', methods=['POST', 'DELETE', 'GET'])
 def auth(op):
     if op not in ALLOWED_AUTH_OP:
         return make_response(f'Invalid operation {op}'), 400
@@ -162,14 +163,25 @@ def auth(op):
     elif op == 'logout':
         url = LOGOUT_URL
         params = {}
-        jwt_token = request.headers.get('Refresh')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
-        headers = {'Refresh': jwt_token}  # Usa il token JWT ricevuto nell'header della richiesta
+        jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
+        headers = {
+            'Authorization': jwt_token
+        } 
+    elif op == 'newToken':
+        url = NEWTOKEN_URL
+        params = {}
+        jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
+        headers = {
+            'Authorization': jwt_token
+        } 
 
     # Chiamata al servizio in base all'operazione
     if op in ['login', 'signup']:
         x, status_code = auth_circuit_breaker.call('POST', url, params, {}, {}, True)
     elif op == 'logout':
         x, status_code = auth_circuit_breaker.call('DELETE', url, {}, headers, {}, False)
+    elif op == 'newToken':
+        x, status_code = auth_circuit_breaker.call('GET', url, {}, headers, {}, False)
     else:
         x, status_code = auth_circuit_breaker.call('DELETE', url, params, headers, {}, True)
 

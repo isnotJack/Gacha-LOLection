@@ -79,6 +79,13 @@ admin_token = token.get('access_token')
 headers = {
     'Authorization' : f'Bearer {admin_token}'
 }
+
+admin_ref_token = token.get('refresh_token')
+ref_headers = {
+    'Authorization' : f'Bearer {admin_ref_token}'
+}
+
+
 # Imposta il percorso della cartella contenente le immagini
 images_folder = "./meme images"
 url = "http://localhost:5009/gachasystem_service/add_gacha"
@@ -110,4 +117,20 @@ for filename in os.listdir(images_folder):
         # Mostra l'esito della richiesta
         print(f"Status Code: {response.status_code}")
         print(f"Response Text: {response.text}\n")
+    
+try:
+    url = 'http://localhost:5009/auth_service/logout'
+    
+    # Effettua la richiesta DELETE per il logout
+    response = requests.delete(url, headers=ref_headers)
+
+    if response.status_code == 200:
+        print('Logout avvenuto con successo.')
+    else:
+        print(f'Errore {response.status_code} durante il logout: {response.text}')
+except requests.ConnectionError as e:
+    print(f'Errore di connessione durante il logout: {e}')
+except Exception as e:
+    print(f'Errore generico durante il logout: {e}')
+
 

@@ -204,9 +204,11 @@ def login():
 
         payload = {
             "iss": "http://auth_service:5002",      # Emittente
-            "sub": user.username,                  # Soggetto (può essere l'ID utente o l'email)
+            "sub": user.username,                 # Soggetto (può essere l'ID utente o l'email)
+            "aud":"auth_service",
             "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
             "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1),  # Expiration (7 giorni)
+            "scope": scope,
             "jti": refresh_jti                             # JWT ID
         }
 
@@ -225,36 +227,36 @@ def logout():
     if not ref_token:
         return jsonify({"error": "Missing Authorization header"}), 401
     ref_token = ref_token.removeprefix("Bearer ").strip()
-    # try:
-    # Carica la chiave pubblica
-    with open(public_key_path, 'r') as key_file:
-        public_key = key_file.read()
-    
-    # Decodifica il token
-    decoded_token = jwt.decode(ref_token, public_key, algorithms=["RS256"])
-    jti = decoded_token.get("jti")  # Estrai il jti dal token
-    
-    # Cerca il token nel database
-    old_token = RefreshToken.query.filter_by(jti_id=jti).first()
-    if not old_token:
-        return jsonify({'error': 'Refresh token not found'}), 404
+    try:
+        # Carica la chiave pubblica
+        with open(public_key_path, 'r') as key_file:
+            public_key = key_file.read()
 
-    # Controlla se il token è già scaduto
-    if old_token.is_revoked:
-        return jsonify({"msg": "Token already revoked"}), 200
+        # Decodifica il token
+        decoded_token = jwt.decode(ref_token, public_key, algorithms=["RS256"], audience="auth_service")
+        jti = decoded_token.get("jti")  # Estrai il jti dal token
 
-    # Marca il token come scaduto
-    old_token.is_revoked = True
-    db.session.commit()
+        # Cerca il token nel database
+        old_token = RefreshToken.query.filter_by(jti_id=jti).first()
+        if not old_token:
+            return jsonify({'error': 'Refresh token not found'}), 404
 
-    return jsonify({"msg": "Logout success"}), 200
+        # Controlla se il token è già scaduto
+        if old_token.is_revoked:
+            return jsonify({"msg": "Token already revoked"}), 200
 
-    # except jwt.ExpiredSignatureError:
-    #     return jsonify({"error": "Refresh token expired"}), 401
-    # except jwt.InvalidTokenError:
-    #     return jsonify({"error": "Invalid token"}), 400
-    # except Exception as e:
-    #     return jsonify({"error": str(e)}), 500
+        # Marca il token come scaduto
+        old_token.is_revoked = True
+        db.session.commit()
+
+        return jsonify({"msg": "Logout success"}), 200
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Refresh token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 # Endpoint per l'eliminazione di un account
 @app.route('/delete', methods=['DELETE'])
 def delete_account():
@@ -312,6 +314,57 @@ def delete_account():
         return jsonify({"msg": "Account deleted successfully"}), 200
     else:
         return jsonify({"Error": "User not found or incorrect password"}), 404
+
+@app.route('/newToken', methods=['GET'])
+def newToken():
+    ref_token = request.headers.get('Authorization')
+    if not ref_token:
+        return jsonify({'error': 'Refresh token not present'}), 400
+    ref_token = ref_token.removeprefix("Bearer ").strip()
+
+    try:
+        with open(public_key_path, 'r') as key_file:
+            public_key = key_file.read()
+        # Decodifica il token
+        decoded_token = jwt.decode(ref_token, public_key, algorithms=["RS256"], audience="auth_service")
+        jti = decoded_token.get("jti")  # Estrai il jti dal token
+        
+        # Cerca il token nel database
+        old_token = RefreshToken.query.filter_by(jti_id=jti).first()
+        if not old_token:
+            return jsonify({'error': 'Refresh token not found'}), 404
+
+        # Controlla se il token è già scaduto
+        if old_token.is_revoked:
+            return jsonify({"msg": "Token already revoked"}), 200
+        with open(private_key_path, "r") as priv_key_file:
+            private_key = priv_key_file.read()
+
+        jti = str(uuid.uuid4())  # Genera un UUID univoco per il jti
+
+        header = { 
+            "alg": "RS256",
+            "typ": "JWT"
+        } 
+        payload = {
+            "iss": "http://auth_service:5002",      # Emittente
+            "sub": decoded_token.get("sub"),              # Soggetto
+            "aud": ["profile_setting", "gachasystem", "payment_service", "gacha_roll", "auction_service"],         
+            "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
+            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),  # Expiration
+            "scope": decoded_token.get("scope"),                   # Scopi
+            "jti": jti              # JWT ID
+        }
+
+        access_token = jwt.encode(payload, private_key, algorithm="RS256", headers=header)
+        return jsonify(access_token=access_token) , 200
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Refresh token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     db.create_all()
