@@ -392,7 +392,7 @@ def create_profile():
         # Controlla se il profilo esiste già
         existing_profile = Profile.query.filter_by(username=username).first()
         if existing_profile:
-            return jsonify({"error": "Profile already exists"}), 400
+            return jsonify({"error": "Profile already exists"}), 500
 
         # Crea un nuovo profilo
         new_profile = Profile(
@@ -434,9 +434,9 @@ def delete_profile():
 
     user = Profile.query.filter_by(username=username).first()
     if not user:
-        return jsonify({'Error': 'User not found'}), 400
+        return jsonify({'Error': 'User not found'}), 404
     db.session.delete(user)
-    db.session.commit
+    db.session.commit()
     return jsonify({"message": f"Profile for username '{username}' deleted successfully"}), 200
 
 @app.route('/insertGacha', methods=['POST'])
