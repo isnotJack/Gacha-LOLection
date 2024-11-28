@@ -2,167 +2,314 @@ openapi: 3.0.0
 info:
   title: Gacha System API
   version: 1.0.0
-  description: API per la gestione delle collezioni di gacha del sistema. Consente ai giocatori di vedere la collezione globale di gacha e di ottenere informazioni sui gacha mancanti.
+  description: API to manage gachas in the system.
 
 servers:
-  - url: http://.../gachasystem
+  - url: http://localhost:5004/gachasystem
 
 paths:
-  /get_gacha_collection:
-    get:
-      summary: Get the details of a specific system gacha
-      description: Retrieve the detailed information of a specific gacha from the system collection or if the gacha_id is not set, retrieve all the entire gacha collection.
+  /add_gacha:
+    post:
+      summary: Add a new gacha item
+      description: |
+        Allows an administrator to add a new gacha item to the system. 
+        This requires an `Authorization` header with a valid Bearer token.
       parameters:
-        - name: gacha_name
-          in: query
-          required: false
-          description: Name of the meme to get its details
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication. Format: `Bearer <token>`.
           schema:
             type: string
+      requestBody:
+        description: Form data to upload the new gacha item.
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                gacha_name:
+                  type: string
+                  description: Name of the gacha item.
+                  example: "Trial gacha"
+                rarity:
+                  type: string
+                  description: Rarity of the gacha item (common, rare, legendary).
+                  example: "common"
+                description:
+                  type: string
+                  description: A brief description of the gacha item.
+                  example: "This is the description of a common gacha called Trial gacha."
+                image:
+                  type: string
+                  format: binary
+                  description: The image file representing the gacha item.
+              required:
+                - gacha_name
+                - rarity
+                - image
       responses:
         '200':
-          description: Gacha details retrieved successfully
+          description: Gacha item added successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message.
+                    example: "Gacha added successfully"
+                  gacha:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: Name of the gacha item.
+                      image_path:
+                        type: string
+                        description: Path where the image is stored.
+                      rarity:
+                        type: string
+                        description: Rarity of the gacha item.
+                      description:
+                        type: string
+                        description: Description of the gacha item.
+        '400':
+          description: Missing or invalid parameters (e.g., missing fields, invalid file type).
+        '401':
+          description: Unauthorized - Missing or invalid Authorization header.
+        '403':
+          description: Forbidden - Action not allowed for a user.
+        '500':
+          description: Internal server error - Database or server issues.
+
+  /delete_gacha:
+    delete:
+      summary: Deletes a gacha item
+      description: Allows an administrator to remove a gacha item from the system and associated user profiles.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication. Format: `Bearer <token>`.
+          schema:
+            type: string
+      requestBody:
+        description: Gacha name to be deleted.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                gacha_name:
+                  type: string
+                  description: Name of the gacha to delete.
+                  example: "Trial gacha"
+              required:
+                - gacha_name
+      responses:
+        '200':
+          description: Gacha deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Gacha with name 'Trial gacha' deleted successfully."
+        '400':
+          description: Missing or invalid parameters.
+        '401':
+          description: Unauthorized - Missing or invalid Authorization header.
+        '403':
+          description: Forbidden - Action not allowed for the user.
+        '404':
+          description: Gacha not found.
+        '500':
+          description: Internal server error.
+
+  /update_gacha:
+    patch:
+      summary: Updates a gacha item
+      description: Allows an administrator to modify the details of an existing gacha item.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication. Format: `Bearer <token>`.
+          schema:
+            type: string
+      requestBody:
+        description: Fields to update in the gacha.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                gacha_name:
+                  type: string
+                  description: Name of the gacha to update.
+                  example: "Legendary Sword"
+                rarity:
+                  type: string
+                  description: New rarity of the gacha.
+                  example: "common"
+                description:
+                  type: string
+                  description: New description for the gacha.
+                  example: "Updated description."
+              required:
+                - gacha_name
+      responses:
+        '200':
+          description: Gacha updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Gacha updated successfully"
+                  gacha:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: Name of the gacha.
+                      rarity:
+                        type: string
+                        description: Updated rarity.
+                      description:
+                        type: string
+                        description: Updated description.
+        '400':
+          description: Missing or invalid parameters.
+        '401':
+          description: Unauthorized - Missing or invalid Authorization header.
+        '403':
+          description: Forbidden - Action not allowed for the user.
+        '404':
+          description: Gacha not found.
+        '500':
+          description: Internal server error.
+
+  /get_gacha_collection:
+    get:
+      summary: Retrieves the gacha collection
+      description: Fetches all gachas or a specific one by name.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication. Format: `Bearer <token>`.
+          schema:
+            type: string
+      requestBody:
+        description: (Optional) Gacha names to filter the collection.
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                gacha_name:
+                  type: string
+                  description: Comma-separated names of gachas to fetch.
+                  example: "Trial gacha,Trial gacha2"
+      responses:
+        '200':
+          description: List of gacha items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    gacha_id:
+                      type: integer
+                      description: Unique ID of the gacha.
+                    gacha_name:
+                      type: string
+                      description: Name of the gacha.
+                    description:
+                      type: string
+                      description: Description of the gacha.
+                    rarity:
+                      type: string
+                      description: Rarity of the gacha.
+                    img:
+                      type: string
+                      description: URL of the gacha image.
+        '401':
+          description: Unauthorized - Missing or invalid Authorization header.
+        '404':
+          description: No gacha items found.
+        '500':
+          description: Internal server error.
+
+  /get_gacha_roll:
+    get:
+      summary: Extract a random gacha from the entire collection of the system
+      description: Returns a random gacha whose rarity depends on the level of the roll.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication. Format: `Bearer <token>`.
+          schema:
+            type: string
+        - name: level
+          in: query
+          required: true
+          description: Level of the roll. Valid values: `standard`, `medium`, `premium`.
+          schema:
+            type: string
+            enum:
+              - standard
+              - medium
+              - premium
+      responses:
+        '200':
+          description: Gacha roll result.
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   gacha_id:
-                    type: string
+                    type: integer
+                    description: Unique ID of the gacha.
                   gacha_name:
                     type: string
+                    description: Name of the gacha.
                   description:
                     type: string
+                    description: Description of the gacha.
                   rarity:
                     type: string
-                  collected_date:
-                    type: string
+                    description: Rarity of the gacha.
                   img:
                     type: string
-                    format: uri
+                    description: URL of the gacha image.
+        '400':
+          description: Invalid level or missing parameters.
         '401':
-          description: User not authorized
+          description: Unauthorized - Missing or invalid Authorization header.
         '404':
-          description: Gacha not found
-
-  /add_gacha:
-    post:
-      summary: Add a gacha to the system (administrator only)
-      description: Allows an administrator to add a gacha the collection.
-      parameters:
-        - name: image
-          in: query
-          required: true
-          description: immage
-          schema:
-            type: string
-            format: uri 
-        - name: gacha_name
-          in: query
-          required: true
-          description: Name for the meme
-          schema:
-            type: string
-        - name: rarity
-          in: query
-          required: true
-          description: Gacha rarity 
-          schema:
-            type: string
-        - name: description
-          in: query
-          required: false
-          description: Description of the meme
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Gacha collection updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Gacha added successfully."
-        '400':
-          description: Invalid request (missing or incorrect fields) or meme already exists
-        '403':
-          description: Access forbidden for non-administrators
-
-  /delete_gacha:
-    delete:
-      summary: Remove a gacha from the collection  (administrator only)
-      description: Allows an administratore to remove a gacha from the collection.
-      parameters:
-        - name: gacha_name
-          in: query
-          required: true
-          description: Name of the meme
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Gacha removed successfully 
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Gacha removed successfully."
-        '400':
-          description: Invalid request (missing or incorrect fields)
-        '403':
-          description: Access forbidden for non-administrators
-        '404':
-          description: Gacha not found
+          description: No gacha items found for the roll.
         '500':
-          description: Faild elaborating the request
+          description: Internal server error.
 
-  /update_gacha:
-    put:
-      summary: Update a gacha (Administrator only)
-      description: The administrator can update the details of an existing gacha.
-      parameters:
-        - name: gacha_name
-          in: query
-          required: true
-          description: Name of the meme
-          schema:
-            type: string
-        - name: rarity
-          in: query
-          required: false
-          description: New rarity of the gacha
-          schema:
-            type: string
-        - name: description
-          in: query
-          required: false
-          description: New description of the gacha
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Gacha updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Gacha updated successfully."
-        '400':
-          description: Invalid request (missing or incorrect fields)
-        '403':
-          description: Access forbidden for non-administrators
-        '404':
-          description: Gacha not found
-          
+
+
+  
 
   
  

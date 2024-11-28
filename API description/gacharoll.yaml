@@ -1,18 +1,28 @@
 openapi: 3.0.0
 info:
-  title: Gacha System API
+  title: Gacha Roll API
   version: 1.0.0
-  description: API per la gestione delle collezioni di gacha del sistema. Consente ai giocatori di vedere la collezione globale di gacha e di ottenere informazioni sui gacha mancanti.
+  description: API that allows a user to roll and obtain a gacha.
 
 servers:
-  - url: http://.../gacharoll
+  - url: http://localhost:5007/gacha_roll
 
 paths:
-    /gacharoll:
+  /gacharoll:
     post:
-      summary: Use in-game currency to roll a gacha
-      description: Allows a player to spend in-game currency to roll a gacha, potentially adding a new gacha to their collection.
+      summary: Perform a gacha roll for a user
+      description: |
+        Allows a user to perform a gacha roll at a specified level. 
+        The system remove the required amount from the user's account, retrieves a gacha interacting with Gacha System, and adds it to the user's profile.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication. Format: `Bearer <token>`.
+          schema:
+            type: string
       requestBody:
+        description: JSON payload containing `username` and `level`.
         required: true
         content:
           application/json:
@@ -21,36 +31,45 @@ paths:
               properties:
                 username:
                   type: string
-                  description: The player's username who wants to roll the gacha.
-                rarity:
+                  description: The username of the player performing the gacha roll.
+                  example: "user1"
+                level:
                   type: string
-                  description: The rarity of the roll.
-                currency_amount:
-                  type: integer
-                  description: The amount of in-game currency used for the roll.
+                  description: The level of the gacha roll. Can be 'standard', 'medium', or 'premium'.
+                  enum: [standard, medium, premium]
+                  example: "standard"
+              required:
+                - username
+                - level
       responses:
         '200':
-          description: Gacha rolled successfully
+          description: Gacha roll completed successfully.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  gacha_id:
-                    type: string
                   gacha_name:
                     type: string
+                    description: Name of the gacha item obtained.
                   description:
                     type: string
+                    description: Description of the gacha item.
                   rarity:
                     type: string
-                  collected_date:
-                    type: string
+                    description: Rarity of the gacha item.
                   img:
                     type: string
-                    format: uri
-                  message:
+                    description: URL of the gacha item's image.
+                  collected_date:
                     type: string
-                    example: "You successfully rolled a new gacha!"
+                    format: date-time
+                    description: The date and time when the gacha was collected.
         '400':
-          description: Insufficient in-game currency or invalid request
+          description: Missing or invalid parameters (e.g., invalid level or missing username).
+        '401':
+          description: Unauthorized - Missing or invalid Authorization header.
+        '403':
+          description: The username in the token does not match the username in the request body.
+        '500':
+          description: Internal server error - Failure in payment, fetching gacha, or updating the profile.

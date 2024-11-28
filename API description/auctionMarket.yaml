@@ -5,7 +5,7 @@ info:
   description: An Api to manage the auction market, enancing the user/admin to see, create, modify and bid to auctions
 
 servers:
-  - url: http://.../auctionMarket
+  - url: http://localhost:5008/auction_service
 paths:
   /see:
     get:
