@@ -5,94 +5,139 @@ info:
   description: API for the authentication, which includes opeartion for creating/deleting account and login/logout.
 
 servers:
-  - url: http://.../auth
+  - url: http://localhost:5002/auth_service
 paths:
   /signup:
     post:
-      summary: Creation of an account
-      parameters:
-        - name: username
-          in: query
-          required: true
-          description: Username of the new player
-          schema:
-            type: string
-        - name: password
-          in: query
-          required: true
-          description: Password of the new player
-          schema:
-            type: string
-        - name: email
-          in: query
-          required: true
-          description: Email of the new player
-          schema:
-            type: string
+      summary: Create a new account
+      requestBody:
+        description: Information required to create a new account.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Username of the new player.
+                email:
+                  type: string
+                  description: Email of the new player.
+                password:
+                  type: string
+                  description: Password of the new player.
+              required:
+                - username
+                - email
+                - password
       responses:
         '200':
-          description: Account created successfully
+          description: Account created successfully.
         '400':
-          description: Bad request. All parameters must be strings
+          description: Missing parameters.
+        '422':
+          description: Username already exists.
+        '500':
+          description: Failure in creating the profile of the user or its balance.
 
   /login:
     post:
       summary: Login of a player/admin
-      parameters:
-        - name: username
-          in: query
-          required: true
-          description: Username of the player/admin
-          schema:
-            type: string
-        - name: password
-          in: query
-          required: true
-          description: Password of the player/admin
-          schema:
-            type: string
+      requestBody:
+        description: Credentials for logging in.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Username of the player/admin.
+                password:
+                  type: string
+                  description: Password of the player/admin.
+              required:
+                - username
+                - password
       responses:
         '200':
-          description: Login success
+          description: Login successful, returns access and refresh tokens.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: JWT access token.
+                  refresh_token:
+                    type: string
+                    description: JWT refresh token.
         '400':
-          description: Bad request. All parameters must be strings
+          description: Missing parameters.
         '404':
-          description: Invalid credentials
+          description: Username doesn't exist.
+        '422':
+          description: Invalid credentials.
 
   /logout:
     delete:
       summary: Logout of player/admin
       parameters:
-        - name: ID
-          in: query
+        - name: Authorization
+          in: header
           required: true
-          description: Username of the player/admin
+          description: Bearer token used for authentication.
           schema:
             type: string
       responses:
         '200':
-          description: Logout success
+          description: Logout successful.
+        '401':
+          description: Missing or invalid authorization header.
+        '404':
+          description: Refresh token not found.
+
 
   /delete:
     delete:
-      summary: Elimination of an existing account
+      summary: Delete an existing account
       parameters:
-        - name: ID
-          in: query
+        - name: Authorization
+          in: header
           required: true
-          description: Username of the player to be deleted
+          description: Bearer token used for authentication.
           schema:
             type: string
-        - name: password
-          in: query
-          required: true
-          description: Password of the player to be deleted
-          schema:
-            type: string
+      requestBody:
+        description: Information required to delete the account.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Username of the player to be deleted.
+                password:
+                  type: string
+                  description: Password of the player to be deleted.
+              required:
+                - username
+                - password
       responses:
         '200':
-          description: Account deleted successfully
+          description: Account deleted successfully.
         '400':
-          description: Error in the elimination of the account
+          description: Missing parameters or error in the deletion process.
+        '403':
+          description: Username in token does not match the request username.
         '404':
-          description: User not found
+          description: User not found or incorrect password.
+        '401':
+          description: Token expired or invalid.
+        '500':
+          description: Error while deleting associated profile or balance.

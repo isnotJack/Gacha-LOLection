@@ -123,6 +123,10 @@ def pay():
 
 @app.route('/buycurrency', methods = ['POST'])
 def buycurrency():
+    data = request.get_json()
+    username = data.get('username')
+    amount = data.get('amount')
+    method = data.get('payment_method')
     # Recupera l'header Authorization
     auth_header = request.headers.get('Authorization')
     if not auth_header:
@@ -136,15 +140,12 @@ def buycurrency():
 
     try:
         decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="payment_service")
+        if username and decoded_token.get("sub") != username:
+            return jsonify({"error": "Username in token does not match the request username"}), 403
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Token expired"}), 401
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
-  
-    data = request.get_json()
-    username = data.get('username')
-    amount = data.get('amount')
-    method = data.get('payment_method')
 
     if not username:
         return jsonify({'Error': 'Invalid username'}), 400
@@ -190,6 +191,7 @@ def buycurrency():
 
 @app.route('/viewTrans', methods = ['GET'])
 def viewTrans():  
+    username = request.args.get('username')
     # Recupera l'header Authorization
     auth_header = request.headers.get('Authorization')
     if not auth_header:
@@ -203,11 +205,13 @@ def viewTrans():
 
     try:
         decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="payment_service")
+        # if username and decoded_token.get("sub") != username:
+        #     return jsonify({"error": "Username in token does not match the request username"}), 403
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Token expired"}), 401
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
-    username = request.args.get('username')
+    
     if not username:
         return jsonify({'Error' : 'Invalid parameter username'}), 400
     # Search in the transaction db
@@ -260,7 +264,8 @@ def newBalance():
 
 @app.route('/getBalance', methods=['GET'])
 def getBalance():
-        # Recupera l'header Authorization
+    username = request.args.get('username')
+    # Recupera l'header Authorization
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         return jsonify({"error": "Missing Authorization header"}), 401
@@ -273,11 +278,13 @@ def getBalance():
 
     try:
         decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="payment_service")
+        if username and decoded_token.get("sub") != username:
+            return jsonify({"error": "Username in token does not match the request username"}), 403
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Token expired"}), 401
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
-    username = request.args.get('username')
+    
     if not username:
         return jsonify({'Error' : 'Invalid parameter username'}), 400
     res = Balance.query.filter_by(username=username).first()
@@ -288,7 +295,7 @@ def getBalance():
     
 @app.route('/deleteBalance', methods=['DELETE'])
 def deleteBalance():
-        # Recupera l'header Authorization
+    # Recupera l'header Authorization
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         return jsonify({"error": "Missing Authorization header"}), 401

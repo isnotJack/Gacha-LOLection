@@ -184,7 +184,6 @@ def add_gacha():
                         #,"collected_date": new_gacha.collected_date  # Restituisci anche la data di raccolta
                     }}), 200
 
-# SOLO ADMIN
 @app.route('/delete_gacha', methods=['DELETE'])
 # @jwt_required()  # Sblocca questa linea se vuoi proteggere l'endpoint con JWT
 def delete_gacha():
@@ -254,7 +253,6 @@ def delete_gacha():
 
     return jsonify({"message": f"Gacha with name '{gacha_name}' deleted successfully."}), 200
 
-# SOLO ADMIN
 @app.route('/update_gacha', methods=['PATCH'])
 # @jwt_required()  # Sblocca questa linea se vuoi proteggere l'endpoint con JWT
 def update_gacha():
