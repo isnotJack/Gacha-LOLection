@@ -461,25 +461,7 @@ def bid_for_auction():
 
 @app.route('/gacha_receive', methods=['POST'])
 def gacha_receive():
-    # Recupera l'header Authorization
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        return jsonify({"error": "Missing Authorization header"}), 401
 
-    access_token = auth_header.removeprefix("Bearer ").strip()
-
-    # Leggi la chiave pubblica
-    with open(public_key_path, 'r') as key_file:
-        public_key = key_file.read()
-
-    try:
-        # Decodifica e verifica il token
-        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")
-
-    except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"error": "Invalid token"}), 401
     # Recupera i parametri dall'oggetto JSON
     data = request.get_json()
     auction_id = data.get('auction_id')
@@ -520,35 +502,15 @@ def gacha_receive():
     #     return jsonify({"Error": "Time out expired"}), 408
     # except requests.exceptions.RequestException as e:
         # Gestisce errori di rete o problemi con il servizio profile_setting
-    headers = {
-        "Authorization": f"Bearer {access_token}"
-    }
-    payment_response, status = profile_circuit_breaker.call('post', profile_service_url,payload, headers,{}, True)
+
+    payment_response, status = profile_circuit_breaker.call('post', profile_service_url,payload, {},{}, True)
     if status != 200:
         return jsonify({f"error": "Profile service failed", "details": {payment_response}}), status
     return jsonify({"message": "Gacha correctly received"}), 200
 
 @app.route('/auction_lost', methods=['POST'])
 def auction_lost():
-    # Recupera l'header Authorization
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        return jsonify({"error": "Missing Authorization header"}), 401
 
-    access_token = auth_header.removeprefix("Bearer ").strip()
-
-    # Leggi la chiave pubblica
-    with open(public_key_path, 'r') as key_file:
-        public_key = key_file.read()
-
-    try:
-        # Decodifica e verifica il token
-        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")
-
-    except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"error": "Invalid token"}), 401
     # Recupera i parametri dal corpo JSON
     data = request.get_json()
     auction_id = data.get('auction_id')
@@ -588,10 +550,8 @@ def auction_lost():
             # try:
             #     payment_response = requests.post(payment_service_url, data=refund_payload, timeout=10)
             #     payment_response.raise_for_status()
-            headers = {
-                "Authorization": f"Bearer {access_token}"
-            }
-            payment_response , status = payment_circuit_breaker.call('post', payment_service_url, refund_payload, headers,{}, False)
+
+            payment_response , status = payment_circuit_breaker.call('post', payment_service_url, refund_payload, {},{}, False)
             if status != 200:
                 failed_refunds.append({"username": bid.username, "error": f"Payment failed: {payment_response}"})
             else:
@@ -609,25 +569,7 @@ def auction_lost():
 
 @app.route('/auction_terminated', methods=['POST'])
 def auction_terminated():
-    # Recupera l'header Authorization
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        return jsonify({"error": "Missing Authorization header"}), 401
 
-    access_token = auth_header.removeprefix("Bearer ").strip()
-
-    # Leggi la chiave pubblica
-    with open(public_key_path, 'r') as key_file:
-        public_key = key_file.read()
-
-    try:
-        # Decodifica e verifica il token
-        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")
-
-    except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"error": "Invalid token"}), 401
     # Recupera i parametri dal corpo JSON
     data = request.get_json()
     auction_id = data.get('auction_id')
@@ -655,10 +597,7 @@ def auction_terminated():
         "receiver_us": auction.seller_username,  # Il creatore dell'asta riceve
         "amount": auction.current_bid  # L'importo totale offerto dal vincitore
     }
-    headers = {
-        "Authorization": f"Bearer {access_token}"
-    }
-    payment_response , status = payment_circuit_breaker.call('post', payment_service_url, transfer_payload, headers,{}, False)
+    payment_response , status = payment_circuit_breaker.call('post', payment_service_url, transfer_payload, {},{}, False)
     if status != 200:
     # try:
     #     payment_response = requests.post(payment_service_url, data=transfer_payload, timeout=10)

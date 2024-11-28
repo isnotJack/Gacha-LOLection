@@ -439,26 +439,7 @@ def insertGacha():
     if not data:
         return jsonify({"error": "Missing request data"}), 400
 
-    username = data.get('username')
-
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        return jsonify({"error": "Missing Authorization header"}), 401
-    access_token = auth_header.removeprefix("Bearer ").strip()
-
-    with open(public_key_path, 'r') as key_file:
-        public_key = key_file.read()
-
-    try:
-        # Verifica il token con la chiave pubblica
-        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="profile_setting")  
-        if username and decoded_token.get("sub") != username:
-            return jsonify({"error": "Username in token does not match the request username"}), 403
-    except ExpiredSignatureError:
-        return jsonify({"error": "Token expired"}), 401
-    except InvalidTokenError:
-        return jsonify({"error": "Invalid token"}), 401
-    
+    username = data.get('username')  
     gacha_name = data.get('gacha_name')
     collected_date_str = data.get('collected_date')
     # Controlla che tutti i parametri obbligatori siano presenti

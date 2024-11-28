@@ -39,23 +39,6 @@ from datetime import datetime
 
 @app.route('/pay', methods=['POST'])
 def pay():
-    # Recupera l'header Authorization
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        return jsonify({"error": "Missing Authorization header"}), 401
-
-    access_token = auth_header.removeprefix("Bearer ").strip()
-
-    # Verifica e decodifica del token
-    with open(public_key_path, 'r') as key_file:
-        public_key = key_file.read()
-
-    try:
-        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="payment_service")
-    except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"error": "Invalid token"}), 401
 
     payer_us = request.form.get('payer_us')
     receiver_us = request.form.get('receiver_us')
