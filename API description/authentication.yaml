@@ -100,7 +100,6 @@ paths:
         '404':
           description: Refresh token not found.
 
-
   /delete:
     delete:
       summary: Delete an existing account

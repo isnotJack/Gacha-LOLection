@@ -2,219 +2,178 @@ openapi: 3.0.0
 info:
   title: Auction Market Api
   version: 1.0.0
-  description: An Api to manage the auction market, enancing the user/admin to see, create, modify and bid to auctions
+  description: API for managing auctions, including creation, modification, bidding, see, and closure.
 
 servers:
   - url: http://localhost:5008/auction_service
 paths:
   /see:
     get:
-      summary: See the active auctions, the old auctions or just one auction
+      summary: Retrieve auctions
+      description: Returns a specific auction by `auction_id` or all active auctions if no ID is provided.
       parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication.
+          schema:
+            type: string
         - name: auction_id
           in: query
           required: false
-          description: id of the auction that the user (admin) want to see ( shows all if not present)
+          description: The ID of the auction to retrieve.
           schema:
-            type: integer
-
+            type: string
         - name: status
           in: query
           required: false
-          description: Parameter to select old auctions or active auctions. (active by default)
+          description: Status of the auctions to filter. Defaults to `active`.
           schema:
             type: string
-            enum: [active, old]
+            enum: [active, closed]
       responses:
-        '200':
-          description: List of active auctions
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  auctions:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        auct_id:
-                          type: integer
-                          description: Auction ID
-                        gacha_id:
-                          type: integer
-                          description: Gacha ID
-                        Winner:
-                          type: integer
-                          description: Current Winner ID
-                        currentBid:
-                          type: number
-                          format: float
-                          description: Current bid of the auction
-                        endDate:
-                          type: string
-                          format: date-time
-                          description: Auction end date and time
-                                          
-        '400':
-              description: Invalid Input
-        '404':
-              description: Service down or invalid operation
+        200:
+          description: Successful response with auction details.
+        401:
+          description: Unauthorized due to missing or invalid token.
+        404:
+          description: Auction not found.
   /create:
     post:
-      summary: create a new auction
-      parameters: 
-        - name: seller_id
-          in: query
+      summary: Create a new auction
+      description: Allows a seller to create a new auction for a gacha item.
+      parameters:
+        - name: Authorization
+          in: header
           required: true
-          description: id of the seller (the user that create a new auction)
-          schema:
-            type: integer
-
-        - name: gacha_id
-          in: query
-          required: true
-          description: id of gacha which will be auctioned off 
-          schema:
-            type: integer
-
-        - name: endDate
-          in: query
-          required: true
-          description: end date of the auction
+          description: Bearer token for authentication.
           schema:
             type: string
-            format: date-time
-        
-        - name: basePrice
-          in: query
-          required: true
-          description: base price for the auction
-          schema:
-            type: number
-            format: float
-              
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                seller_username:
+                  type: string
+                  description: Username of the seller.
+                gacha_name:
+                  type: string
+                  description: Name of the gacha item.
+                basePrice:
+                  type: number
+                  description: Base price for the auction.
+                endDate:
+                  type: string
+                  format: date-time
+                  description: Auction's end date in ISO 8601 format.
+              required: [seller_username, gacha_name, basePrice, endDate]
       responses:
-        '200':
-          description: Auction created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    description: The ID of the newly created auction
-                  message:
-                    type: string
-                    example: Auction created successfully                            
-        '400':
-              description: Invalid Input
-        '404':
-              description: Service down or invalid operation
+        200:
+          description: Auction created successfully.
+        400:
+          description: Invalid input parameters.
+        401:
+          description: Unauthorized due to missing or invalid token.
+        404:
+          description: Error from profile service during gacha removal.
   /modify:
     patch:
-      summary: modify an existent auction (admin)
-      parameters: 
+      summary: Modify an auction (Admin only)
+      description: Allows an admin to modify auction details.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication.
+          schema:
+            type: string
         - name: auction_id
           in: query
           required: true
-          description: id of the auction
-          schema:
-            type: integer
-
-        - name: seller_id
-          in: query
-          required: false
-          description: id of the seller (the user that created that auction) (if not present, remains the same)
-          schema:
-            type: integer
-
-        - name: gacha_id
-          in: query
-          required: false
-          description: id of gacha which will be auctioned off (if not present, remains the same)
-          schema:
-            type: integer
-
-        - name: endDate
-          in: query
-          required: false
-          description: end date of the auction (if not present, remains the same)
+          description: ID of the auction to modify.
           schema:
             type: string
-            format: date-time
-          
+        - name: seller_username
+          in: query
+          required: false
+          description: New seller username.
+          schema:
+            type: string
+        - name: gacha_name
+          in: query
+          required: false
+          description: New gacha name.
+          schema:
+            type: string
         - name: basePrice
           in: query
           required: false
-          description: base price for the auction (if not present, remains the same)
+          description: New base price for the auction.
           schema:
             type: number
-            format: float
-          
+        - name: endDate
+          in: query
+          required: false
+          description: New end date in ISO 8601 format.
+          schema:
+            type: string
+            format: date-time
       responses:
-        '200':
-          description: Auction updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    description: The ID of the updated auction
-                  message:
-                    type: string
-                    example: Auction updated successfully                            
-        '400':
-              description: Invalid Input
-        '404':
-              description: Service down or invalid operation
+        200:
+          description: Auction updated successfully.
+        400:
+          description: Missing or invalid auction ID.
+        401:
+          description: Unauthorized due to missing or invalid token.
+        403:
+          description: Unauthorized due to insufficient permissions.
+        404:
+          description: Auction not found.
   /bid:
     patch:
-      summary: bid for an auction
-      parameters: 
-        - name: bidder_id
+      summary: Place a bid on an auction.
+      description: Allows a user to place a bid on an active auction.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication.
+          schema:
+            type: string
+        - name: username
           in: query
           required: true
-          description: id of the bidder (the user that bid for the auction) 
+          description: Username of the bidder.
           schema:
-            type: integer
-
+            type: string
         - name: auction_id
           in: query
           required: true
-          description: id of the auction 
+          description: ID of the auction to bid on.
           schema:
-            type: integer
-        
+            type: string
         - name: newBid
           in: query
           required: true
-          description: the bid to participate to the auction
+          description: New bid amount.
           schema:
             type: number
-            format: float
       responses:
-        '200':
-          description: Bid updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: New bid sets                           
-        '400':
-              description: Invalid Input
-        '404':
-              description: Service down or invalid operation          
-        
+        200:
+          description: Bid placed successfully.
+        400:
+          description: Invalid bid or parameters.
+        401:
+          description: Unauthorized due to missing or invalid token.
+        404:
+          description: Auction not found.
   /gacha_receive:
     post:
-      summary: Receive a gacha after winning it (talks with profile APIs)
+      summary: Transfer a gacha item to the auction winner
+      description: Assigns the gacha item to the auction winner in their profile.
       requestBody:
         required: true
         content:
@@ -223,50 +182,20 @@ paths:
               type: object
               properties:
                 auction_id:
-                  type: integer
-                  description: ID of the auction associated with the gacha
-                winner_username:
                   type: string
-                  description: Username of the user who won the gacha
-                gacha_name:
-                  type: string
-                  description: Name of the gacha
+                  description: ID of the auction.
+              required: [auction_id]
       responses:
-        '200':
-          description: Gacha correctly received
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Gacha correctly received                           
-        '400':
-          description: Invalid Input
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Invalid input
-        '404':
-          description: Service down or invalid operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Auction not found or service is down
-
-
+        200:
+          description: Gacha item transferred successfully.
+        400:
+          description: Invalid input parameters.
+        404:
+          description: Auction not found or no winner for the auction.
   /auction_lost:
     post:
-      summary: Process refunds for all participants who lost an auction (invokes the payment service to transfer funds back to users).
+      summary: Refund bidders who lost the auction
+      description: Refunds all non-winning bidders for a specific auction.
       requestBody:
         required: true
         content:
@@ -275,123 +204,69 @@ paths:
               type: object
               properties:
                 auction_id:
-                  type: integer
-                  description: ID of the auction to process refunds for.
+                  type: string
+                  description: ID of the auction.
+              required: [auction_id]
       responses:
-        '200':
-          description: Refund process completed with details of successful and failed transactions.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Refund process completed
-                  successful_refunds:
-                    type: array
-                    description: List of refunds that were processed successfully.
-                    items:
-                      type: object
-                      properties:
-                        username:
-                          type: string
-                          description: Username of the user who received the refund.
-                        amount:
-                          type: number
-                          format: float
-                          description: Amount refunded to the user.
-                  failed_refunds:
-                    type: array
-                    description: List of refunds that failed during processing.
-                    items:
-                      type: object
-                      properties:
-                        username:
-                          type: string
-                          description: Username of the user whose refund failed.
-                        error:
-                          type: string
-                          description: Reason for the failure.
-        '400':
-          description: Invalid Input (e.g., missing auction ID).
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Missing auction_id
-        '404':
-          description: Auction not found or no bids associated with the auction.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Auction not found
-
-              
-/auction_terminated:
-  post:
-    summary: Process the transfer of funds to the seller after an auction is terminated with a winner.
-    requestBody:
-      required: true
-      content:
-        application/json:
+        200:
+          description: Refund process completed with details of successful and failed refunds.
+        400:
+          description: Invalid input parameters or auction status.
+        404:
+          description: Auction not found or no bids found.
+  /auction_terminated:
+    post:
+      summary: Transfer funds to the auction seller
+      description: Transfers the final bid amount to the auction seller once the auction is closed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                auction_id:
+                  type: string
+                  description: ID of the auction.
+              required: [auction_id]
+      responses:
+        200:
+          description: Funds transferred successfully to the seller.
+        400:
+          description: No valid bids to transfer funds.
+        404:
+          description: Auction not found.
+  /close_auction:
+    post:
+      summary: Close an auction.
+      description: Closes an auction that has no bids and returns the gacha item to the seller.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication.
           schema:
-            type: object
-            properties:
-              auction_id:
-                type: integer
-                description: ID of the auction that has terminated.
-    responses:
-      '200':
-        description: Funds successfully transferred to the seller.
+            type: string
+      requestBody:
+        required: true
         content:
           application/json:
             schema:
               type: object
               properties:
-                message:
+                auction_id:
                   type: string
-                  example: Money correctly received
-                transaction_details:
-                  type: object
-                  properties:
-                    payer_us:
-                      type: string
-                      description: Username of the system as the payer.
-                    receiver_us:
-                      type: string
-                      description: Username of the seller who received the payment.
-                    amount:
-                      type: number
-                      format: float
-                      description: Amount transferred to the seller.
-      '400':
-        description: Invalid Input (e.g., missing or incorrect auction ID).
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                error:
-                  type: string
-                  example: Missing auction_id
-      '404':
-        description: Auction not found or auction has no winner.
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                error:
-                  type: string
-                  example: Auction not found or no winner assigned
+                  description: ID of the auction to close.
+              required: [auction_id]
+      responses:
+        200:
+          description: Auction closed successfully.
+        400:
+          description: Invalid parameters or auction cannot be closed due to existing bids.
+        401:
+          description: Unauthorized due to missing or invalid token.
+        404:
+          description: Auction not found.
 
 
 
