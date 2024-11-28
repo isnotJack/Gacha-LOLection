@@ -1,13 +1,13 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-# from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+import jwt
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
+# from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 import bcrypt
 import requests , time
 import os
 import datetime
 import uuid
-import jwt
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@auth_db:5432/auth_db'
@@ -254,8 +254,26 @@ def logout():
 # Endpoint per l'eliminazione di un account
 @app.route('/delete', methods=['DELETE'])
 def delete_account():
-    #Dati arrivano in formato JSON dal gateway
     data = request.get_json()
+    #Dati arrivano in formato JSON dal gateway
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+    access_token = auth_header.removeprefix("Bearer ").strip()
+
+    with open(public_key_path, 'r') as key_file:
+        public_key = key_file.read()
+
+    try:
+        # Verifica il token con la chiave pubblica
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="gacha_roll")  
+        #print(f"Token verificato! Dati decodificati: {decoded_token}")
+        if 'username' in data and decoded_token.get("sub") != data['username']:
+            return jsonify({"error": "Username in token does not match the request username"}), 403
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
     username = data.get('username')
     password = data.get('password') 
     if not username or not password:
@@ -273,7 +291,10 @@ def delete_account():
             # x = requests.delete(url, json=params, timeout=10)
             # x.raise_for_status()
             # res = x.json()
-        res, status = profile_circuit_breaker.call('delete', url, params, {},{}, True)
+        headers={
+            'Authorization' : f'Bearer {access_token}'
+        }
+        res, status = profile_circuit_breaker.call('delete', url, params, headers,{}, True)
         if status != 200:
             # Ritorna un errore se la chiamata al `profile_setting` fallisce
             return jsonify({'Error': f'Failed to delete profile: {res}'}), 500
@@ -281,7 +302,7 @@ def delete_account():
             # x = requests.delete(url, json=params, timeout=10)
             # x.raise_for_status()
             # res = x.json()
-        res, status = payment_circuit_breaker.call('delete', url, params, {},{}, True)
+        res, status = payment_circuit_breaker.call('delete', url, params, headers,{}, True)
         if status != 200:
             return jsonify({'Error': f'Failed to delete balance: {res}'}), 500
         return jsonify({"msg": "Account deleted successfully"}), 200
