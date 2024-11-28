@@ -242,8 +242,6 @@ def create_auction():
     data = request.get_json()
     if data is None:
         return jsonify({"error": "Invalid JSON or missing Content-Type header"}), 400
-
-    
     
     # Recupera i parametri dall'oggetto JSON
     seller_username = data.get('seller_username')

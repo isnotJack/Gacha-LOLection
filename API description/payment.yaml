@@ -28,13 +28,15 @@ paths:
                 amount:
                   type: string
                   description: Amount to be transferred (in Memecoins).
+              required:
+                - payer_us
+                - receiver_us
+                - amount
       responses:
         '200':
           description: Payment successfully executed.
         '400':
           description: Invalid request data, such as missing payer or receiver, or invalid amount.
-        '401':
-          description: Unauthorized request due to missing or invalid token.
         '404':
           description: User balance not found.
         '422':
@@ -44,6 +46,13 @@ paths:
     post:
       summary: Purchase in-game currency (Memecoins).
       description: Allows a user to purchase in-game currency using real money.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication. Format: `Bearer <token>`.
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -60,6 +69,10 @@ paths:
                 payment_method:
                   type: string
                   description: The payment method used for the transaction (e.g. card).
+              required:
+               - username
+               - amount
+               - payment_method
       responses:
         '200':
           description: Currency purchase completed successfully.
@@ -87,23 +100,18 @@ paths:
           description: User not found.
         '500':
           description: Internal server error or payment processing issue.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  Error:
-                    type: string
-                    example: "Internal server error or payment processing issue"
-                  details:
-                    type: string
-                    example: "Details of the error"
 
   /viewTrans:
     get:
       summary: View transactions for a specific user.
       description: Fetches a list of all transactions (sent and received) for a specified user.
       parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication. Format: `Bearer <token>`.
+          schema:
+            type: string
         - name: username
           in: query
           required: true
@@ -143,8 +151,8 @@ paths:
           description: Invalid username parameter.
         '401':
           description: Unauthorized request due to missing or invalid token.
-        # '403':
-        #   description: The username in the token does not match the username in the request body.
+        '403':
+          description: The username in the token does not match the username in the request body.
   
   /newBalance:
     post:
@@ -160,6 +168,8 @@ paths:
                 username:
                   type: string
                   description: The username of the user for whom the balance is being created.
+              required:
+                - username
       responses:
         '200':
           description: Balance created successfully for the user.
@@ -218,6 +228,8 @@ paths:
                 username:
                   type: string
                   description: The username of the user whose balance is being deleted.
+              required:
+                - username
       responses:
         '200':
           description: Successfully deleted the user's balance.
