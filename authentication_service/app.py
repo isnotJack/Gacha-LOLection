@@ -163,9 +163,12 @@ def login():
     if not username or not password:
          return jsonify({"Error": "Missing parameters"}), 400
     
+    
     user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({"Error": "User not found"}), 404
     hashed_input = bcrypt.hashpw(password.encode('utf-8'), user.salt.encode('utf-8')).decode('utf-8')
-    if user and user.password == hashed_input:
+    if user.password == hashed_input:
         # Legge la chiave privata
         with open(private_key_path, "r") as key_file:
             private_key = key_file.read()
@@ -218,9 +221,10 @@ def login():
 # Endpoint per il logout (simulato, senza revoca token per semplicità)
 @app.route('/logout', methods=['DELETE'])
 def logout():
-    ref_token = request.headers.get('Refresh')
+    ref_token = request.headers.get('Authorization')
     if not ref_token:
-        return jsonify({'error': 'Refresh token not present'}), 400
+        return jsonify({"error": "Missing Authorization header"}), 401
+    ref_token = ref_token.removeprefix("Bearer ").strip()
     # try:
     # Carica la chiave pubblica
     with open(public_key_path, 'r') as key_file:
