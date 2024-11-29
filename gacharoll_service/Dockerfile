@@ -21,4 +21,4 @@ ENV FLASK_ENV=development
 EXPOSE 5007
 
 # Comando per eseguire l'app Flask
-CMD ["flask", "run"]
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5007", "--cert=/app/gacharoll_cert.pem", "--key=/app/gacharoll_key.pem"]

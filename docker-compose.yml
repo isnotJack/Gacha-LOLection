@@ -4,6 +4,9 @@ services:
     build: ./admin_gateway
     ports:
       - 5009:5009
+    secrets:
+      - auction_cert
+      - auction_key
     depends_on:
       - auth_service
       - auth_db
@@ -18,6 +21,9 @@ services:
     build: ./gateway
     ports:
       - 5001:5001
+    secrets:
+      - gateway_cert
+      - gateway_key
     depends_on:
       - auth_service
       - auth_db
@@ -47,6 +53,9 @@ services:
     build: ./authentication_service
     ports:
       - "5002:5002"
+    secrets:
+      - authentication_cert
+      - authentication_key
     volumes:
       - ./RSAkeys:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
     environment:
@@ -76,6 +85,9 @@ services:
       - ./RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
     ports:
       - "5003:5003"
+    secrets:
+      - profile_cert
+      - profile_key
     environment:
       - DATABASE_URI=postgresql://user:password@profile_db:5432/profile_db
       - JWT_SECRET_KEY=super-secret-key
@@ -104,6 +116,9 @@ services:
       - ./RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
     ports:
       - "5004:5004" # mappa la porta del container 5001 (destra) sulla stessa porta dell'host
+    secrets:
+      - gachasystem_cert
+      - gachasystem_key
     environment:
       - DATABASE_URI=postgresql://user:password@db_gachasystem:5432/memes_db   # variabile d'ambiente che specifica l'uri per connettersi al db
       - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
@@ -129,6 +144,9 @@ services:
       - "5006:5006"
     volumes:
       - ./RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
+    secrets:
+      - payment_cert
+      - payment_key
     environment:
       - DATABASE_URI=postgresql://user:password@db_payment:5432/trans_db
       - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
@@ -142,6 +160,9 @@ services:
       restart: always
       ports:
         - "5007:5007"
+      secrets:
+        - gacharoll_cert
+        - gacharoll_key
       volumes:
         - ./RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
       environment:
@@ -166,6 +187,9 @@ services:
     build: ./auction_market_service
     ports:
       - "5008:5008"
+    secrets:
+      - auction_cert
+      - auction_key
     volumes:
       - ./RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
     environment:
@@ -182,3 +206,36 @@ volumes:
   meme_images:
   payment_data:
   auction_data:
+secrets:
+  auction_cert:
+    file: ./auction_market_service/auction_cert.pem
+  auction_key:
+    file: ./auction_market_service/auction_key.pem
+  profile_cert:
+    file: ./profile_setting/profile_cert.pem
+  profile_key:
+    file: ./profile_setting/profile_key.pem
+  authentication_cert:
+    file: ./authentication_service/authentication_cert.pem
+  authentication_key:
+    file: ./authentication_service/authentication_key.pem
+  gacharoll_cert:
+    file: ./gacharoll_service/gacharoll_cert.pem
+  gacharoll_key:
+    file: ./gacharoll_service/gacharoll_key.pem
+  gachasystem_cert:
+    file: ./gachasystem_service/gachasystem_cert.pem
+  gachasystem_key:
+    file: ./gachasystem_service/gachasystem_key.pem
+  payment_cert:
+    file: ./payment_service/payment_cert.pem
+  payment_key:
+    file: ./payment_service/payment_key.pem
+  gateway_cert:
+    file: ./gateway/gateway_cert.pem
+  gateway_key:
+    file: ./gateway/gateway_key.pem
+  admingateway_cert:
+    file: ./admin_gateway/admingateway_cert.pem
+  admingateway_key:
+    file: ./admin_gateway/admingateway_key.pem

@@ -1,11 +1,13 @@
 import requests
 import os
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 #SCRIPT DI POPOLAZIONE
 #REGISTRO 3 UTENTI
-url = 'http://localhost:5001/auth_service/signup'
+url = 'https://localhost:5001/auth_service/signup'
 
-admin_url = 'http://localhost:5009/auth_service/signup'
+admin_url = 'https://localhost:5009/auth_service/signup'
 data={
     'username' : 'system',
     'password' : '1234'
@@ -31,7 +33,7 @@ data3 = {
 }
 
 # Invia la richiesta POST
-response = requests.post(admin_url, data=data)
+response = requests.post(admin_url, data=data, verify=False)
 # Verifica la risposta
 if response.status_code == 200:
     print('Successo:', response.json())  # Se la risposta è in formato JSON
@@ -39,21 +41,21 @@ else:
     print(f'Errore {response.status_code}: {response.text}')
 
 # Invia la richiesta POST
-response = requests.post(url, data=data1)
+response = requests.post(url, data=data1, verify=False)
 # Verifica la risposta
 if response.status_code == 200:
     print('Successo:', response.json())  # Se la risposta è in formato JSON
 else:
     print(f'Errore {response.status_code}: {response.text}')
 
-response = requests.post(url, data=data2)
+response = requests.post(url, data=data2, verify=False)
 # Verifica la risposta
 if response.status_code == 200:
     print('Successo:', response.json())  # Se la risposta è in formato JSON
 else:
     print(f'Errore {response.status_code}: {response.text}')
 
-response = requests.post(url, data=data3)
+response = requests.post(url, data=data3, verify=False)
 # Verifica la risposta
 if response.status_code == 200:
     print('Successo:', response.json())  # Se la risposta è in formato JSON
@@ -62,12 +64,12 @@ else:
 
     # LOGIN ADMIN #
 
-admin_url = 'http://localhost:5009/auth_service/login'
+admin_url = 'https://localhost:5009/auth_service/login'
 data={
     'username' : 'system',
     'password' : '1234'
     }
-response = requests.post(admin_url, data=data)
+response = requests.post(admin_url, data=data, verify=False)
 # Verifica la risposta
 if response.status_code == 200:
     print('Successo:', response.json())  # Se la risposta è in formato JSON
@@ -88,7 +90,7 @@ ref_headers = {
 
 # Imposta il percorso della cartella contenente le immagini
 images_folder = "./meme images"
-url = "http://localhost:5009/gachasystem_service/add_gacha"
+url = "https://localhost:5009/gachasystem_service/add_gacha"
 
 count = 0
 rarity = ['common', 'rare', 'legendary' ]
@@ -112,17 +114,17 @@ for filename in os.listdir(images_folder):
         }
         count = (count +1) % 3
         # Invia la richiesta POST
-        response = requests.post(url, files=files, data=data, headers=headers)
+        response = requests.post(url, files=files, data=data, headers=headers, verify=False)
         
         # Mostra l'esito della richiesta
         print(f"Status Code: {response.status_code}")
         print(f"Response Text: {response.text}\n")
     
 try:
-    url = 'http://localhost:5009/auth_service/logout'
+    url = 'https://localhost:5009/auth_service/logout'
     
     # Effettua la richiesta DELETE per il logout
-    response = requests.delete(url, headers=ref_headers)
+    response = requests.delete(url, headers=ref_headers, verify=False)
 
     if response.status_code == 200:
         print('Logout avvenuto con successo.')

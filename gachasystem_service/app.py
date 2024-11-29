@@ -19,7 +19,7 @@ public_key_path = os.getenv("PUBLIC_KEY_PATH")
 
 UPLOAD_FOLDER = '/app/static/uploads'  # Percorso dove Docker monta il volume
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}  # Estensioni permesse
-PROFILE_SETTING_URL = "http://profile_setting:5003/deleteGacha"  # Nome del container nel docker-compose
+PROFILE_SETTING_URL = "https://profile_setting:5003/deleteGacha"  # Nome del container nel docker-compose
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -49,9 +49,9 @@ class CircuitBreaker:
         try:
             # Usa requests.request per specificare il metodo dinamicamente
             if json:
-                response = requests.request(method, url, json=params, headers=headers)
+                response = requests.request(method, url, json=params, headers=headers, verify=False)
             else:
-                response = requests.request(method, url, data=params, headers=headers, files=files)
+                response = requests.request(method, url, data=params, headers=headers, files=files, verify=False)
             
             response.raise_for_status()  # Solleva un'eccezione per errori HTTP (4xx, 5xx)
 
@@ -372,7 +372,7 @@ def get_gacha_collection():
             "description": gacha.description or "",
             "rarity": gacha.rarity,
             #"collected_date": gacha.collected_date.isoformat(),  # Aggiungi la data di raccolta
-            "img": f"http://localhost:5001/images_gacha/uploads/{os.path.basename(gacha.image_path)}"  # URL completo immagine
+            "img": f"https://localhost:5001/images_gacha/uploads/{os.path.basename(gacha.image_path)}"  # URL completo immagine
         }
         
 
@@ -438,7 +438,7 @@ def get_gacha_roll():
         "description": gacha.description or "",
         "rarity": gacha.rarity,
         #"collected_date": gacha.collected_date.isoformat(),
-        "img": f"http://localhost:5001/images_gacha/uploads/{os.path.basename(gacha.image_path)}"
+        "img": f"https://localhost:5001/images_gacha/uploads/{os.path.basename(gacha.image_path)}"
     }
 
     return jsonify(gacha_details), 200
@@ -446,4 +446,4 @@ def get_gacha_roll():
 
 if __name__ == '__main__':
     db.create_all()
-    app.run(host='0.0.0.0', port=5004)
+   # app.run(host='0.0.0.0', port=5004)

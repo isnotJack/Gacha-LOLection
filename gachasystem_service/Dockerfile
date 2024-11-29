@@ -20,4 +20,4 @@ ENV FLASK_ENV=development
 EXPOSE 5004
 
 # Comando per avviare il servizio
-CMD ["flask", "run"]
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5004", "--cert=/app/gachasystem_cert.pem", "--key=/app/gachasystem_key.pem"]

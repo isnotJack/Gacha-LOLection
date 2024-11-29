@@ -9,6 +9,7 @@ import os
 import datetime
 import uuid
 
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@auth_db:5432/auth_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -42,9 +43,9 @@ class CircuitBreaker:
         try:
             # Usa requests.request per specificare il metodo dinamicamente
             if json:
-                response = requests.request(method, url, json=params, headers=headers)
+                response = requests.request(method, url, json=params, headers=headers, verify=False)
             else:
-                response = requests.request(method, url, data=params, headers=headers, files=files)
+                response = requests.request(method, url, data=params, headers=headers, files=files, verify=False)
             
             response.raise_for_status()  # Solleva un'eccezione per errori HTTP (4xx, 5xx)
 
@@ -129,7 +130,7 @@ def signup():
         'profile_image': 'default_image_url',
         'currency_balance': 0
     }
-    url = 'http://profile_setting:5003/create_profile'
+    url = 'https://profile_setting:5003/create_profile'
     # x = requests.post(url, json=params, timeout=10)
     res, status = profile_circuit_breaker.call('post', url, params, {},{}, True )
     # x.raise_for_status()
@@ -140,7 +141,7 @@ def signup():
     params = {
         'username': username,
     }
-    url = 'http://payment_service:5006/newBalance'
+    url = 'https://payment_service:5006/newBalance'
     
         # y = requests.post(url, json=params, timeout=10)
         # y.raise_for_status()
@@ -184,7 +185,7 @@ def login():
             "typ": "JWT"
         } 
         payload = {
-            "iss": "http://auth_service:5002",      # Emittente
+            "iss": "https://auth_service:5002",      # Emittente
             "sub": user.username,              # Soggetto
             "aud": ["profile_setting", "gachasystem", "payment_service", "gacha_roll", "auction_service"],         
             "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
@@ -203,7 +204,7 @@ def login():
         }
 
         payload = {
-            "iss": "http://auth_service:5002",      # Emittente
+            "iss": "https://auth_service:5002",      # Emittente
             "sub": user.username,                 # Soggetto (può essere l'ID utente o l'email)
             "aud":"auth_service",
             "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
@@ -293,7 +294,7 @@ def delete_account():
         params = {
             'username': username,
         }
-        url = 'http://profile_setting:5003/delete_profile'
+        url = 'https://profile_setting:5003/delete_profile'
             # x = requests.delete(url, json=params, timeout=10)
             # x.raise_for_status()
             # res = x.json()
@@ -304,7 +305,7 @@ def delete_account():
         if status != 200:
             # Ritorna un errore se la chiamata al `profile_setting` fallisce
             return jsonify({'Error': f'Failed to delete profile: {res}'}), 500
-        url = 'http://payment_service:5006/deleteBalance'
+        url = 'https://payment_service:5006/deleteBalance'
             # x = requests.delete(url, json=params, timeout=10)
             # x.raise_for_status()
             # res = x.json()
@@ -347,7 +348,7 @@ def newToken():
             "typ": "JWT"
         } 
         payload = {
-            "iss": "http://auth_service:5002",      # Emittente
+            "iss": "https://auth_service:5002",      # Emittente
             "sub": decoded_token.get("sub"),              # Soggetto
             "aud": ["profile_setting", "gachasystem", "payment_service", "gacha_roll", "auction_service"],         
             "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
@@ -368,4 +369,4 @@ def newToken():
 
 if __name__ == '__main__':
     db.create_all()
-    app.run(host='0.0.0.0', port=5001)
+    #app.run(host='0.0.0.0', port=5001)

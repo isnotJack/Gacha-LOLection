@@ -5,12 +5,13 @@ import jwt
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 import os
 
+
 app = Flask(__name__)
 
 # URL dei servizi
-GACHA_SYSTEM_URL = "http://gachasystem:5004/get_gacha_roll"  # Nome del container nel docker-compose
-PAYMENT_SERVICE_URL = "http://payment_service:5006/pay"  # Nome del container nel docker-compose
-PROFILE_SETTING_URL = "http://profile_setting:5003/insertGacha"  # Nome del container nel docker-compose
+GACHA_SYSTEM_URL = "https://gachasystem:5004/get_gacha_roll"  # Nome del container nel docker-compose
+PAYMENT_SERVICE_URL = "https://payment_service:5006/pay"  # Nome del container nel docker-compose
+PROFILE_SETTING_URL = "https://profile_setting:5003/insertGacha"  # Nome del container nel docker-compose
 
 public_key_path = os.getenv("PUBLIC_KEY_PATH")
 
@@ -36,9 +37,9 @@ class CircuitBreaker:
         try:
             # Usa requests.request per specificare il metodo dinamicamente
             if json:
-                response = requests.request(method, url, json=params, headers=headers)
+                response = requests.request(method, url, json=params, headers=headers, verify=False)
             else:
-                response = requests.request(method, url, data=params, headers=headers, files=files)
+                response = requests.request(method, url, data=params, headers=headers, files=files, verify=False)
             
             response.raise_for_status()  # Solleva un'eccezione per errori HTTP (4xx, 5xx)
 
@@ -127,7 +128,7 @@ def gacharoll():
         "Authorization": f"Bearer {access_token}"
     }
 
-    payment_response,status = payment_circuit_breaker.call('post', PAYMENT_SERVICE_URL, payment_data, {},{}, False)
+    payment_response,status = payment_circuit_breaker.call('post', PAYMENT_SERVICE_URL, payment_data,{},{}, False)
     # try: 
     #     payment_response = requests.post(PAYMENT_SERVICE_URL, data=payment_data, timeout=10)
     if status != 200:
@@ -168,5 +169,5 @@ def gacharoll():
         "collected_date": collected_date.isoformat()  # Includi la data come stringa nel formato ISO
     }), 200
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5007)  # La porta 5007 è quella su cui il servizio è esposto
+#if __name__ == "__main__":
+    #app.run(host='0.0.0.0', port=5007)  # La porta 5007 è quella su cui il servizio è esposto

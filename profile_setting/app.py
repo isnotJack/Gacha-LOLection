@@ -48,9 +48,9 @@ class CircuitBreaker:
         try:
             # Usa requests.request per specificare il metodo dinamicamente
             if json:
-                response = requests.request(method, url, json=params, headers=headers)
+                response = requests.request(method, url, json=params, headers=headers, verify=False)
             else:
-                response = requests.request(method, url, data=params, headers=headers, files=files)
+                response = requests.request(method, url, data=params, headers=headers, files=files, verify=False)
             
             response.raise_for_status()  # Solleva un'eccezione per errori HTTP (4xx, 5xx)
 
@@ -193,7 +193,7 @@ def modify_profile():
                     "profile": {
                         "username": profile.username,
                         "email": profile.email,
-                        "profile_image": f"http://localhost:5001/images_profile/uploads/{os.path.basename(profile.profile_image)}",
+                        "profile_image": f"https://localhost:5001/images_profile/uploads/{os.path.basename(profile.profile_image)}",
                         "currency_balance": profile.currency_balance
                     }}), 200
 
@@ -230,7 +230,7 @@ def check_profile():
     profile_data = {
         "username": profile.username,
         "email": profile.email,
-        "profile_image": f"http://localhost:5001/images_profile/uploads/{os.path.basename(profile.profile_image)}",
+        "profile_image": f"https://localhost:5001/images_profile/uploads/{os.path.basename(profile.profile_image)}",
         "currency_balance": profile.currency_balance,
     }
     return jsonify(profile_data), 200
@@ -269,7 +269,7 @@ def retrieve_gacha_collection():
     if not gacha_collection:
         return jsonify({"message": "User has no gachas"}), 200
 
-    url="http://gachasystem:5004/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
+    url="https://gachasystem:5004/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
      # Se l'utente ha dei gachas nella collezione, li inviamo al servizio come parametro
     jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
     headers = {
@@ -321,7 +321,7 @@ def info_gacha_collection():
 
     # Costruisci i parametri per la richiesta
     params = {"gacha_name": gacha_name}
-    url = "http://gachasystem:5004/get_gacha_collection"
+    url = "https://gachasystem:5004/get_gacha_collection"
 
         # Invia la richiesta al servizio Gacha
         # x = requests.get(url, json=params)
@@ -538,4 +538,4 @@ def deleteGacha():
 
 if __name__ == '__main__':
     db.create_all()
-    app.run(host='0.0.0.0', port=5002)
+    #app.run(host='0.0.0.0', port=5002)

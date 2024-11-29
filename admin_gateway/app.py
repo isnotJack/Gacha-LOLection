@@ -6,28 +6,29 @@ from werkzeug.exceptions import NotFound
 from io import BytesIO
 
 
+
 ALLOWED_GACHA_SYS_OP ={'add_gacha', 'delete_gacha', 'update_gacha', 'get_gacha_collection'}
-ADD_URL = 'http://gachasystem:5004/add_gacha'
-DELETE_GACHA_URL = 'http://gachasystem:5004/delete_gacha'
-UPDATE_GACHA_URL = 'http://gachasystem:5004/update_gacha'
-GET_GACHA_COLL_URL = 'http://gachasystem:5004/get_gacha_collection'
-GACHA_IMAGE_URL = 'http://gachasystem:5004/uploads/'
+ADD_URL = 'https://gachasystem:5004/add_gacha'
+DELETE_GACHA_URL = 'https://gachasystem:5004/delete_gacha'
+UPDATE_GACHA_URL = 'https://gachasystem:5004/update_gacha'
+GET_GACHA_COLL_URL = 'https://gachasystem:5004/get_gacha_collection'
+GACHA_IMAGE_URL = 'https://gachasystem:5004/uploads/'
 
 ALLOWED_AUTH_OP ={'signup', 'login', 'logout', 'delete', 'newToken'}
-SINGUP_URL = 'http://auth_service:5002/signup'
-LOGIN_URL = 'http://auth_service:5002/login'
-LOGOUT_URL = 'http://auth_service:5002/logout'
-DELETE_URL = 'http://auth_service:5002/delete'
-NEWTOKEN_URL = 'http://auth_service:5002/newToken'
+SINGUP_URL = 'https://auth_service:5002/signup'
+LOGIN_URL = 'https://auth_service:5002/login'
+LOGOUT_URL = 'https://auth_service:5002/logout'
+DELETE_URL = 'https://auth_service:5002/delete'
+NEWTOKEN_URL = 'https://auth_service:5002/newToken'
 
 ALLOWED_PROF_OP ={'modify_profile','checkprofile', 'retrieve_gachacollection', 'info_gachacollection'}
-MODIFY_URL = 'http://profile_setting:5003/modify_profile'
-CHECK_URL = 'http://profile_setting:5003/checkprofile'
-RETRIEVE_URL = 'http://profile_setting:5003/retrieve_gachacollection'
-INFO_URL = 'http://profile_setting:5003/info_gachacollection'
+MODIFY_URL = 'https://profile_setting:5003/modify_profile'
+CHECK_URL = 'https://profile_setting:5003/checkprofile'
+RETRIEVE_URL = 'https://profile_setting:5003/retrieve_gachacollection'
+INFO_URL = 'https://profile_setting:5003/info_gachacollection'
 
 ALLOWED_AUCTION_OP = {'see', 'create', 'modify', 'bid','gacha_receive', 'auction_lost', 'auction_terminated'} 
-AUCTION_BASE_URL = 'http://auction_service:5008'
+AUCTION_BASE_URL = 'https://auction_service:5008'
 SEE_AUCTION_URL = f'{AUCTION_BASE_URL}/see'
 # CREATE_AUCTION_URL = f'{AUCTION_BASE_URL}/create'
 MODIFY_AUCTION_URL = f'{AUCTION_BASE_URL}/modify'
@@ -37,7 +38,7 @@ MODIFY_AUCTION_URL = f'{AUCTION_BASE_URL}/modify'
 
 # GACHAROLL_URL = 'http://gacha_roll:5007/gacharoll'
 
-PROFILE_IMAGE_URL = 'http://profile_setting:5003/uploads/'
+PROFILE_IMAGE_URL = 'https://profile_setting:5003/uploads/'
 
 # BUYCURRENCY_URL = 'http://payment_service:5006/buycurrency'
 
@@ -68,9 +69,9 @@ class CircuitBreaker:
         try:
             # Usa requests.request per specificare il metodo dinamicamente
             if json:
-                response = requests.request(method, url, json=params, headers=headers)
+                response = requests.request(method, url, json=params, headers=headers, verify=False)
             else:
-                response = requests.request(method, url, data=params, headers=headers, files=files)
+                response = requests.request(method, url, data=params, headers=headers, files=files, verify=False)
             
             response.raise_for_status()  # Solleva un'eccezione per errori HTTP (4xx, 5xx)
 

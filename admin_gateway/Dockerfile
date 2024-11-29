@@ -18,4 +18,4 @@ ENV FLASK_ENV=development
 EXPOSE 5009
 
 # Comando per avviare il servizio
-CMD ["flask", "run"]
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5009", "--cert=/app/admingateway_cert.pem", "--key=/app/admingateway_key.pem"]

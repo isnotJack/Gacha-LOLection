@@ -10,4 +10,4 @@ ENV FLASK_RUN_PORT=5008
 ENV FLASK_ENV=development
 
 EXPOSE 5008
-CMD ["flask", "run"]
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5008", "--cert=/app/auction_cert.pem", "--key=/app/auction_key.pem"]

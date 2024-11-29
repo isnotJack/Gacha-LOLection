@@ -48,9 +48,9 @@ class CircuitBreaker:
         try:
             # Usa requests.request per specificare il metodo dinamicamente
             if json:
-                response = requests.request(method, url, json=params, headers=headers)
+                response = requests.request(method, url, json=params, headers=headers, verify=False)
             else:
-                response = requests.request(method, url, data=params, headers=headers, files=files)
+                response = requests.request(method, url, data=params, headers=headers, files=files, verify=False)
             
             response.raise_for_status()  # Solleva un'eccezione per errori HTTP (4xx, 5xx)
 
@@ -139,7 +139,7 @@ def check_and_close_auctions():
                 payload = {"auction_id": auction.id}
                 # response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
                 # response.raise_for_status()
-                response, status = auction_circuit_breaker.call('post', 'http://auction_service:5008/gacha_receive', payload, {},{}, True )
+                response, status = auction_circuit_breaker.call('post', 'https://auction_service:5008/gacha_receive', payload, {},{}, True )
                 if status != 200:
                     app.logger.error(f"Errore durante gacha_receive per l'asta {auction.id}: {response}")
             else:
@@ -148,7 +148,7 @@ def check_and_close_auctions():
                     # Gacha Receive per trasferire il gacha al vincitore
                     # gacha_response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
                     # gacha_response.raise_for_status()
-                response, status = auction_circuit_breaker.call('post', 'http://auction_service:5008/gacha_receive', payload, {},{}, True )
+                response, status = auction_circuit_breaker.call('post', 'https://auction_service:5008/gacha_receive', payload, {},{}, True )
                 if status != 200:
                     app.logger.error(f"Errore durante gacha_receive per l'asta {auction.id}: {response}")
 
@@ -156,13 +156,13 @@ def check_and_close_auctions():
                     # Refund dei partecipanti perdenti
                     # lost_response = requests.post(f"http://auction_service:5008/auction_lost", json=payload, timeout=10)
                     # lost_response.raise_for_status()
-                lost_response, status = auction_circuit_breaker.call('post', 'http://auction_service:5008/auction_lost', payload, {},{}, True )
+                lost_response, status = auction_circuit_breaker.call('post', 'https://auction_service:5008/auction_lost', payload, {},{}, True )
                 if status != 200:
                     app.logger.error(f"Errore durante auction_lost per l'asta {auction.id}: {lost_response}")
                     # Trasferire i fondi al venditore
                 # terminated_response = requests.post(f"http://auction_service:5008/auction_terminated", json=payload, timeout=10)
                 # terminated_response.raise_for_status()
-                terminated_response, status = auction_circuit_breaker.call('post', 'http://auction_service:5008/auction_terminated', payload, {},{}, True )
+                terminated_response, status = auction_circuit_breaker.call('post', 'https://auction_service:5008/auction_terminated', payload, {},{}, True )
                 if status != 200:
                     app.logger.error(f"Errore durante auction_terminated per l'asta {auction.id}: {terminated_response}")
 
@@ -279,7 +279,7 @@ def create_auction():
         end_date=end_date
     )
 
-    profile_service_url = "http://profile_setting:5003/deleteGacha"
+    profile_service_url = "https://profile_setting:5003/deleteGacha"
     payload = {
         "username": seller_username,
         "gacha_name": gacha_name
@@ -419,7 +419,7 @@ def bid_for_auction():
     if bid_difference <= 0:
         return jsonify({"error": "New bid must be higher than your previous bid"}), 400
 
-    payment_service_url = "http://payment_service:5006/pay"
+    payment_service_url = "https://payment_service:5006/pay"
     payload = {
         "payer_us": bidder_username,
         "receiver_us": "auction_system",
@@ -482,7 +482,7 @@ def gacha_receive():
     gacha_name = auction.gacha_name
 
     # Crea il payload per la chiamata al servizio di profile_setting
-    profile_service_url = "http://profile_setting:5003/insertGacha"
+    profile_service_url = "https://profile_setting:5003/insertGacha"
     payload = {
         "username": winner_username,  # Nome del vincitore
         "gacha_name": gacha_name,   # Nome del gacha
@@ -532,7 +532,7 @@ def auction_lost():
         return jsonify({"error": "No bids found for this auction"}), 404
 
     # Itera su tutti i partecipanti e fai il refund ai non vincitori
-    payment_service_url = "http://payment_service:5006/pay"
+    payment_service_url = "https://payment_service:5006/pay"
     failed_refunds = []
     successful_refunds = []
 
@@ -589,7 +589,7 @@ def auction_terminated():
         return jsonify({"error": "Auction has no valid bids to transfer, no money sent from system to seller :("}), 400
 
     # Recupera i dettagli per la transazione
-    payment_service_url = "http://payment_service:5006/pay"
+    payment_service_url = "https://payment_service:5006/pay"
     transfer_payload = {
         "payer_us": "auction_system",  # Il sistema paga il seller
         "receiver_us": auction.seller_username,  # Il creatore dell'asta riceve
@@ -668,7 +668,7 @@ def close_auction():
     headers = {
         "Authorization": f"Bearer {access_token}"
     }
-    response , status = auction_circuit_breaker.call('post', "http://auction_service:5008/gacha_receive", payload, headers,{}, True)
+    response , status = auction_circuit_breaker.call('post', "https://auction_service:5008/gacha_receive", payload, headers,{}, True)
     if status != 200:
     # try:
     #     response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
@@ -684,4 +684,4 @@ def close_auction():
 
 if __name__ == '__main__':
     db.create_all()
-    app.run(host='0.0.0.0', port=5008)
+    #app.run(host='0.0.0.0', port=5008)
