@@ -138,7 +138,7 @@ def add_gacha():
         return jsonify({"error": "Missing required fields (image, gacha_name, or rarity)"}), 400
 
     file = request.files['image']
-
+    
     # Verifica che l'immagine abbia un nome valido
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400

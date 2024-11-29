@@ -203,8 +203,11 @@ def profile_setting(op):
         username = request.form.get('username')
         value = request.form.get('value')
         field = request.form.get('field')
-        file = request.files['image']
-        files = {'image': (file.filename, file.stream, file.mimetype)}
+        if 'image' not in request.files:
+            files={}
+        else:
+            file = request.files['image']
+            files = {'image': (file.filename, file.stream, file.mimetype)}
         url = MODIFY_URL
         params = {
             'username': username,

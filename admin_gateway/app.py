@@ -300,8 +300,11 @@ def gachasystem(op):
         gacha_name = request.form.get('gacha_name')
         rarity = request.form.get('rarity')
         description = request.form.get('description')
-        file = request.files['image']
-        files = {'image': (file.filename, file.stream, file.mimetype)}
+        if 'image' not in request.files:
+            files = {}
+        else:
+            file = request.files['image']
+            files = {'image': (file.filename, file.stream, file.mimetype)}
         url = ADD_URL
         params = {
             'gacha_name': gacha_name,
@@ -338,7 +341,10 @@ def gachasystem(op):
         }
     # ENTRAMBI
     elif op == 'get_gacha_collection':
-        params = {}
+        gacha_name = request.form.get('gacha_name')
+        params = {
+            'gacha_name': gacha_name
+        }
         url = GET_GACHA_COLL_URL
         jwt_token = request.headers.get('Authorization')
         headers = {
