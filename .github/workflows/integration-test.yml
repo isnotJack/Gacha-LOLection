@@ -37,7 +37,7 @@ jobs:
     # 6. Esegui i test con Newman
     - name: Run integration tests with Newman
       run: |
-        newman run tests/sse-project.postman_collection.json \
+        newman run tests/integration-test.postman_collection.json \
           --reporters cli,html \
           --reporter-html-export newman-report.html
 
