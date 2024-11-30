@@ -313,10 +313,17 @@ def gachasystem(op):
         }
     # ENTRAMBI
     elif op == 'get_gacha_collection':
-        gacha_name = request.form.get('gacha_name')
-        params = {
-            'gacha_name': gacha_name
-        }
+        gacha_name = request.form.getlist('gacha_name')
+        # if gacha_name:
+        #     gacha_name = gacha_name.split(',')  # Divide la stringa in una lista
+        if gacha_name:
+            params = {
+                'gacha_name': gacha_name
+            }
+        else:
+            params = {
+                'gacha_name': {}
+            }
         url = GET_GACHA_COLL_URL
         jwt_token = request.headers.get('Authorization')
         headers = {

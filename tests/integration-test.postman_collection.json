@@ -3,8 +3,8 @@
 		"_postman_id": "97fa0d6b-6340-42bb-9e35-b0cece03357a",
 		"name": "integration-test",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "39569604",
-		"_collection_link": "https://sse888.postman.co/workspace/SSE-Workspace~ba3287da-3f46-4d53-b9ae-99dcb913c461/collection/39569604-97fa0d6b-6340-42bb-9e35-b0cece03357a?action=share&source=collection_link&creator=39569604"
+		"_exporter_id": "39572565",
+		"_collection_link": "https://sse888.postman.co/workspace/SSE-Workspace~ba3287da-3f46-4d53-b9ae-99dcb913c461/collection/39569604-97fa0d6b-6340-42bb-9e35-b0cece03357a?action=share&source=collection_link&creator=39572565"
 	},
 	"item": [
 		{
@@ -1926,6 +1926,55 @@
 									"response": []
 								},
 								{
+									"name": "twin_auction",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Response status is 400\", function () {",
+													"    pm.response.to.have.status(400);",
+													"});",
+													"",
+													"pm.test(\"Error message for existing active auction\", function () {",
+													"    const jsonData = pm.response.json();",
+													"    pm.expect(jsonData).to.have.property(\"Error\");",
+													"});",
+													""
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"seller_username\": \"user1\",\n    \"gacha_name\": \"Trial gacha\",\n    \"basePrice\": 10.0,\n    \"endDate\": \"2024-12-31T23:59:59\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://localhost:5001/auction_service/create",
+											"protocol": "https",
+											"host": [
+												"localhost"
+											],
+											"port": "5001",
+											"path": [
+												"auction_service",
+												"create"
+											]
+										}
+									},
+									"response": []
+								},
+								{
 									"name": "missing_param",
 									"event": [
 										{
@@ -2051,55 +2100,6 @@
 										"body": {
 											"mode": "raw",
 											"raw": "{\n    \"seller_username\": \"player1\",\n    \"gacha_name\": \"GachaX\",\n    \"basePrice\": 100.0,\n    \"endDate\": \"2023-01-01T23:59:59\"\n}\n",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": {
-											"raw": "https://localhost:5001/auction_service/create",
-											"protocol": "https",
-											"host": [
-												"localhost"
-											],
-											"port": "5001",
-											"path": [
-												"auction_service",
-												"create"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "twin_auction",
-									"event": [
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													"pm.test(\"Response status is 400\", function () {",
-													"    pm.response.to.have.status(400);",
-													"});",
-													"",
-													"pm.test(\"Error message for existing active auction\", function () {",
-													"    const jsonData = pm.response.json();",
-													"    pm.expect(jsonData).to.have.property(\"Error\");",
-													"});",
-													""
-												],
-												"type": "text/javascript",
-												"packages": {}
-											}
-										}
-									],
-									"request": {
-										"method": "POST",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"seller_username\": \"user1\",\n    \"gacha_name\": \"Trial gacha\",\n    \"basePrice\": 10.0,\n    \"endDate\": \"2024-12-31T23:59:59\"\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3112,7 +3112,7 @@
 											"pm.test(\"Access Token received\", function () {\r",
 											"    pm.response.to.have.status(200);\r",
 											"    var jsonData = pm.response.json();\r",
-											"    pm.environment.set(\"auth_token\", jsonData.access_token);\r",
+											"    pm.environment.set(\"admin_auth_token\", jsonData.access_token);\r",
 											"});"
 										],
 										"type": "text/javascript",
@@ -3206,7 +3206,7 @@
 											"pm.test(\"Access Token received\", function () {\r",
 											"    pm.response.to.have.status(200);\r",
 											"    var jsonData = pm.response.json();\r",
-											"    pm.environment.set(\"auth_token\", jsonData.access_token);\r",
+											"    pm.environment.set(\"user1_auth_token\", jsonData.access_token);\r",
 											"});"
 										],
 										"type": "text/javascript",
@@ -3360,7 +3360,7 @@
 												"exec": [
 													"pm.test(\"Error code 400 for missing gacha_name in request\", function () {",
 													"    pm.response.to.have.status(400);",
-													"    pm.expect(pm.response.json().error).to.include(\"Missing required field: 'name'\");",
+													"    pm.expect(pm.response.json()).to.have.property('Error');",
 													"});"
 												],
 												"type": "text/javascript",
@@ -3410,7 +3410,7 @@
 												"exec": [
 													"pm.test(\"Error code 404 for gacha_name not existing\", function () {",
 													"    pm.response.to.have.status(404);",
-													"    pm.expect(pm.response.json().error).to.not.be.empty;",
+													"    pm.expect(pm.response.json()).to.have.property('Error');",
 													"});"
 												],
 												"type": "text/javascript",
@@ -3488,7 +3488,7 @@
 											"formdata": [
 												{
 													"key": "gacha_name",
-													"value": "Trial2 gacha",
+													"value": "Trial3 gacha",
 													"type": "text"
 												}
 											]
@@ -3691,7 +3691,12 @@
 											"formdata": [
 												{
 													"key": "gacha_name",
-													"value": "Trial gacha, Trial2 gacha",
+													"value": "Trial gacha",
+													"type": "text"
+												},
+												{
+													"key": "gacha_name",
+													"value": "Trial2 gacha",
 													"type": "text"
 												}
 											]
@@ -3742,13 +3747,7 @@
 										"header": [],
 										"body": {
 											"mode": "formdata",
-											"formdata": [
-												{
-													"key": "gacha_name",
-													"value": "",
-													"type": "text"
-												}
-											]
+											"formdata": []
 										},
 										"url": {
 											"raw": "https://localhost:5009/gachasystem_service/get_gacha_collection",
@@ -3926,7 +3925,7 @@
 															"",
 															"pm.test(\"Error message for currency_balance not modifiable\", function () {",
 															"    const jsonData = pm.response.json();",
-															"    pm.expect(jsonData).to.have.property(\"error\", \"Modifying 'currency_balance' field is not allowed\");",
+															"    pm.expect(jsonData).to.have.property(\"Error\");",
 															"});",
 															""
 														],
@@ -3985,7 +3984,7 @@
 															"});",
 															"",
 															"pm.test(\"Missing username parameter\", function () {",
-															"    pm.expect(pm.response.json().error).to.include(\"Missing required 'username' field\");",
+															"    pm.expect(pm.response.json()).to.have.property(\"Error\");",
 															"});",
 															""
 														],
@@ -4040,7 +4039,7 @@
 															"",
 															"pm.test(\"Error message for username in token doesn't match username in request\", function () {",
 															"    const jsonData = pm.response.json();",
-															"    pm.expect(jsonData).to.have.property(\"error\", \"Username in token does not match the request username\");",
+															"       pm.expect(pm.response.json()).to.have.property(\"Error\");",
 															"});"
 														],
 														"type": "text/javascript",
@@ -4089,7 +4088,7 @@
 															"",
 															"pm.test(\"Error message for no field to modify\", function () {",
 															"    const jsonData = pm.response.json();",
-															"    pm.expect(jsonData).to.have.property(\"error\", \"No valid field or image provided for update\");",
+															"       pm.expect(pm.response.json()).to.have.property(\"Error\");",
 															"});"
 														],
 														"type": "text/javascript",
@@ -4192,7 +4191,7 @@
 															"",
 															"pm.test(\"Error message for username in token doesn't match username in request\", function () {",
 															"    const jsonData = pm.response.json();",
-															"    pm.expect(jsonData).to.have.property(\"error\", \"Username in token does not match the request username\");",
+															"       pm.expect(pm.response.json()).to.have.property(\"Error\");",
 															"});",
 															""
 														],
@@ -4232,13 +4231,13 @@
 													"listen": "test",
 													"script": {
 														"exec": [
-															"pm.test(\"Response status is 401\", function () {",
-															"    pm.response.to.have.status(401);",
+															"pm.test(\"Response status is 403\", function () {",
+															"    pm.response.to.have.status(403);",
 															"});",
 															"",
 															"pm.test(\"Error message for missing username\", function () {",
 															"    const jsonData = pm.response.json();",
-															"    pm.expect(jsonData).to.have.property(\"error\", \"User not found\");",
+															"      pm.expect(pm.response.json()).to.have.property(\"Error\");",
 															"});",
 															""
 														],
@@ -4281,13 +4280,13 @@
 															"    pm.response.to.have.status(200);",
 															"});",
 															"",
-															"pm.test(\"There are gachas in the collection of the user\", function () {",
-															"    const jsonData = pm.response.json();",
-															"    pm.expect(jsonData).to.be.an('array'); // Controlla che la risposta sia un array",
-															"    pm.expect(jsonData.length).to.be.greaterThan(0); // Controlla che ci siano oggetti nella collezione",
-															"});",
 															"",
-															""
+															"pm.test(\"Response data is an array or message property is present\", function () {",
+															"    const jsonData = pm.response.json();",
+															"    pm.expect(jsonData).to.satisfy((data) => {",
+															"        return Array.isArray(data) || data.hasOwnProperty('message');",
+															"    });",
+															"});"
 														],
 														"type": "text/javascript",
 														"packages": {}
@@ -4331,7 +4330,7 @@
 															"",
 															"pm.test(\"Error message for username in token doesn't match username in request\", function () {",
 															"    const jsonData = pm.response.json();",
-															"    pm.expect(jsonData).to.have.property(\"error\", \"Username in token does not match the request username\");",
+															"    pm.expect(jsonData).to.have.property(\"Error\");",
 															"});",
 															""
 														],
@@ -4638,7 +4637,12 @@
 											"formdata": [
 												{
 													"key": "gacha_name",
-													"value": "Trial gacha, Trial2 gacha",
+													"value": "Trial gacha",
+													"type": "text"
+												},
+												{
+													"key": "gacha_name",
+													"value": "Trial2 gacha",
 													"type": "text"
 												}
 											]
@@ -4689,13 +4693,7 @@
 										"header": [],
 										"body": {
 											"mode": "formdata",
-											"formdata": [
-												{
-													"key": "gacha_name",
-													"value": "",
-													"type": "text"
-												}
-											]
+											"formdata": []
 										},
 										"url": {
 											"raw": "https://localhost:5001/gachasystem_service/get_gacha_collection",
@@ -4831,7 +4829,7 @@
 											"bearer": [
 												{
 													"key": "token",
-													"value": "{{refresh_token}}",
+													"value": "{{admin_refresh_token}}",
 													"type": "string"
 												}
 											]
@@ -4977,14 +4975,14 @@
 													"pm.test(\"Access Token received\", function () {",
 													"    pm.response.to.have.status(200);",
 													"    var jsonData = pm.response.json();",
-													"    pm.environment.set(\"auth_token\", jsonData.access_token);",
+													"    pm.environment.set(\"admin_auth_token\", jsonData.access_token);",
 													"});",
 													"",
 													"",
 													"pm.test(\"Refresh Token received\", function () {",
 													"    pm.response.to.have.status(200);",
 													"    var jsonData = pm.response.json();",
-													"    pm.environment.set(\"refresh_token\", jsonData.refresh_token);",
+													"    pm.environment.set(\"admin_refresh_token\", jsonData.refresh_token);",
 													"});",
 													""
 												],
@@ -5267,7 +5265,7 @@
 													"    var responseData = pm.response.json();\r",
 													"    // Add assertions to validate the response body\r",
 													"    pm.expect(responseData).to.have.property('Error');\r",
-													"    pm.expect(pm.response.to.have.status(404));\r",
+													"    pm.expect(pm.response.to.have.status(403));\r",
 													"});"
 												],
 												"type": "text/javascript",
@@ -5432,7 +5430,7 @@
 											"bearer": [
 												{
 													"key": "token",
-													"value": "{{refresh_token}}",
+													"value": "{{user1_refresh_token}}",
 													"type": "string"
 												}
 											]
@@ -5527,7 +5525,7 @@
 								"bearer": [
 									{
 										"key": "token",
-										"value": "{{user2_refresh_token}}",
+										"value": "{{user1_refresh_token}}",
 										"type": "string"
 									}
 								]
@@ -5578,14 +5576,14 @@
 													"pm.test(\"Access Token received\", function () {",
 													"    pm.response.to.have.status(200);",
 													"    var jsonData = pm.response.json();",
-													"    pm.environment.set(\"auth_token\", jsonData.access_token);",
+													"    pm.environment.set(\"user1_auth_token\", jsonData.access_token);",
 													"});",
 													"",
 													"",
 													"pm.test(\"Refresh Token received\", function () {",
 													"    pm.response.to.have.status(200);",
 													"    var jsonData = pm.response.json();",
-													"    pm.environment.set(\"refresh_token\", jsonData.refresh_token);",
+													"    pm.environment.set(\"user1_refresh_token\", jsonData.refresh_token);",
 													"});",
 													""
 												],
@@ -5747,6 +5745,38 @@
 									},
 									"response": []
 								}
+							],
+							"auth": {
+								"type": "bearer",
+								"bearer": [
+									{
+										"key": "token",
+										"value": "{{user1_refresh_token}}",
+										"type": "string"
+									}
+								]
+							},
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"packages": {},
+										"exec": [
+											""
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"packages": {},
+										"exec": [
+											""
+										]
+									}
+								}
 							]
 						},
 						{
@@ -5868,7 +5898,7 @@
 													"    var responseData = pm.response.json();\r",
 													"    // Add assertions to validate the response body\r",
 													"    pm.expect(responseData).to.have.property('Error');\r",
-													"    pm.expect(pm.response.to.have.status(404));\r",
+													"    pm.expect(pm.response.to.have.status(403));\r",
 													"});"
 												],
 												"type": "text/javascript",

@@ -313,6 +313,11 @@ def info_gacha_collection():
         return jsonify({"error": "Invalid token"}), 401
 
     gacha_name = request.args.get('gacha_name')
+    if gacha_name:
+        # Dividi i nomi separati da virgole (opzionale se supporti più valori separati)
+        gacha_names = [name.strip() for name in gacha_name.split(',')]
+    else:
+        gacha_names = []  # Lista vuota se `gacha_name` non è presente
 
     # Verifica che il profilo utente esista
     profile = Profile.query.filter_by(username=username).first()
@@ -320,7 +325,7 @@ def info_gacha_collection():
         return jsonify({"error": "User not found"}), 401
 
     # Costruisci i parametri per la richiesta
-    params = {"gacha_name": gacha_name}
+    params = {"gacha_name": gacha_names}
     url = "https://gachasystem:5004/get_gacha_collection"
 
         # Invia la richiesta al servizio Gacha
