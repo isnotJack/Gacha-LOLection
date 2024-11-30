@@ -1,0 +1,410 @@
+openapi: 3.0.0
+info:
+  title: Admin Gateway API
+  version: 1.0.0
+  description: API for administrative operations, including gacha system management and auction management.
+
+servers:
+  - url: https://localhost:5009/admin_gateway
+
+paths:
+  /auth_service/signup:
+    post:
+      summary: Signup of a new admin
+      description: Allows the creation of a new admin.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Username of the new admin.
+                password:
+                  type: string
+                  description: Password for the new admin.
+                email:
+                  type: string
+                  description: Email of the new admin.
+              required:
+                - username
+                - password
+                - email
+      responses:
+        '200':
+          description: Account created successfully.
+        '400':
+          description: Missing parameters.
+        '422':
+          description: Username already exists.
+        '500':
+          description: Failure in creating the profile of the user or its balance.
+        '503':
+          description: Service unavailable.
+  
+  /auth_service/login:
+    post:
+      summary: Admin login
+      description: Allows an admin to log in.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Admin username.
+                password:
+                  type: string
+                  description: Admin password.
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Login successful, returns access and refresh tokens.
+        '400':
+          description: Missing parameters.
+        '404':
+          description: Username doesn't exist.
+        '422':
+          description: Invalid credentials.
+        '503':
+          description: Service unavailable.
+
+  /auth_service/logout:
+    delete:
+      summary: Admin logout
+      description: Logs out an admin.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for admin authentication.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Logout successful.
+        '401':
+          description: Missing or invalid authorization header.
+        '404':
+          description: Refresh token not found.
+        '503':
+          description: Service unavailable.
+
+  /auth_service/delete:
+    delete:
+      summary: Delete account
+      description: Allows an admin to delete its account
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for admin authentication.
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Username of the admin to be deleted.
+                password:
+                  type: string
+                  description: Password of the admin to be deleted.
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Account deleted successfully.
+        '400':
+          description: Missing parameters or error in the deletion process.
+        '403':
+          description: Username in token does not match the request username.
+        '404':
+          description: User not found or incorrect password.
+        '401':
+          description: Token expired or invalid.
+        '500':
+          description: Error while deleting associated profile or balance.
+        '503':
+          description: Service unavailable.
+  
+  /auth_service/newToken:
+    get:
+      summary: Generate a new access token using a valid refresh token
+      description: This route allows the admin to obtain a new access token by providing a valid refresh token.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for admin authentication.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A new access token is successfully generated.
+        '400':
+          description: Invalid or missing refresh token.
+        '401':
+          description: The refresh token is expired or invalid.
+        '404':
+          description: The refresh token could not be found.
+        '500':
+          description: Internal error occurred while generating the new token.
+        '503':
+          description: Service unavailable.
+
+  /auction_service/see:
+    get:
+      summary: View auction details
+      description: Allows an admin to view details of auctions.
+      parameters:
+        - name: auction_id
+          in: query
+          description: ID of the auction to view.
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by auction status (e.g., active).
+          required: false
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for admin authentication.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response with auction details.
+        '401':
+          description: Unauthorized due to missing or invalid token.
+        '404':
+          description: Auction not found.
+        '503':
+          description: Service unavailable.
+
+  /auction_service/modify:
+    patch:
+      summary: Modify an auction
+      description: Allows an admin to modify details of an existing auction.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for admin authentication.
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                auction_id:
+                  type: string
+                  description: ID of the auction to modify.
+                seller_username:
+                  type: string
+                  description: New seller username, if being updated.
+                gacha_name:
+                  type: string
+                  description: Name of the gacha in the auction, if being updated.
+                basePrice:
+                  type: number
+                  description: Updated base price for the auction.
+                endDate:
+                  type: string
+                  format: date-time
+                  description: Updated end date of the auction.
+              required:
+                - auction_id
+      responses:
+        '200':
+          description: Auction updated successfully.
+        '400':
+          description: Missing or invalid auction ID.
+        '401':
+          description: Unauthorized due to missing or invalid token.
+        '403':
+          description: Unauthorized due to insufficient permissions.
+        '404':
+          description: Auction not found.
+        '503':
+          description: Service unavailable.
+
+  /gachasystem_service/add_gacha:
+    post:
+      summary: Add a new gacha item
+      description: Allows an admin to add a new gacha to the system.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for admin authentication.
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                gacha_name:
+                  type: string
+                  description: Name of the gacha to add.
+                rarity:
+                  type: string
+                  description: Rarity level of the gacha.
+                description:
+                  type: string
+                  description: Description of the gacha.
+                image:
+                  type: string
+                  format: binary
+                  description: Image file of the gacha.
+              required:
+                - gacha_name
+                - rarity
+                - description
+      responses:
+        '200':
+          description: Gacha item added successfully.
+        '400':
+          description: Missing or invalid parameters (e.g., missing fields, invalid file type).
+        '401':
+          description: Unauthorized - Missing or invalid Authorization header.
+        '403':
+          description: Forbidden - Action not allowed for a user.
+        '500':
+          description: Internal server error - Database or server issues.
+        '503':
+          description: Service unavailable.
+
+  /gachasystem_service/delete_gacha:
+    delete:
+      summary: Delete a gacha item
+      description: Allows an admin to delete a gacha from the system.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for admin authentication.
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                gacha_name:
+                  type: string
+                  description: Name of the gacha to delete.
+              required:
+                - gacha_name
+      responses:
+        '200':
+          description: Gacha deleted successfully.
+        '400':
+          description: Missing or invalid parameters.
+        '401':
+          description: Unauthorized - Missing or invalid Authorization header.
+        '403':
+          description: Forbidden - Action not allowed for the user.
+        '404':
+          description: Gacha not found.
+        '500':
+          description: Internal server error.
+        '503':
+          description: Service unavailable.
+
+  /gachasystem_service/update_gacha:
+    patch:
+      summary: Update a gacha item
+      description: Allows an admin to update details of an existing gacha.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for admin authentication.
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                gacha_name:
+                  type: string
+                  description: Name of the gacha to update.
+                rarity:
+                  type: string
+                  description: Updated rarity level.
+                description:
+                  type: string
+                  description: Updated description.
+              required:
+                - gacha_name
+      responses:
+        '200':
+          description: Gacha updated successfully.
+         '400':
+          description: Missing or invalid parameters.
+        '401':
+          description: Unauthorized - Missing or invalid Authorization header.
+        '403':
+          description: Forbidden - Action not allowed for the user.
+        '404':
+          description: Gacha not found.
+        '500':
+          description: Internal server error.
+        '503':
+          description: Service unavailable.
+  
+  /gachasystem_service/get_gacha_collection:
+    get:
+      summary: Get gacha collection.
+      description: Retrieves the collection of gacha items.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for admin authentication.
+          schema:
+            type: string
+      requestBody:
+        description: (Optional) Gacha names to filter the collection.
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                gacha_name:
+                  type: string
+                  description: Comma-separated names of gachas to fetch.
+                  example: "Trial gacha,Trial gacha2"
+      responses:
+        '200':
+          description: List of gacha items.
+        '401':
+          description: Unauthorized - Missing or invalid Authorization header.
+        '404':
+          description: No gacha items found.
+        '500':
+          description: Internal server error.
+        '503':
+          description: Service unavailable.

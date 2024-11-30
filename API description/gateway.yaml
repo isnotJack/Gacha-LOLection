@@ -1,0 +1,509 @@
+openapi: 3.0.0
+info:
+  title: Gateway API
+  description: Gateway for users to various services, including authentication, profile management, auctions, gacha, and more.
+  version: 1.0.0
+
+servers:
+  - url: https://localhost:5001/gateway
+
+paths:
+  /auth_service/signup:
+    post:
+      summary: User registration
+      description: Registers a new user with username, password, and email.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                email:
+                  type: string
+              required: [username, password, email]
+      responses:
+        '200':
+          description: Account created successfully.
+        '400':
+          description: Missing parameters.
+        '422':
+          description: Username already exists.
+        '500':
+          description: Failure in creating the profile of the user or its balance.
+        '503':
+          description: Service unavailable.
+
+  /auth_service/login:
+    post:
+      summary: User login
+      description: Logs in an existing user with their credentials.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required: [username, password]
+      responses:
+        '200':
+          description: Login successful, returns access and refresh tokens.
+        '400':
+          description: Missing parameters.
+        '404':
+          description: Username doesn't exist.
+        '422':
+          description: Invalid credentials.
+        '503':
+          description: Service unavailable.
+  
+  /auth_service/logout:
+    delete:
+      summary: User logout
+      description: Logs out a user.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for admin authentication.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Logout successful.
+        '401':
+          description: Missing or invalid authorization header.
+        '404':
+          description: Refresh token not found.
+        '503':
+          description: Service unavailable.
+
+  /auth_service/delete:
+    delete:
+      summary: Delete user account
+      description: Deletes a user account with their credentials.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required: [username, password]
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: JWT token for authentication
+      responses:
+        '200':
+          description: Account deleted successfully.
+        '400':
+          description: Missing parameters or error in the deletion process.
+        '403':
+          description: Username in token does not match the request username.
+        '404':
+          description: User not found or incorrect password.
+        '401':
+          description: Token expired or invalid.
+        '500':
+          description: Error while deleting associated profile or balance.
+        '503':
+          description: Service unavailable.
+
+  /auth_service/newToken:
+    get:
+      summary: Generate a new token
+      description: Generates a new access token for the user.
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: JWT token for authentication
+      responses:
+        '200':
+          description: A new access token is successfully generated.
+        '400':
+          description: Invalid or missing refresh token.
+        '401':
+          description: The refresh token is expired or invalid.
+        '404':
+          description: The refresh token could not be found.
+        '500':
+          description: Internal error occurred while generating the new token.
+        '503':
+          description: Service unavailable.
+
+  /profile_setting/modify_profile:
+    patch:
+      summary: Modify user profile
+      description: Updates specific fields in the user's profile.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                field:
+                  type: string
+                value:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: JWT token for authentication
+      responses:
+        '200':
+          description: Profile successfully updated.
+        '400':
+          description: Bad request due to invalid data.
+        '401':
+          description: Unauthorized access.
+        '403':
+          description: Forbidden due to a mismatch in the token and request data.
+        '404':
+          description: Profile not found.
+        '500':
+          description: Internal server error.
+        '503':
+          description: Circuit breaker open or service error
+  
+  /profile_setting/checkprofile:
+    get:
+      summary: View user profile
+      description: Retrieves the user's profile information.
+      parameters:
+        - in: query
+          name: username
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: JWT token for authentication
+      responses:
+        '200':
+          description: User profile retrieved successfully.
+        '400':
+          description: Bad request.
+        '401':
+          description: Unauthorized access.
+        '403':
+          description: Forbidden due to token mismatch.
+        '404':
+          description: Profile not found.
+        '503':
+          description: Circuit breaker open or service error
+
+  profile_setting/retrieve_gachacollection:
+    get:
+      summary: Retrieve a user's Gacha collection
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: Bearer token for authentication (e.g., `Bearer <token>`).
+        - in: query
+          name: username
+          required: true
+          schema:
+            type: string
+          description: The username of the user.
+      responses:
+        '200':
+          description: Gacha collection retrieved successfully.
+        '400':
+          description: Bad request.
+        '401':
+          description: Unauthorized access.
+        '403':
+          description: Forbidden due to token mismatch.
+        '404':
+          description: User or Gacha collection not found.
+        '503':
+          description: Service unavailable.
+
+  profile_setting/info_gachacollection:
+    get:
+      summary: Get details of a specific Gacha item.
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: Bearer token for authentication (e.g., `Bearer <token>`).
+        - in: query
+          name: username
+          required: true
+          schema:
+            type: string
+          description: The username of the user.
+        - in: query
+          name: gacha_name
+          required: true
+          schema:
+            type: string
+          description: The name of the Gacha item.
+      responses:
+        '200':
+          description: Gacha item details retrieved successfully.
+        '400':
+          description: Bad request.
+        '401':
+          description: Unauthorized access.
+        '403':
+          description: Forbidden due to token mismatch.
+        '404':
+          description: User or Gacha item not found.
+        '503':
+          description: Service unavailable.
+
+  /auction_service/see:
+    get:
+      summary: View auctions
+      description: Retrieves a list of auctions or specific auction details.
+      parameters:
+        - in: query
+          name: auction_id
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [active, completed]
+          default: active
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: JWT token for authentication
+      responses:
+        '200':
+          description: Successful response with auction details.
+        '401':
+          description: Unauthorized due to missing or invalid token.
+        '404':
+          description: Auction not found.
+        '503':
+          description: Service unavailable.
+
+  /auction_service/create:
+    post:
+      summary: Create auction
+      description: Creates a new auction for selling a gacha item.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                seller_username:
+                  type: string
+                gacha_name:
+                  type: string
+                basePrice:
+                  type: number
+                endDate:
+                  type: string
+                  format: date-time
+              required: [seller_username, gacha_name, basePrice, endDate]
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: JWT token for authentication
+      responses:
+        '200':
+          description: Auction created successfully.
+        '400':
+          description: Invalid input parameters.
+        '401':
+          description: Unauthorized due to missing or invalid token.
+        '404':
+          description: Error from profile service during gacha removal.
+        '503':
+          description: Service unavailable.
+  
+  /auction_service/bid:
+    patch:
+      summary: Place a bid
+      description: Places a bid on an active auction.
+      parameters:
+        - in: query
+          name: username
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: auction_id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: newBid
+          required: true
+          schema:
+            type: number
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: JWT token for authentication
+      responses:
+        '200':
+          description: Bid placed successfully.
+        '400':
+          description: Invalid bid or parameters.
+        '401':
+          description: Unauthorized due to missing or invalid token.
+        '404':
+          description: Auction not found.
+        '503':
+          description: Service unavailable.
+  
+  /gacha_roll/gacharoll:
+    post:
+      summary: Perform a gacha roll
+      description: Executes a gacha roll based on the user's level.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                level:
+                  type: integer
+              required: [username, level]
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: JWT token for authentication
+      responses:
+        '200':
+          description: Gacha roll completed successfully.
+        '400':
+          description: Missing or invalid parameters (e.g., invalid level or missing username).
+        '401':
+          description: Unauthorized - Missing or invalid Authorization header.
+        '403':
+          description: The username in the token does not match the username in the request body.
+        '500':
+          description: Internal server error - Failure in payment, fetching gacha, or updating the profile.
+        '503':
+          description: Service unavailable.
+  
+  /payment_service/buycurrency:
+    post:
+      summary: Purchase in-game currency
+      description: Allows a user to purchase in-game currency using a specified payment method.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Username of the user.
+                amount:
+                  type: number
+                  description: Amount of currency to purchase.
+                payment_method:
+                  type: string
+                  description: Payment method to use.
+              required:
+                - username
+                - amount
+                - payment_method
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: JWT token for authentication.
+      responses:
+        '200':
+          description: Currency purchase completed successfully.
+        '400':
+          description: Invalid request data, such as missing parameters.
+        '401':
+          description: Unauthorized request due to missing or invalid token.
+        '403':
+          description: The username in the token does not match the username in the request body.
+        '404':
+          description: User not found.
+        '500':
+          description: Internal server error or payment processing issue.
+        '503':
+          description: Circuit breaker open or service unavailable.
+
+  /gachasystem_service/get_gacha_collection:
+    get:
+      summary: Retrieve the gacha collection
+      description: Fetches the collection of gacha items for the authenticated user.
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: JWT token for authentication.
+      responses:
+        '200':
+          description: List of gacha items.
+        '401':
+          description: Unauthorized - Missing or invalid Authorization header.
+        '404':
+          description: No gacha items found.
+        '500':
+          description: Internal server error.
+        '503':
+          description: Circuit breaker open or service unavailable.

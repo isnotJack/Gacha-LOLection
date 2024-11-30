@@ -5,7 +5,7 @@ info:
   description: API that allows a user to roll and obtain a gacha.
 
 servers:
-  - url: http://localhost:5007/gacha_roll
+  - url: https://localhost:5007/gacha_roll
 
 paths:
   /gacharoll:
@@ -73,3 +73,5 @@ paths:
           description: The username in the token does not match the username in the request body.
         '500':
           description: Internal server error - Failure in payment, fetching gacha, or updating the profile.
+        '503':
+          description: Service unavailable.
