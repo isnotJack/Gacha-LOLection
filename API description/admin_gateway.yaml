@@ -376,27 +376,22 @@ paths:
   
   /gachasystem_service/get_gacha_collection:
     get:
-      summary: Get gacha collection.
-      description: Retrieves the collection of gacha items.
+      summary: Retrieve Gacha collection details
+      description: Fetches the details of the Gacha collection. Optionally filters by specific Gacha names.
       parameters:
-        - name: Authorization
-          in: header
+        - name: gacha_name
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: Optional list of Gacha names to filter the collection.
+        - in: header
+          name: Authorization
           required: true
-          description: Bearer token for admin authentication.
           schema:
             type: string
-      requestBody:
-        description: (Optional) Gacha names to filter the collection.
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                gacha_name:
-                  type: string
-                  description: Comma-separated names of gachas to fetch.
-                  example: "Trial gacha,Trial gacha2"
+          description: JWT token for authentication.
       responses:
         '200':
           description: List of gacha items.

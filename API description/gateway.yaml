@@ -488,7 +488,7 @@ paths:
   /gachasystem_service/get_gacha_collection:
     get:
       summary: Retrieve the gacha collection
-      description: Fetches the collection of gacha items for the authenticated user.
+      description: Fetches the collection of gacha items. Optionally, filter the collection by specifying gacha names.
       parameters:
         - in: header
           name: Authorization
@@ -496,6 +496,14 @@ paths:
           schema:
             type: string
           description: JWT token for authentication.
+        - in: query
+          name: gacha_name
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          description: A list of gacha names to filter the collection. If omitted, retrieves the entire collection.
       responses:
         '200':
           description: List of gacha items.
@@ -506,4 +514,4 @@ paths:
         '500':
           description: Internal server error.
         '503':
-          description: Circuit breaker open or service unavailable.
+          description: Service unavailable.
