@@ -1699,7 +1699,7 @@
 													"  pm.response.to.have.status(200);",
 													"});",
 													"let response = pm.response.json()",
-													"pm.globals.set(\"rolledGacha\", response.gacha_name)",
+													"pm.environment.set(\"rolledGacha\", response.gacha_name)",
 													"",
 													"pm.test(\"Gacha details include name, description, rarity, image, and collected date\", function () {",
 													"    var gachaDetails = pm.response.json();",
@@ -4237,7 +4237,7 @@
 															"",
 															"pm.test(\"Error message for missing username\", function () {",
 															"    const jsonData = pm.response.json();",
-															"      pm.expect(pm.response.json()).to.have.property(\"Error\");",
+															"      pm.expect(jsonData).to.have.property(\"Error\");",
 															"});",
 															""
 														],

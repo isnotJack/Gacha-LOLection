@@ -45,7 +45,7 @@ jobs:
     # 7. Ferma e rimuovi i container Docker
     - name: Stop Docker Compose
       run: |
-        docker compose down -v
+        docker compose down 
 
     # 8. Carica il report HTML (opzionale)
     - name: Upload HTML report
