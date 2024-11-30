@@ -410,7 +410,15 @@ def gachasystem(op):
         return make_response(f'Invalid operation {op}', 400)
     # ENTRAMBI
     if op == 'get_gacha_collection':
-        params = {}
+        gacha_name = request.form.getlist('gacha_name')
+        if gacha_name:
+            params = {
+                'gacha_name': gacha_name
+            }
+        else:
+            params = {
+                'gacha_name': {}
+            }
         jwt_token = request.headers.get('Authorization')
         headers = {
             'Authorization' : jwt_token

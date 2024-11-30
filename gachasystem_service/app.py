@@ -350,7 +350,7 @@ def get_gacha_collection():
     
     if gacha_names:
         # Suddividi i nomi in una lista
-        gacha_names = gacha_names.split(',')
+        # gacha_names = gacha_names.split(',')
         
         # Cerca i gachas con i nomi specificati
         gachas = Gacha.query.filter(Gacha.meme_name.in_(gacha_names)).all()
