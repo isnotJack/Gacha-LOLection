@@ -39,6 +39,7 @@ jobs:
       run: |
         newman run ./tests/integration-test.postman_collection.json \
           --environment ./tests/environment.postman_environment.json \
+          --insecure \
           --reporters cli,html \
           --reporter-html-export newman-report.html
 
