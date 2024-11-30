@@ -5,7 +5,7 @@ info:
   description: API for managing auctions, including creation, modification, bidding, see, and closure.
 
 servers:
-  - url: http://localhost:5008/auction_service
+  - url: https://localhost:5008/auction_service
 paths:
   /see:
     get:

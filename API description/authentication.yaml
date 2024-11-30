@@ -5,7 +5,7 @@ info:
   description: API for the authentication, which includes opeartion for creating/deleting account and login/logout.
 
 servers:
-  - url: http://localhost:5002/auth_service
+  - url: https://localhost:5002/auth_service
 paths:
   /signup:
     post:

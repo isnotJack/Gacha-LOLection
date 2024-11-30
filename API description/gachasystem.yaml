@@ -5,7 +5,7 @@ info:
   description: API to manage gachas in the system.
 
 servers:
-  - url: http://localhost:5004/gachasystem
+  - url: https://localhost:5004/gachasystem
 
 paths:
   /add_gacha:

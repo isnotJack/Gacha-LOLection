@@ -5,7 +5,7 @@ info:
   description: API for handling payments, transactions, and user balances.
 
 servers:
-  - url: http://localhost:5006/payment_service
+  - url: https://localhost:5006/payment_service
 
 paths:
   /pay:

@@ -5,7 +5,7 @@ info:
   description: API that allows a user to roll and obtain a gacha.
 
 servers:
-  - url: http://localhost:5007/gacha_roll
+  - url: https://localhost:5007/gacha_roll
 
 paths:
   /gacharoll:
