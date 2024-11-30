@@ -21,11 +21,6 @@ LOGOUT_URL = 'https://auth_service:5002/logout'
 DELETE_URL = 'https://auth_service:5002/delete'
 NEWTOKEN_URL = 'https://auth_service:5002/newToken'
 
-ALLOWED_PROF_OP ={'modify_profile','checkprofile', 'retrieve_gachacollection', 'info_gachacollection'}
-MODIFY_URL = 'https://profile_setting:5003/modify_profile'
-CHECK_URL = 'https://profile_setting:5003/checkprofile'
-RETRIEVE_URL = 'https://profile_setting:5003/retrieve_gachacollection'
-INFO_URL = 'https://profile_setting:5003/info_gachacollection'
 
 ALLOWED_AUCTION_OP = {'see', 'create', 'modify', 'bid','gacha_receive', 'auction_lost', 'auction_terminated'} 
 AUCTION_BASE_URL = 'https://auction_service:5008'
@@ -194,30 +189,6 @@ def auth(op):
         return make_response(jsonify(x), status_code)
     else:
         return jsonify({'Error' : f'Error during signup {x}'}), status_code
-
-
-
-
-@app.route('/profile_setting/<op>', methods=['GET', 'PATCH'])
-def profile_setting(op):
-    if op not in ALLOWED_PROF_OP:
-        return make_response(f'Invalid operation {op}'), 400
-    if op == 'info_gachacollection':
-        username = request.args.get('username')
-        gacha_name = request.args.get('gacha_name')
-        url = INFO_URL + f"?username={username}&gacha_name={gacha_name}"
-        jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
-        headers = {
-            'Authorization': jwt_token  # Usa il token JWT ricevuto nell'header della richiesta
-        }
-        response, status_code = profile_circuit_breaker.call('GET', url, {}, headers, {}, False)
-        if status_code != 200:
-            return jsonify({'Error' : f'Error with profile setting {response}'}), status_code
-    else:
-        return make_response(f'Invalid operation {op}'), 400
-    # Restituisci la risposta del servizio con il codice di stato appropriato
-    return make_response(jsonify(response), status_code)
-    
 
 
 @app.route('/auction_service/<op>', methods=['GET', 'POST', 'PATCH'])
