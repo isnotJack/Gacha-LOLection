@@ -317,59 +317,6 @@ def auction_service(op):
         if status_code != 200:
             return jsonify({'Error' : f'Error during bid op {response}'}), status_code
         return make_response(jsonify(response), status_code)
-
-    # Operazione "gacha_receive"
-    elif op == 'gacha_receive':
-        data = request.get_json()
-        auction_id = data.get('auction_id')
-        winner_username = data.get('winner_username')
-        gacha_name = data.get('gacha_name')
-
-        if not all([auction_id, winner_username, gacha_name]):
-            return jsonify({"error": "Missing required parameters"}), 400
-        jwt_token = request.headers.get('Authorization')
-        headers = {
-            'Authorization' : jwt_token
-        }
-        url = f'{AUCTION_BASE_URL}/gacha_receive'
-        response, status_code = auction_circuit_breaker.call('post', url, data, headers, {}, True)
-        if status_code != 200:
-            return jsonify({'Error' : f'Error during gacha receive op {response}'}), status_code
-        return make_response(jsonify(response), status_code)
-
-    # Operazione "auction_lost"
-    elif op == 'auction_lost':
-        data = request.get_json()
-        auction_id = data.get('auction_id')
-
-        if not auction_id:
-            return jsonify({"error": "Missing auction_id"}), 400
-        jwt_token = request.headers.get('Authorization')
-        headers = {
-            'Authorization' : jwt_token
-        }
-        url = f'{AUCTION_BASE_URL}/auction_lost'
-        response, status_code = auction_circuit_breaker.call('post', url, data, headers, {}, True)
-        if status_code != 200:
-            return jsonify({'Error' : f'Error during auction lost op {response}'}), status_code
-        return make_response(jsonify(response), status_code)
-
-    # Operazione "auction_terminated"
-    elif op == 'auction_terminated':
-        data = request.get_json()
-        auction_id = data.get('auction_id')
-        jwt_token = request.headers.get('Authorization')
-        headers = {
-            'Authorization' : jwt_token
-        }
-        if not auction_id:
-            return jsonify({"error": "Missing auction_id"}), 400
-
-        url = f'{AUCTION_BASE_URL}/auction_terminated'
-        response, status_code = auction_circuit_breaker.call('post', url, data, headers, {}, True)
-        if status_code != 200:
-            return jsonify({'Error' : f'Error during auction terminated op {response}'}), status_code
-        return make_response(jsonify(response), status_code)
     else:
         return jsonify({"error": f"Unknown operation '{op}'"}), 400
 

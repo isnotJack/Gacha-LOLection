@@ -180,7 +180,7 @@ def start_scheduler():
     if not scheduler.running:
         scheduler.start()
 
-@app.route('/see', methods=['GET'])
+@app.route('/see', methods=['GET']) #controlli token no
 def see_auctions():
     # Recupera l'header Authorization
     auth_header = request.headers.get('Authorization')
@@ -216,7 +216,7 @@ def see_auctions():
     return jsonify([auction.to_dict() for auction in auctions]), 200
 
 
-@app.route('/create', methods=['POST'])
+@app.route('/create', methods=['POST']) #controlli sul seller 
 #@jwt_required()
 def create_auction():
     # Recupera l'header Authorization
@@ -362,7 +362,7 @@ def modify_auction():
     db.session.commit()
     return jsonify({"id": auction.id, "message": "Auction updated successfully"}), 200
 
-@app.route('/bid', methods=['PATCH'])
+@app.route('/bid', methods=['PATCH']) #controlli token
 def bid_for_auction():
     # Recupera l'header Authorization
     auth_header = request.headers.get('Authorization')
