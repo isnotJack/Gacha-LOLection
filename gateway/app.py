@@ -219,7 +219,6 @@ def profile_setting(op):
             'Authorization' : jwt_token
         }
         response, status_code = profile_circuit_breaker.call('PATCH', url, params, headers, files, False)
-    # SOLO USER
     elif op == 'checkprofile':
         username = request.args.get('username')
         url = CHECK_URL + f"?username={username}"
@@ -278,7 +277,6 @@ def auction_service(op):
         return make_response(jsonify(response), status_code)
 
     # Operazione "create"
-    # SOLO USER
     elif op == 'create':
         data = request.get_json()  # Recupera i parametri dal corpo JSON
         seller_username = data.get('seller_username')
@@ -300,7 +298,6 @@ def auction_service(op):
         return make_response(jsonify(response), status_code)
 
     # Operazione "bid"
-    # SOLO USER
     elif op == 'bid':
         username = request.args.get('username')
         auction_id = request.args.get('auction_id')

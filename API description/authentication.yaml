@@ -40,6 +40,8 @@ paths:
           description: Username already exists.
         '500':
           description: Failure in creating the profile of the user or its balance.
+        '503':
+          description: Service unavailable.
 
   /login:
     post:
@@ -140,3 +142,37 @@ paths:
           description: Token expired or invalid.
         '500':
           description: Error while deleting associated profile or balance.
+        '503':
+          description: Service unavailable.
+
+  /newToken:
+    get:
+      summary: Generate a new access token using a valid refresh token
+      description: This route allows users to obtain a new access token by providing a valid refresh token. If the refresh token is valid and not revoked, a new access token is returned.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token used for authentication (refresh token).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A new access token is successfully generated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: The new JWT access token.
+        '400':
+          description: Invalid or missing refresh token.
+        '401':
+          description: The refresh token is expired or invalid.
+        '404':
+          description: The refresh token could not be found.
+        '500':
+          description: Internal error occurred while generating the new token.
+

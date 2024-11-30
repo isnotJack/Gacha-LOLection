@@ -32,11 +32,11 @@ paths:
             type: string
             enum: [active, closed]
       responses:
-        200:
+        '200':
           description: Successful response with auction details.
-        401:
+        '401':
           description: Unauthorized due to missing or invalid token.
-        404:
+        '404':
           description: Auction not found.
   /create:
     post:
@@ -71,14 +71,16 @@ paths:
                   description: Auction's end date in ISO 8601 format.
               required: [seller_username, gacha_name, basePrice, endDate]
       responses:
-        200:
+        '200':
           description: Auction created successfully.
-        400:
+        '400':
           description: Invalid input parameters.
-        401:
+        '401':
           description: Unauthorized due to missing or invalid token.
-        404:
+        '404':
           description: Error from profile service during gacha removal.
+        '503':
+          description: Service unavailable.
   /modify:
     patch:
       summary: Modify an auction (Admin only)
@@ -122,15 +124,15 @@ paths:
             type: string
             format: date-time
       responses:
-        200:
+        '200':
           description: Auction updated successfully.
-        400:
+        '400':
           description: Missing or invalid auction ID.
-        401:
+        '401':
           description: Unauthorized due to missing or invalid token.
-        403:
+        '403':
           description: Unauthorized due to insufficient permissions.
-        404:
+        '404':
           description: Auction not found.
   /bid:
     patch:
@@ -162,14 +164,17 @@ paths:
           schema:
             type: number
       responses:
-        200:
+        '200':
           description: Bid placed successfully.
-        400:
+        '400':
           description: Invalid bid or parameters.
-        401:
+        '401':
           description: Unauthorized due to missing or invalid token.
-        404:
+        '404':
           description: Auction not found.
+        '503':
+          description: Service unavailable.
+
   /gacha_receive:
     post:
       summary: Transfer a gacha item to the auction winner
@@ -186,12 +191,15 @@ paths:
                   description: ID of the auction.
               required: [auction_id]
       responses:
-        200:
+        '200':
           description: Gacha item transferred successfully.
-        400:
+        '400':
           description: Invalid input parameters.
-        404:
+        '404':
           description: Auction not found or no winner for the auction.
+        '503':
+          description: Service unavailable.
+
   /auction_lost:
     post:
       summary: Refund bidders who lost the auction
@@ -208,12 +216,15 @@ paths:
                   description: ID of the auction.
               required: [auction_id]
       responses:
-        200:
+        '200':
           description: Refund process completed with details of successful and failed refunds.
-        400:
+        '400':
           description: Invalid input parameters or auction status.
-        404:
+        '404':
           description: Auction not found or no bids found.
+        '503':
+          description: Service unavailable.
+
   /auction_terminated:
     post:
       summary: Transfer funds to the auction seller
@@ -230,12 +241,15 @@ paths:
                   description: ID of the auction.
               required: [auction_id]
       responses:
-        200:
+        '200':
           description: Funds transferred successfully to the seller.
-        400:
+        '400':
           description: No valid bids to transfer funds.
-        404:
+        '404':
           description: Auction not found.
+        '503':
+          description: Service unavailable.
+
   /close_auction:
     post:
       summary: Close an auction.
@@ -259,14 +273,16 @@ paths:
                   description: ID of the auction to close.
               required: [auction_id]
       responses:
-        200:
+        '200':
           description: Auction closed successfully.
-        400:
+        '400':
           description: Invalid parameters or auction cannot be closed due to existing bids.
-        401:
+        '401':
           description: Unauthorized due to missing or invalid token.
-        404:
+        '404':
           description: Auction not found.
+        '503':
+          description: Service unavailable.
 
 
 

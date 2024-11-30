@@ -149,6 +149,8 @@ paths:
           description: Forbidden due to token mismatch.
         '404':
           description: User or Gacha collection not found.
+        '503':
+          description: Service unavailable.
 
   /info_gachacollection:
     get:
@@ -193,6 +195,8 @@ paths:
           description: Forbidden due to token mismatch.
         '404':
           description: User or Gacha item not found.
+        '503':
+          description: Service unavailable.
 
   /create_profile:
     post:
