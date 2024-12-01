@@ -391,7 +391,7 @@ def bid_for_auction():
     auction_id = request.args.get('auction_id')
     new_bid = request.args.get('newBid', type=float)
 
-        # Controlla che il ruolo dell'utente sia corretto
+    # Controlla che il ruolo dell'utente sia corretto
     if decoded_token.get('sub') != bidder_username:
         return jsonify({"error": "Unauthorized access, only the bidder can create a bid for the auction"}), 403
 
@@ -407,6 +407,10 @@ def bid_for_auction():
     if auction.status != 'active':
         return jsonify({"error": "Cannot place a bid on a closed or inactive auction"}), 400
     
+    # Controlla che il creatore dell'asta non possa fare una bid
+    if auction.seller_username == bidder_username:
+        return jsonify({"error": "You cannot bid on your own auction"}), 400
+
     if auction.winner_username == bidder_username:
         return jsonify({"error": "You are already the highest bidder"}), 400
 
