@@ -46,6 +46,26 @@ class GachaUser(HttpUser):
         else:
             self.jwt_token = login_response.json().get("access_token")
 
+    # @task(1)
+    # def delete_account(self):
+    #     headers = {
+    #         'Authorization': f"Bearer {self.jwt_token}"  # Autenticazione tramite il token
+    #     }
+    #     params = {
+    #         'username': self.username,  # Passa il nome utente come parametro
+    #         'password': self.password
+    #     }
+
+    #     # Effettua la chiamata al gateway per eliminare l'account
+    #     response = self.client.delete("/auth_service/delete", params=params, verify=False, headers=headers, name="Delete Account Endpoint")
+
+    #     if response.status_code != 200:
+    #         print(f"Errore durante l'eliminazione dell'account '{self.username}': {response.text}")
+    #     else:
+    #         self.stop()
+            
+
+
     @task(1)
     def modify_profile_image (self):
         # task che permette di modificare l'immagine del profilo dell'utente
@@ -111,6 +131,23 @@ class GachaUser(HttpUser):
         response = self.client.get("/profile_setting/checkprofile", params=params, verify=False, headers=headers, name="Check Profile Endpoint")
         if response.status_code != 200:
             print(f"Error during profile check: {response.text}")
+
+    @task(1)
+    def info_gachacollection(self):
+        headers = {
+            'Authorization': f"Bearer {self.jwt_token}"  # Autenticazione tramite il token
+        }
+        params = {
+            'username': self.username  # Passa solo il parametro username
+        }
+
+        response = self.client.get("/profile_setting/info_gachacollection", params=params, verify=False, headers=headers, name="Info Gacha Collection Endpoint")
+
+        if response.status_code != 200:
+        #     print(f"Info Gacha Collection retrieved successfully: {response.json()}")
+        # else:
+            print(f"Failed to retrieve gacha collection info: {response.text}")
+
 
     @task(1)
     def buy_currency(self):
