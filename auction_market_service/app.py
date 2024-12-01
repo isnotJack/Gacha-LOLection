@@ -12,6 +12,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import uuid
 import jwt  # PyJWT
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
+import re
 
 
 
@@ -86,6 +87,20 @@ class CircuitBreaker:
 auction_circuit_breaker = CircuitBreaker()
 payment_circuit_breaker = CircuitBreaker()
 profile_circuit_breaker = CircuitBreaker()
+
+# Funzione per sanitizzare input
+def sanitize_input(input_string):
+    """Permette solo caratteri alfanumerici, trattini bassi, e spazi."""
+    if not input_string:
+        return input_string
+    if not re.match(r"^[\w\s-]+$", input_string):
+        raise ValueError(f"Input non valido: {input_string}")
+    return input_string
+def sanitize_input_gacha(input_string):
+    """Permette solo caratteri alfanumerici, trattini bassi, spazi, trattini e punti."""
+    if not input_string:
+        return input_string
+    return re.sub(r"[^\w\s\-.]", "", input_string)
 
 # Modello Auction
 class Auction(db.Model):
@@ -243,11 +258,14 @@ def create_auction():
         return jsonify({"error": "Invalid JSON or missing Content-Type header"}), 400
     
     # Recupera i parametri dall'oggetto JSON
-    seller_username = data.get('seller_username')
-    gacha_name = data.get('gacha_name')
+    seller_username = sanitize_input(data.get('seller_username'))
+    gacha_name = sanitize_input_gacha(data.get('gacha_name'))
     base_price = data.get('basePrice')
     end_date = data.get('endDate')
 
+    sanitized_value = float(base_price)
+    if sanitized_value <= 0:
+        return jsonify({"error": "base price must be higher than"}), 400
     # Controlla che il ruolo dell'utente sia corretto
     if decoded_token.get('sub') != seller_username:
         return jsonify({"error": "Unauthorized access, only the seller can create this auction"}), 403
@@ -387,9 +405,12 @@ def bid_for_auction():
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
     # Recupera i parametri dalla query string
-    bidder_username = request.args.get('username') 
+    bidder_username = sanitize_input(request.args.get('username'))
     auction_id = request.args.get('auction_id')
     new_bid = request.args.get('newBid', type=float)
+
+    if auction_id or new_bid < 0:
+        return jsonify({"error": "Invalid input"}), 400
 
     # Controlla che il ruolo dell'utente sia corretto
     if decoded_token.get('sub') != bidder_username:

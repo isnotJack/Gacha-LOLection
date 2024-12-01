@@ -8,6 +8,7 @@ import requests , time
 import os
 import datetime
 import uuid
+import re  # Per sanitizzare input
 
 
 app = Flask(__name__)
@@ -82,6 +83,28 @@ class CircuitBreaker:
 profile_circuit_breaker = CircuitBreaker()
 payment_circuit_breaker = CircuitBreaker()
 
+# Funzione per sanitizzare input
+def sanitize_input(input_string):
+    """Permette solo caratteri alfanumerici, trattini bassi e spazi"""
+    if not input_string:
+        return input_string
+    return re.sub(r"[^\w\s]", "", input_string)
+
+def sanitize_input_error(input_string):
+    """Permette solo caratteri alfanumerici, trattini bassi e spazi"""
+    if not input_string:
+        return input_string  # Ritorna direttamente se l'input è vuoto o None
+    
+    # Controlla se l'input contiene caratteri non validi
+    invalid_chars = re.search(r"[^\w\s]", input_string)
+    if invalid_chars:
+        return True
+
+# Funzione per validare email
+def validate_email(email):
+    """Conferma che l'email sia in un formato valido"""
+    email_regex = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+    return re.match(email_regex, email)
 
 # Modello Utente
 class User(db.Model):
@@ -101,9 +124,16 @@ class RefreshToken(db.Model):
 @app.route('/signup', methods=['POST'])
 def signup():
     data = request.get_json()
-    username = data.get('username')
+    username = sanitize_input(data.get('username'))
     password = data.get('password')
     email = data.get('email')
+
+    # if sanitize_input_error(username):
+    #     return jsonify({"Error": "Invalid characters in username"}), 400
+     # Validazione email
+    if not validate_email(email):
+        return jsonify({"Error": "Invalid email format"}), 400
+
     auth = request.headers.get('Origin')
     if not auth or auth != 'admin_gateway':
         role='user'
@@ -158,7 +188,7 @@ def signup():
 def login():
       #Dati arrivano in formato JSON dal gateway
     data = request.get_json()
-    username = data.get('username')
+    username = sanitize_input(data.get('username'))
     password = data.get('password')
     
     if not username or not password:
@@ -281,7 +311,7 @@ def delete_account():
         return jsonify({"error": "Token expired"}), 401
     except InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
-    username = data.get('username')
+    username = sanitize_input(data.get('username'))
     password = data.get('password') 
     if not username or not password:
         return jsonify({'Error': 'Missing parameters'}),400

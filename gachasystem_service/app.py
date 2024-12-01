@@ -9,6 +9,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from werkzeug.utils import secure_filename
 import jwt
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
+import re
 
 app = Flask(__name__)   # crea un'applicazione Flask
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@db_gachasystem:5432/memes_db'    # URL di connessione al database
@@ -87,6 +88,18 @@ class CircuitBreaker:
 # Inizializzazione dei circuit breakers
 profile_circuit_breaker = CircuitBreaker()
 
+# Funzione per sanitizzare stringhe generali
+def sanitize_input(input_string):
+    """Permette solo caratteri alfanumerici, trattini bassi, spazi e trattini."""
+    if not input_string:
+        return input_string
+    return re.sub(r"[^\w\s-]", "", input_string)
+def sanitize_input_gacha(input_string):
+    """Permette solo caratteri alfanumerici, trattini bassi, spazi, trattini e punti."""
+    if not input_string:
+        return input_string
+    return re.sub(r"[^\w\s\-.]", "", input_string)
+
 # Modello Utente
 # 
 # La classe Gacha eredita da db.Model, che è la classe base fornita da SQLAlchemy
@@ -129,9 +142,9 @@ def add_gacha():
         return jsonify({"error": "Invalid token"}), 401
     
 
-    name = request.form.get('gacha_name')
-    rarity = request.form.get('rarity')
-    description = request.form.get('description')
+    name = sanitize_input_gacha(request.form.get('gacha_name'))
+    rarity = sanitize_input(request.form.get('rarity'))
+    description = sanitize_input(request.form.get('description'))
 
     # Controlla che tutti i campi siano forniti
     if not name or not rarity or 'image' not in request.files:
@@ -208,7 +221,7 @@ def delete_gacha():
 
     # Recupera il nome del gacha dai parametri della query string
     data= request.get_json()
-    gacha_name = data.get('gacha_name')
+    gacha_name = sanitize_input_gacha(data.get('gacha_name'))
     if not gacha_name:
         return jsonify({"error": "Missing 'gacha_name' in query string."}), 400
 
@@ -277,9 +290,9 @@ def update_gacha():
 
     # Estrai i parametri dalla query string
     data = request.get_json()
-    name = data.get('gacha_name')
-    rarity = data.get('rarity')
-    description = data.get('description')
+    name = sanitize_input_gacha(data.get('gacha_name'))
+    rarity = sanitize_input(data.get('rarity'))
+    description = sanitize_input(data.get('description'))
 
     # Verifica che il parametro 'name' sia presente
     if not name:
@@ -346,7 +359,7 @@ def get_gacha_collection():
 
     data= request.get_json()
     # Estrai il parametro 'gacha_name' dalla query string (facoltativo), supporta una lista separata da virgola
-    gacha_names = data.get('gacha_name')
+    gacha_names = sanitize_input_gacha(data.get('gacha_name'))
     
     if gacha_names:
         # Suddividi i nomi in una lista
@@ -400,7 +413,7 @@ def get_gacha_roll():
         return jsonify({"error": "Invalid token"}), 401
 
     # Estrai il parametro 'level' dalla query string
-    level = request.args.get('level')
+    level = sanitize_input(request.args.get('level'))
     
     # Definizione delle probabilità per ogni livello
     probabilities = {

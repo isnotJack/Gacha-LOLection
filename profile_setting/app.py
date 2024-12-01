@@ -9,6 +9,7 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 import jwt
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
+import re 
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@profile_db:5432/profile_db'
@@ -87,6 +88,26 @@ class CircuitBreaker:
 # Inizializzazione dei circuit breakers
 gacha_sys_circuit_breaker = CircuitBreaker()
 
+# Generale: sanitizza stringhe generiche (es. username, campi testo)
+def sanitize_input(input_string):
+    """Permette solo caratteri alfanumerici, spazi, trattini e underscore."""
+    if not input_string:
+        return input_string
+    return re.sub(r"[^\w\s-]", "", input_string)
+
+# Specifico: include punti per email o nomi di file
+def sanitize_email(input_string):
+    """Permette solo caratteri validi per un'email."""
+    if not input_string:
+        return input_string
+    return re.sub(r"[^\w\.\@\s-]", "", input_string)
+
+def sanitize_input_gacha(input_string):
+    """Permette solo caratteri alfanumerici, trattini bassi, spazi, trattini e punti."""
+    if not input_string:
+        return input_string
+    return re.sub(r"[^\w\s\-.]", "", input_string)
+
 # Modello per il profilo utente
 class Profile(db.Model):
     __tablename__ = 'profiles'
@@ -112,7 +133,7 @@ class GachaItem(db.Model):
 #@jwt_required()  # Attiva il controllo del token JWT se richiesto
 def modify_profile():
     updated_data = request.form
-    username = updated_data.get('username')
+    username = sanitize_input(updated_data.get('username'))
 
     auth_header = request.headers.get('Authorization')
     if not auth_header:
@@ -132,8 +153,8 @@ def modify_profile():
     except InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
 
-    field = updated_data.get('field')           # specify the text fields to be modified
-    value = updated_data.get('value')           # for text fields
+    field = sanitize_input(updated_data.get('field'))           # specify the text fields to be modified
+    value = sanitize_input(updated_data.get('value'))           # for text fields
 
     # Controlla che il campo username sia fornito
     if not username:
@@ -201,7 +222,7 @@ def modify_profile():
 @app.route('/checkprofile', methods=['GET'])
 #@jwt_required()
 def check_profile():
-    username = request.args.get('username')
+    username = sanitize_input(request.args.get('username'))
 
     auth_header = request.headers.get('Authorization')
     if not auth_header:
@@ -239,7 +260,7 @@ def check_profile():
 @app.route('/retrieve_gachacollection', methods=['GET']) #--> Sistemare GACHA SYSTEM PER RICEVERE COLLEZIONI
 #@jwt_required()
 def retrieve_gacha_collection():
-    username = request.args.get('username')
+    username = sanitize_input(request.args.get('username'))
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         return jsonify({"error": "Missing Authorization header"}), 401
@@ -292,7 +313,7 @@ def retrieve_gacha_collection():
 @app.route('/info_gachacollection', methods=['GET'])
 #@jwt_required()
 def info_gacha_collection():
-    username = request.args.get('username')
+    username = sanitize_input(request.args.get('username'))
 
     auth_header = request.headers.get('Authorization')
     if not auth_header:
@@ -359,8 +380,8 @@ def allowed_file(filename):
 @app.route('/create_profile', methods=['POST'])
 def create_profile():
     data = request.get_json()
-    username = data.get('username')
-    email = data.get('email')
+    username = sanitize_input(data.get('username'))
+    email = sanitize_email(data.get('email'))
     currency_balance = data.get('currency_balance', 0)
 
     if not username:
@@ -417,7 +438,7 @@ def create_profile():
 @app.route('/delete_profile', methods=['DELETE'])
 def delete_profile():
     data= request.get_json()
-    username = data.get('username')
+    username = sanitize_input(data.get('username'))
 
     auth_header = request.headers.get('Authorization')
     if not auth_header:
@@ -452,8 +473,8 @@ def insertGacha():
     if not data:
         return jsonify({"error": "Missing request data"}), 400
 
-    username = data.get('username')  
-    gacha_name = data.get('gacha_name')
+    username = sanitize_input(data.get('username'))  
+    gacha_name = sanitize_input_gacha(data.get('gacha_name'))
     collected_date_str = data.get('collected_date')
     # Controlla che tutti i parametri obbligatori siano presenti
     if not username:
@@ -489,7 +510,7 @@ def insertGacha():
 @app.route('/deleteGacha', methods=['DELETE'])
 def deleteGacha():
     data = request.get_json()
-    username = data.get('username')
+    username = sanitize_input(data.get('username'))
 
     auth_header = request.headers.get('Authorization')
     if not auth_header:

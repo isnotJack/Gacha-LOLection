@@ -4,6 +4,7 @@ from datetime import datetime
 import jwt
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 import os
+import re
 
 
 app = Flask(__name__)
@@ -76,6 +77,12 @@ gacha_sys_circuit_breaker = CircuitBreaker()
 profile_circuit_breaker = CircuitBreaker()
 payment_circuit_breaker = CircuitBreaker()
 
+def sanitize_input(input_string):
+    """Permette solo caratteri alfanumerici, trattini bassi e spazi."""
+    if not input_string:
+        return input_string
+    return re.sub(r"[^\w\s-]", "", input_string)
+
 @app.route('/gacharoll', methods=['POST'])
 def gacharoll():
     # Estrai i dati dal body della richiesta
@@ -104,8 +111,8 @@ def gacharoll():
     if 'username' not in data or 'level' not in data:                               
         return jsonify({"error": "Missing 'username' or 'level' parameter"}), 400
     
-    username = data['username']
-    level = data['level']
+    username = sanitize_input(data['username'])
+    level = sanitize_input(data['level'])
 
     # Determina l'importo in base al livello
     if level == "standard":
