@@ -233,7 +233,6 @@ def create_auction():
     try:
         # Decodifica e verifica il token
         decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")
-
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Token expired"}), 401
     except jwt.InvalidTokenError:
@@ -248,6 +247,10 @@ def create_auction():
     gacha_name = data.get('gacha_name')
     base_price = data.get('basePrice')
     end_date = data.get('endDate')
+
+    # Controlla che il ruolo dell'utente sia corretto
+    if decoded_token.get('sub') != seller_username:
+        return jsonify({"error": "Unauthorized access, only the seller can create this auction"}), 403
 
     existing_auction = Auction.query.filter_by(gacha_name=gacha_name, seller_username=seller_username, status='active').first()
     if existing_auction:
@@ -387,6 +390,10 @@ def bid_for_auction():
     bidder_username = request.args.get('username') 
     auction_id = request.args.get('auction_id')
     new_bid = request.args.get('newBid', type=float)
+
+        # Controlla che il ruolo dell'utente sia corretto
+    if decoded_token.get('sub') != bidder_username:
+        return jsonify({"error": "Unauthorized access, only the bidder can create a bid for the auction"}), 403
 
     # Controlla che tutti i parametri siano presenti
     if not all([bidder_username, auction_id, new_bid]):
