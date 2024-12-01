@@ -88,7 +88,7 @@ def sanitize_input(input_string):
     """Permette solo caratteri alfanumerici, trattini bassi e spazi"""
     if not input_string:
         return input_string
-    return re.sub(r"[^\w\s]", "", input_string)
+    return re.sub(r"[^\w\s\-]", "", input_string)
 
 def sanitize_input_error(input_string):
     """Permette solo caratteri alfanumerici, trattini bassi e spazi"""

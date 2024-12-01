@@ -90,12 +90,10 @@ profile_circuit_breaker = CircuitBreaker()
 
 # Funzione per sanitizzare input
 def sanitize_input(input_string):
-    """Permette solo caratteri alfanumerici, trattini bassi, e spazi."""
+    """Permette solo caratteri alfanumerici, trattini bassi e spazi."""
     if not input_string:
         return input_string
-    if not re.match(r"^[\w\s-]+$", input_string):
-        raise ValueError(f"Input non valido: {input_string}")
-    return input_string
+    return re.sub(r"[^\w\s-]", "", input_string)
 def sanitize_input_gacha(input_string):
     """Permette solo caratteri alfanumerici, trattini bassi, spazi, trattini e punti."""
     if not input_string:
