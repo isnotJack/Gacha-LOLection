@@ -359,8 +359,8 @@ def get_gacha_collection():
 
     data= request.get_json()
     # Estrai il parametro 'gacha_name' dalla query string (facoltativo), supporta una lista separata da virgola
-    gacha_names = sanitize_input_gacha(data.get('gacha_name'))
-    
+    # gacha_names = sanitize_input_gacha(data.get('gacha_name'))
+    gacha_names=data.get('gacha_name')
     if gacha_names:
         # Suddividi i nomi in una lista
         # gacha_names = gacha_names.split(',')
