@@ -404,6 +404,8 @@
 													"    pm.expect(pm.response.json()).to.have.property('message');",
 													"});",
 													"",
+													"console.log(\"Response Body:\", pm.response.text());",
+													"",
 													"// Test to verify the gacha details include the required properties",
 													"pm.test(\"Gacha details include name, image path, rarity, and description\", function () {",
 													"    var gachaDetails = pm.response.json().gacha;",
@@ -443,7 +445,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "{{GACHA_IMAGE_PATH}}"
+													"src": "postman-cloud:///1efa8252-c07c-4de0-9114-3368d46f4848"
 												}
 											]
 										},
@@ -514,7 +516,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "{{GACHA_IMAGE_PATH}}"
+													"src": "postman-cloud:///1efa8252-c07c-4de0-9114-3368d46f4848"
 												}
 											]
 										},
@@ -584,7 +586,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "{{GACHA_IMAGE_PATH}}"
+													"src": "postman-cloud:///1efa8252-c07c-4de0-9114-3368d46f4848"
 												}
 											]
 										},
@@ -649,7 +651,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "{{GACHA_IMAGE_PATH}}"
+													"src": "postman-cloud:///1efa8252-c07c-4de0-9114-3368d46f4848"
 												}
 											]
 										},
@@ -833,7 +835,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "{{GACHA_IMAGE_PATH}}"
+													"src": "postman-cloud:///1efa82bd-d1e5-4f30-abda-93bf7ad8bc5f"
 												}
 											]
 										},
@@ -1953,7 +1955,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"seller_username\": \"user1\",\n    \"gacha_name\": \"Trial gacha\",\n    \"basePrice\": 10.0,\n    \"endDate\": \"2024-12-31T23:59:59\"\n}",
+											"raw": "{\n    \"seller_username\": \"user1\",\n    \"gacha_name\": \"{{rolledGacha}}\",\n    \"basePrice\": 10.0,\n    \"endDate\": \"2024-12-31T23:59:59\"\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2002,7 +2004,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"seller_username\": \"player2\",\n    \"gacha_name\": \"doge\"\n}",
+											"raw": "{\n    \"seller_username\": \"user1\",\n    \"gacha_name\": \"{{rolledGacha}}\"\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2051,7 +2053,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"seller_username\": \"player1\",\n    \"gacha_name\": \"GachaX\",\n    \"basePrice\": -50.0,\n    \"endDate\": \"2024-12-31T23:59:59\"\n}\n",
+											"raw": "{\n    \"seller_username\": \"user1\",\n    \"gacha_name\": \"{{rolledGacha}}\",\n    \"basePrice\": -50.0,\n    \"endDate\": \"2024-12-31T23:59:59\"\n}\n",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2100,7 +2102,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"seller_username\": \"player1\",\n    \"gacha_name\": \"GachaX\",\n    \"basePrice\": 100.0,\n    \"endDate\": \"2023-01-01T23:59:59\"\n}\n",
+											"raw": "{\n    \"seller_username\": \"user1\",\n    \"gacha_name\": \"{{rolledGacha}}\",\n    \"basePrice\": 100.0,\n    \"endDate\": \"2023-01-01T23:59:59\"\n}\n",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3894,7 +3896,7 @@
 														{
 															"key": "image",
 															"type": "file",
-															"src": "{{GACHA_IMAGE_PATH}}"
+															"src": "postman-cloud:///1efa8e6b-e099-4c20-bcf3-e6c6bb8866d7"
 														}
 													]
 												},
