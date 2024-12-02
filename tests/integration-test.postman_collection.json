@@ -404,6 +404,8 @@
 													"    pm.expect(pm.response.json()).to.have.property('message');",
 													"});",
 													"",
+													"console.log(\"Response Body:\", pm.response.text());",
+													"",
 													"// Test to verify the gacha details include the required properties",
 													"pm.test(\"Gacha details include name, image path, rarity, and description\", function () {",
 													"    var gachaDetails = pm.response.json().gacha;",
@@ -649,7 +651,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "{{GACHA_IMAGE_PATH}}"
+													"src":"{{GACHA_IMAGE_PATH}}"
 												}
 											]
 										},
@@ -1953,7 +1955,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"seller_username\": \"user1\",\n    \"gacha_name\": \"Trial gacha\",\n    \"basePrice\": 10.0,\n    \"endDate\": \"2024-12-31T23:59:59\"\n}",
+											"raw": "{\n    \"seller_username\": \"user1\",\n    \"gacha_name\": \"{{rolledGacha}}\",\n    \"basePrice\": 10.0,\n    \"endDate\": \"2024-12-31T23:59:59\"\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2002,7 +2004,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"seller_username\": \"player2\",\n    \"gacha_name\": \"doge\"\n}",
+											"raw": "{\n    \"seller_username\": \"user1\",\n    \"gacha_name\": \"{{rolledGacha}}\"\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2051,7 +2053,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"seller_username\": \"player1\",\n    \"gacha_name\": \"GachaX\",\n    \"basePrice\": -50.0,\n    \"endDate\": \"2024-12-31T23:59:59\"\n}\n",
+											"raw": "{\n    \"seller_username\": \"user1\",\n    \"gacha_name\": \"{{rolledGacha}}\",\n    \"basePrice\": -50.0,\n    \"endDate\": \"2024-12-31T23:59:59\"\n}\n",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2100,7 +2102,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"seller_username\": \"player1\",\n    \"gacha_name\": \"GachaX\",\n    \"basePrice\": 100.0,\n    \"endDate\": \"2023-01-01T23:59:59\"\n}\n",
+											"raw": "{\n    \"seller_username\": \"user1\",\n    \"gacha_name\": \"{{rolledGacha}}\",\n    \"basePrice\": 100.0,\n    \"endDate\": \"2023-01-01T23:59:59\"\n}\n",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2745,6 +2747,8 @@
 													"    pm.response.to.have.status(200);",
 													"});",
 													"",
+													"console.log(\"Response Body:\", pm.response.text());",
+													"",
 													"pm.test(\"Bid is successfully placed\", function () {",
 													"    const jsonData = pm.response.json();",
 													"    pm.expect(jsonData).to.have.property(\"message\", \"New bid set\");",
@@ -2864,7 +2868,7 @@
 										"method": "PATCH",
 										"header": [],
 										"url": {
-											"raw": "https://localhost:5001/auction_service/bid?username=jane_doe&auction_id=9999&newBid=150.0",
+											"raw": "https://localhost:5001/auction_service/bid?username=user2&auction_id=9999&newBid=150.0",
 											"protocol": "https",
 											"host": [
 												"localhost"
@@ -2877,7 +2881,7 @@
 											"query": [
 												{
 													"key": "username",
-													"value": "jane_doe"
+													"value": "user2"
 												},
 												{
 													"key": "auction_id",
@@ -2972,7 +2976,7 @@
 										"method": "PATCH",
 										"header": [],
 										"url": {
-											"raw": "https://localhost:5001/auction_service/bid?username=jane_doe&auction_id=1&newBid=10.0",
+											"raw": "https://localhost:5001/auction_service/bid?username=user2&auction_id=1&newBid=10.0",
 											"protocol": "https",
 											"host": [
 												"localhost"
@@ -2985,7 +2989,7 @@
 											"query": [
 												{
 													"key": "username",
-													"value": "jane_doe"
+													"value": "user2"
 												},
 												{
 													"key": "auction_id",
