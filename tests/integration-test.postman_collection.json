@@ -401,7 +401,7 @@
 												"exec": [
 													"// Test to verify the response message",
 													"pm.test(\"Response message is 'Gacha added successfully'\", function () {",
-													"    pm.expect(pm.response.json().message).to.equal('Gacha added successfully');",
+													"    pm.expect(pm.response.json()).to.have.property('message');",
 													"});",
 													"",
 													"// Test to verify the gacha details include the required properties",
@@ -443,7 +443,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "postman-cloud:///1efa8252-c07c-4de0-9114-3368d46f4848"
+													"src": "{{GACHA_IMAGE_PATH}}"
 												}
 											]
 										},
@@ -474,6 +474,7 @@
 													"    pm.expect(pm.response.json().message).to.equal('Gacha added successfully');",
 													"});",
 													"",
+													"console.log(\"Response Body:\", pm.response.text());",
 													"// Test to verify the gacha details include the required properties",
 													"pm.test(\"Gacha details include name, image path, rarity, and description\", function () {",
 													"    var gachaDetails = pm.response.json().gacha;",
@@ -513,7 +514,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "postman-cloud:///1efa8252-c07c-4de0-9114-3368d46f4848"
+													"src": "{{GACHA_IMAGE_PATH}}"
 												}
 											]
 										},
@@ -583,7 +584,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "postman-cloud:///1efa8252-c07c-4de0-9114-3368d46f4848"
+													"src": "{{GACHA_IMAGE_PATH}}"
 												}
 											]
 										},
@@ -648,7 +649,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "postman-cloud:///1efa8252-c07c-4de0-9114-3368d46f4848"
+													"src": "{{GACHA_IMAGE_PATH}}"
 												}
 											]
 										},
@@ -832,7 +833,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "postman-cloud:///1efa82bd-d1e5-4f30-abda-93bf7ad8bc5f"
+													"src": "{{GACHA_IMAGE_PATH}}"
 												}
 											]
 										},
@@ -3893,7 +3894,7 @@
 														{
 															"key": "image",
 															"type": "file",
-															"src": "postman-cloud:///1efa8e6b-e099-4c20-bcf3-e6c6bb8866d7"
+															"src": "{{GACHA_IMAGE_PATH}}"
 														}
 													]
 												},

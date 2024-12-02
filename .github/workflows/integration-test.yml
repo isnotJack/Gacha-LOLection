@@ -34,14 +34,21 @@ jobs:
       run: |
         sleep 10  # Attendi 30 secondi per assicurarti che tutti i servizi siano attivi
 
+   
     # 6. Esegui i test con Newman
     - name: Run integration tests with Newman
       run: |
+        # Definisci la variabile d'ambiente filePath
+        export filePath=${{ github.workspace }}/meme_images/meme2.jpg
+
+        # Esegui Newman con la variabile passata
         newman run ./tests/integration-test.postman_collection.json \
           --environment ./tests/environment.postman_environment.json \
+          --env-var "GACHA_IMAGE_PATH=$filePath" \
           --insecure \
           --reporters cli,html \
           --reporter-html-export newman-report.html
+
 
     # 7. Ferma e rimuovi i container Docker
     - name: Stop Docker Compose
