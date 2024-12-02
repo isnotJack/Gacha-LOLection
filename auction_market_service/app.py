@@ -407,9 +407,6 @@ def bid_for_auction():
     auction_id = request.args.get('auction_id')
     new_bid = request.args.get('newBid', type=float)
 
-    if auction_id or new_bid < 0:
-        return jsonify({"error": "Invalid input"}), 400
-
     # Controlla che il ruolo dell'utente sia corretto
     if decoded_token.get('sub') != bidder_username:
         return jsonify({"error": "Unauthorized access, only the bidder can create a bid for the auction"}), 403
