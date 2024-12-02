@@ -492,7 +492,7 @@ def gacha_receive():
 
     # Recupera i parametri dall'oggetto JSON
     data = request.get_json()
-    auction_id = sanitize_input(data.get('auction_id'))
+    auction_id = data.get('auction_id')
 
     # Verifica che auction_id sia fornito
     if not auction_id:
@@ -541,7 +541,7 @@ def auction_lost():
 
     # Recupera i parametri dal corpo JSON
     data = request.get_json()
-    auction_id = sanitize_input(data.get('auction_id'))
+    auction_id = data.get('auction_id')
 
     if not auction_id:
         return jsonify({"error": "Missing auction_id"}), 400
@@ -600,7 +600,7 @@ def auction_terminated():
 
     # Recupera i parametri dal corpo JSON
     data = request.get_json()
-    auction_id = sanitize_input(data.get('auction_id'))
+    auction_id = data.get('auction_id')
 
     if not auction_id:
         return jsonify({"error": "Missing auction_id"}), 400
@@ -668,7 +668,7 @@ def close_auction():
         return jsonify({"error": "Invalid token"}), 401
 
     data = request.get_json()
-    auction_id = sanitize_input(data.get('auction_id'))
+    auction_id = data.get('auction_id')
     username = sanitize_input(data.get('username'))
 
     # Controlla che auction_id e username siano forniti
