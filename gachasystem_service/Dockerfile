@@ -7,6 +7,9 @@ WORKDIR /app
 # Copia i file necessari
 COPY . /app
 
+# Copia le immagini dei meme
+COPY meme_images /app/static/uploads
+
 # Installa le dipendenze
 RUN pip install --no-cache-dir -r requirements.txt
 
