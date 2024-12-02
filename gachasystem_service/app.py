@@ -94,11 +94,17 @@ def sanitize_input(input_string):
     if not input_string:
         return input_string
     return re.sub(r"[^\w\s-]", "", input_string)
-def sanitize_input_gacha(input_string):
-    """Permette solo caratteri alfanumerici, trattini bassi, spazi, trattini e punti."""
-    if not input_string:
-        return input_string
-    return re.sub(r"[^\w\s\-.]", "", input_string)
+def sanitize_input_gacha(input_value):
+    """Sanitizza l'input per permettere solo caratteri alfanumerici, trattini bassi, spazi, trattini e punti."""
+    if isinstance(input_value, str):
+        return re.sub(r"[^\w\s\-.]", "", input_value)
+    elif isinstance(input_value, list):
+        return [sanitize_input_gacha(item) for item in input_value if isinstance(item, str)]
+    elif isinstance(input_value, (int, float)):
+        return str(input_value)
+    else:
+        return ""
+
 
 # Modello Utente
 # 
@@ -360,21 +366,28 @@ def get_gacha_collection():
     data= request.get_json()
     # Estrai il parametro 'gacha_name' dalla query string (facoltativo), supporta una lista separata da virgola
     # gacha_names = sanitize_input_gacha(data.get('gacha_name'))
-    gacha_names=data.get('gacha_name')
+    gacha_names = data.get('gacha_name')
+
+    # Sanitizza e verifica l'input
     if gacha_names:
-        # Suddividi i nomi in una lista
-        # gacha_names = gacha_names.split(',')
-        
-        # Cerca i gachas con i nomi specificati
-        gachas = Gacha.query.filter(Gacha.meme_name.in_(gacha_names)).all()
-        
+        gacha_names = sanitize_input_gacha(gacha_names)
+
+        if isinstance(gacha_names, list):
+            # Cerca i gachas con i nomi specificati
+            gachas = Gacha.query.filter(Gacha.meme_name.in_(gacha_names)).all()
+        elif isinstance(gacha_names, str):
+            # Singolo nome fornito come stringa
+            gachas = Gacha.query.filter_by(meme_name=gacha_names).all()
+        else:
+            return jsonify({"error": "Invalid input for gacha_name"}), 400
+
         if not gachas:
-            return jsonify({"error": "No gachas found with the specified names"}), 404  # Se nessun gacha trovato con i nomi specificati
+            return jsonify({"error": "No gachas found with the specified names"}), 404
     else:
         # Se non viene passato 'gacha_name', restituiamo tutta la collezione di gachas
         gachas = Gacha.query.all()
         if not gachas:
-            return jsonify({"error": "No gachas found"}), 404  # Se non ci sono gachas nella collezione
+            return jsonify({"error": "No gachas found"}), 404
     
     # Dettagli della collezione di gachas
     gacha_list = []
