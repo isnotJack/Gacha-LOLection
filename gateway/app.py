@@ -40,6 +40,7 @@ GACHAROLL_URL = 'https://gacha_roll:5007/gacharoll'
 PROFILE_IMAGE_URL = 'https://profile_setting:5003/uploads/'
 
 BUYCURRENCY_URL = 'https://payment_service:5006/buycurrency'
+VIEWTRANS_URL = 'https://payment_service:5006/viewTrans'
 
 
 import time
@@ -398,6 +399,20 @@ def buycurrency():
     response, status = payment_circuit_breaker.call('post', url, params, headers, {}, True)
     if status != 200:
         return jsonify({'Error' : f'Error during buy currency op {response}'}), status
+    return jsonify(response), status
+
+@app.route('/payment_service/viewTrans', methods=['GET'])
+# SOLO USER
+def viewTrans():
+    username = request.args.get('username')
+    jwt_token = request.headers.get('Authorization')
+    headers = {
+        'Authorization' : jwt_token
+    }
+    url = VIEWTRANS_URL+ f'?username={username}'
+    response, status = payment_circuit_breaker.call('get', url, {}, headers, {}, False)
+    if status != 200:
+        return jsonify({'Error' : f'Error in getting the transactions history {response}'}), status
     return jsonify(response), status
     
 

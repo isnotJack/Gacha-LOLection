@@ -4801,6 +4801,133 @@
 					]
 				},
 				{
+					"name": "User seeing transaction hitory",
+					"item": [
+						{
+							"name": "viewTrans_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"\r",
+											"pm.test(\"Response is a list\", function () {\r",
+											"    pm.expect(pm.response.json()).to.be.an('array');\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5001/payment_service/viewTrans?username=user1",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5001",
+									"path": [
+										"payment_service",
+										"viewTrans"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "user1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "viewTrans_bad_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 403\", function () {\r",
+											"    pm.response.to.have.status(403);\r",
+											"});\r",
+											"\r",
+											"\r",
+											"pm.test(\"Response is a list\", function () {\r",
+											"    pm.expect(pm.response.json()).to.have.property('Error');\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5001/payment_service/viewTrans?username=userrr",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5001",
+									"path": [
+										"payment_service",
+										"viewTrans"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "userrr"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{user1_auth_token}}",
+								"type": "string"
+							}
+						]
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
 					"name": "Admin logout, login, delete",
 					"item": [
 						{
