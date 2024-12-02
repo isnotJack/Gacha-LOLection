@@ -2868,7 +2868,7 @@
 										"method": "PATCH",
 										"header": [],
 										"url": {
-											"raw": "https://localhost:5001/auction_service/bid?username=jane_doe&auction_id=9999&newBid=150.0",
+											"raw": "https://localhost:5001/auction_service/bid?username=user2&auction_id=9999&newBid=150.0",
 											"protocol": "https",
 											"host": [
 												"localhost"
@@ -2881,7 +2881,7 @@
 											"query": [
 												{
 													"key": "username",
-													"value": "jane_doe"
+													"value": "user2"
 												},
 												{
 													"key": "auction_id",
@@ -2976,7 +2976,7 @@
 										"method": "PATCH",
 										"header": [],
 										"url": {
-											"raw": "https://localhost:5001/auction_service/bid?username=jane_doe&auction_id=1&newBid=10.0",
+											"raw": "https://localhost:5001/auction_service/bid?username=user2&auction_id=1&newBid=10.0",
 											"protocol": "https",
 											"host": [
 												"localhost"
@@ -2989,7 +2989,7 @@
 											"query": [
 												{
 													"key": "username",
-													"value": "jane_doe"
+													"value": "user2"
 												},
 												{
 													"key": "auction_id",
