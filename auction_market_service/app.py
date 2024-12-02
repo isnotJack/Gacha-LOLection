@@ -404,7 +404,7 @@ def bid_for_auction():
         return jsonify({"error": "Invalid token"}), 401
     # Recupera i parametri dalla query string
     bidder_username = sanitize_input(request.args.get('username'))
-    auction_id = sanitize_input(request.args.get('auction_id'))
+    auction_id = request.args.get('auction_id')
     new_bid = request.args.get('newBid', type=float)
 
     if auction_id or new_bid < 0:
