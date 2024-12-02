@@ -87,6 +87,7 @@ class CircuitBreaker:
 
 # Inizializzazione dei circuit breakers
 gacha_sys_circuit_breaker = CircuitBreaker()
+payment_circuit_breaker = CircuitBreaker()
 
 # Generale: sanitizza stringhe generiche (es. username, campi testo)
 def sanitize_input(input_string):
@@ -248,11 +249,24 @@ def check_profile():
     if not profile:
         return jsonify({"error": "User not found"}), 401
 
+    url = f"https://payment_service:5006/getBalance?username={username}"
+    headers = {
+        'Authorization' : f'Bearer {access_token}'
+    }
+
+    res, status = payment_circuit_breaker.call('get', url , {}, headers, {}, False)
+    if status != 200:
+        balance = profile.balance
+    else:
+        balance = res['balance']
+        profile.currency_balance = balance
+        db.session.commit()
+    
     profile_data = {
         "username": profile.username,
         "email": profile.email,
         "profile_image": f"https://localhost:5001/images_profile/uploads/{os.path.basename(profile.profile_image)}",
-        "currency_balance": profile.currency_balance,
+        "currency_balance": balance,
     }
     return jsonify(profile_data), 200
 
