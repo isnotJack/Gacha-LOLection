@@ -405,7 +405,11 @@ def bid_for_auction():
     # Recupera i parametri dalla query string
     bidder_username = sanitize_input(request.args.get('username'))
     auction_id = request.args.get('auction_id')
-    new_bid = request.args.get('newBid', type=float)
+    new_bid = request.args.get('newBid')
+    try:
+        new_bid = float(new_bid)
+    except (TypeError, ValueError) as e:
+        return jsonify({'Error': f"Invalid value for newBid: {new_bid}. It must be a valid number."}), 400
 
     if auction_id or new_bid < 0:
         return jsonify({"error": "Invalid input"}), 400
