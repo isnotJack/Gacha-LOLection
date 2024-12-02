@@ -2747,6 +2747,8 @@
 													"    pm.response.to.have.status(200);",
 													"});",
 													"",
+													"console.log(\"Response Body:\", pm.response.text());",
+													"",
 													"pm.test(\"Bid is successfully placed\", function () {",
 													"    const jsonData = pm.response.json();",
 													"    pm.expect(jsonData).to.have.property(\"message\", \"New bid set\");",
