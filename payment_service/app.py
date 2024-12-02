@@ -8,6 +8,7 @@ import datetime
 import time
 import jwt  # PyJWT
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
+import re
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@db_payment:5432/trans_db'
@@ -18,6 +19,14 @@ db = SQLAlchemy(app)
 # bcrypt = Bcrypt(app)
 #jwt = JWTManager(app)
 public_key_path = os.getenv("PUBLIC_KEY_PATH")
+
+def sanitize_input(input_string):
+    """Permette solo caratteri alfanumerici, trattini bassi, spazi e trattini."""
+    if not input_string:
+        return input_string
+    return re.sub(r"[^\w\s-]", "", input_string)
+
+
 # Transaction Model
 class Transaction(db.Model):
     __tablename__ = 'transactions'
@@ -40,15 +49,15 @@ from datetime import datetime
 @app.route('/pay', methods=['POST'])
 def pay():
 
-    payer_us = request.form.get('payer_us')
-    receiver_us = request.form.get('receiver_us')
+    payer_us = sanitize_input(request.form.get('payer_us'))
+    receiver_us = sanitize_input(request.form.get('receiver_us'))
     amount = request.form.get('amount')
-
+    amount = float(amount)
     if not payer_us:
         return jsonify({'Error': 'Invalid payer_us'}), 400
     if not receiver_us:
         return jsonify({'Error': 'Invalid receiver_us'}), 400
-    if not amount:
+    if not amount or amount<0:
         return jsonify({'Error': 'Invalid amount'}), 400
     
     # Conversion from string to float
@@ -107,9 +116,9 @@ def pay():
 @app.route('/buycurrency', methods = ['POST'])
 def buycurrency():
     data = request.get_json()
-    username = data.get('username')
+    username = sanitize_input(data.get('username'))
     amount = data.get('amount')
-    method = data.get('payment_method')
+    method = sanitize_input(data.get('payment_method'))
     # Recupera l'header Authorization
     auth_header = request.headers.get('Authorization')
     if not auth_header:
@@ -174,7 +183,7 @@ def buycurrency():
 
 @app.route('/viewTrans', methods = ['GET'])
 def viewTrans():  
-    username = request.args.get('username')
+    username = sanitize_input(request.args.get('username'))
     # Recupera l'header Authorization
     auth_header = request.headers.get('Authorization')
     if not auth_header:
@@ -229,7 +238,7 @@ def newBalance():
     # except jwt.InvalidTokenError:
     #     return jsonify({"error": "Invalid token"}), 401
     data = request.get_json()
-    username = data.get('username')
+    username = sanitize_input(data.get('username'))
     if not username:
         return jsonify({"Error" : "Invalid parameter username"}) , 400
     res = Balance.query.filter_by(username=username).all()
@@ -247,7 +256,7 @@ def newBalance():
 
 @app.route('/getBalance', methods=['GET'])
 def getBalance():
-    username = request.args.get('username')
+    username = sanitize_input(request.args.get('username'))
     # Recupera l'header Authorization
     auth_header = request.headers.get('Authorization')
     if not auth_header:
@@ -296,7 +305,7 @@ def deleteBalance():
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
     data = request.get_json()
-    username = data.get('username')
+    username = sanitize_input(data.get('username'))
     if not username:
         return jsonify({'Error' : 'Invalid parameter username'}), 400
     res = Balance.query.filter_by(username=username).first()

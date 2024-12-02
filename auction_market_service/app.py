@@ -12,6 +12,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import uuid
 import jwt  # PyJWT
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
+import re
 
 
 
@@ -86,6 +87,18 @@ class CircuitBreaker:
 auction_circuit_breaker = CircuitBreaker()
 payment_circuit_breaker = CircuitBreaker()
 profile_circuit_breaker = CircuitBreaker()
+
+# Funzione per sanitizzare input
+def sanitize_input(input_string):
+    """Permette solo caratteri alfanumerici, trattini bassi e spazi."""
+    if not input_string:
+        return input_string
+    return re.sub(r"[^\w\s-]", "", input_string)
+def sanitize_input_gacha(input_string):
+    """Permette solo caratteri alfanumerici, trattini bassi, spazi, trattini e punti."""
+    if not input_string:
+        return input_string
+    return re.sub(r"[^\w\s\-.]", "", input_string)
 
 # Modello Auction
 class Auction(db.Model):
@@ -233,7 +246,6 @@ def create_auction():
     try:
         # Decodifica e verifica il token
         decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")
-
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Token expired"}), 401
     except jwt.InvalidTokenError:
@@ -244,10 +256,17 @@ def create_auction():
         return jsonify({"error": "Invalid JSON or missing Content-Type header"}), 400
     
     # Recupera i parametri dall'oggetto JSON
-    seller_username = data.get('seller_username')
-    gacha_name = data.get('gacha_name')
+    seller_username = sanitize_input(data.get('seller_username'))
+    gacha_name = sanitize_input_gacha(data.get('gacha_name'))
     base_price = data.get('basePrice')
     end_date = data.get('endDate')
+
+    sanitized_value = float(base_price)
+    if sanitized_value <= 0:
+        return jsonify({"error": "base price must be higher than"}), 400
+    # Controlla che il ruolo dell'utente sia corretto
+    if decoded_token.get('sub') != seller_username:
+        return jsonify({"error": "Unauthorized access, only the seller can create this auction"}), 403
 
     existing_auction = Auction.query.filter_by(gacha_name=gacha_name, seller_username=seller_username, status='active').first()
     if existing_auction:
@@ -384,9 +403,16 @@ def bid_for_auction():
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
     # Recupera i parametri dalla query string
-    bidder_username = request.args.get('username') 
+    bidder_username = sanitize_input(request.args.get('username'))
     auction_id = request.args.get('auction_id')
     new_bid = request.args.get('newBid', type=float)
+
+    if auction_id or new_bid < 0:
+        return jsonify({"error": "Invalid input"}), 400
+
+    # Controlla che il ruolo dell'utente sia corretto
+    if decoded_token.get('sub') != bidder_username:
+        return jsonify({"error": "Unauthorized access, only the bidder can create a bid for the auction"}), 403
 
     # Controlla che tutti i parametri siano presenti
     if not all([bidder_username, auction_id, new_bid]):
@@ -400,6 +426,10 @@ def bid_for_auction():
     if auction.status != 'active':
         return jsonify({"error": "Cannot place a bid on a closed or inactive auction"}), 400
     
+    # Controlla che il creatore dell'asta non possa fare una bid
+    if auction.seller_username == bidder_username:
+        return jsonify({"error": "You cannot bid on your own auction"}), 400
+
     if auction.winner_username == bidder_username:
         return jsonify({"error": "You are already the highest bidder"}), 400
 
