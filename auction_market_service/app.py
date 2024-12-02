@@ -652,7 +652,7 @@ def auction_terminated():
 
 @app.route('/close_auction', methods=['POST'])
 def close_auction():
-        # Recupera l'header Authorization
+    # Recupera l'header Authorization
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         return jsonify({"error": "Missing Authorization header"}), 401
@@ -666,23 +666,33 @@ def close_auction():
     try:
         # Decodifica e verifica il token
         decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auction_service")
-
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Token expired"}), 401
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
+
     data = request.get_json()
     auction_id = data.get('auction_id')
+    username = sanitize_input(data.get('username'))
 
-    # Controllo se l'ID dell'asta è fornito
+    # Controlla che auction_id e username siano forniti
     if not auction_id:
         return jsonify({"error": "Auction ID is required"}), 400
+    if not username:
+        return jsonify({"error": "Username is required"}), 400
+
+    # Verifica che l'username sia quello del token
+    if decoded_token.get('sub') != username:
+        return jsonify({"error": "Unauthorized access, token username mismatch"}), 403
 
     # Recupero l'asta dal database
     auction = Auction.query.get(auction_id)
-
     if not auction:
         return jsonify({"error": "Auction not found"}), 404
+
+    # Verifica che l'utente sia il seller dell'asta
+    if auction.seller_username != username:
+        return jsonify({"error": "Unauthorized access, only the seller can close this auction"}), 403
 
     # Controllo se l'asta è già chiusa
     if auction.status != 'active':
@@ -690,7 +700,6 @@ def close_auction():
 
     # Verifico se ci sono offerte associate all'asta
     bids = Bid.query.filter_by(auction_id=auction_id).all()
-
     if bids:
         return jsonify({"error": "Auction cannot be closed because it has bids"}), 400
 
@@ -702,13 +711,9 @@ def close_auction():
     headers = {
         "Authorization": f"Bearer {access_token}"
     }
-    response , status = auction_circuit_breaker.call('post', "https://auction_service:5008/gacha_receive", payload, headers,{}, True)
+    response, status = auction_circuit_breaker.call('post', "https://auction_service:5008/gacha_receive", payload, headers, {}, True)
     if status != 200:
-    # try:
-    #     response = requests.post(f"http://auction_service:5008/gacha_receive", json=payload, timeout=10)
-    #     response.raise_for_status()
-    # except requests.RequestException as e:
-        return jsonify({"error": "Failed to return gacha to seller", f"details": {response}}), 500
+        return jsonify({"error": "Failed to return gacha to seller", "details": response}), 500
 
     # Salvo i cambiamenti nel database
     db.session.commit()

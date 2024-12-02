@@ -250,39 +250,45 @@ paths:
         '503':
           description: Service unavailable.
 
-  /close_auction:
-    post:
-      summary: Close an auction.
-      description: Closes an auction that has no bids and returns the gacha item to the seller.
-      parameters:
-        - name: Authorization
-          in: header
-          required: true
-          description: Bearer token for authentication.
-          schema:
-            type: string
-      requestBody:
+/close_auction:
+  post:
+    summary: Close an auction.
+    description: Closes an auction that has no bids and returns the gacha item to the seller. Only the seller of the auction can perform this operation, and the username must match the one in the authorization token.
+    parameters:
+      - name: Authorization
+        in: header
         required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                auction_id:
-                  type: string
-                  description: ID of the auction to close.
-              required: [auction_id]
-      responses:
-        '200':
-          description: Auction closed successfully.
-        '400':
-          description: Invalid parameters or auction cannot be closed due to existing bids.
-        '401':
-          description: Unauthorized due to missing or invalid token.
-        '404':
-          description: Auction not found.
-        '503':
-          description: Service unavailable.
+        description: Bearer token for authentication.
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              auction_id:
+                type: string
+                description: ID of the auction to close.
+              username:
+                type: string
+                description: Username of the seller attempting to close the auction. Must match the username in the token.
+            required: [auction_id, username]
+    responses:
+      '200':
+        description: Auction closed successfully.
+      '400':
+        description: Invalid parameters or auction cannot be closed due to existing bids.
+      '401':
+        description: Unauthorized due to missing or invalid token, or mismatched username.
+      '403':
+        description: Forbidden. The user is not the seller of the auction.
+      '404':
+        description: Auction not found.
+      '503':
+        description: Service unavailable.
+
 
 
 
