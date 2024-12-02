@@ -411,9 +411,6 @@ def bid_for_auction():
     except (TypeError, ValueError) as e:
         return jsonify({'Error': f"Invalid value for newBid: {new_bid}. It must be a valid number."}), 400
 
-    if auction_id or new_bid < 0:
-        return jsonify({"error": "Invalid input"}), 400
-
     # Controlla che il ruolo dell'utente sia corretto
     if decoded_token.get('sub') != bidder_username:
         return jsonify({"error": "Unauthorized access, only the bidder can create a bid for the auction"}), 403
