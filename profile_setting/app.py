@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
+#from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 import requests
 import os, time
 from requests.exceptions import ConnectionError, HTTPError
