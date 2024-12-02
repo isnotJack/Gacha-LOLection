@@ -445,7 +445,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "GACHA_IMAGE_PATH"
+													"src": "{{GACHA_IMAGE_PATH}}"
 												}
 											]
 										},
@@ -516,7 +516,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "GACHA_IMAGE_PATH"
+													"src": "{{GACHA_IMAGE_PATH}}"
 												}
 											]
 										},
@@ -586,7 +586,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "GACHA_IMAGE_PATH"
+													"src": "{{GACHA_IMAGE_PATH}}"
 												}
 											]
 										},
@@ -651,7 +651,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "GACHA_IMAGE_PATH"
+													"src":"{{GACHA_IMAGE_PATH}}"
 												}
 											]
 										},
@@ -835,7 +835,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src": "GACHA_IMAGE_PATH"
+													"src": "{{GACHA_IMAGE_PATH}}"
 												}
 											]
 										},
@@ -3896,7 +3896,7 @@
 														{
 															"key": "image",
 															"type": "file",
-															"src": "GACHA_IMAGE_PATH"
+															"src": "{{GACHA_IMAGE_PATH}}"
 														}
 													]
 												},
