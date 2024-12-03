@@ -58,10 +58,29 @@ class GachaUser(HttpUser):
         }
 
         # Effettua la chiamata al gateway per eliminare l'account
-        response = self.client.delete("/auth_service/delete", params=params, verify=False, headers=headers, name="Delete Account Endpoint")
+        response = self.client.delete("/auth_service/delete", data=params, verify=False, headers=headers, name="Delete Account Endpoint")
 
         if response.status_code != 200:
-            print(f"Errore durante l'eliminazione dell'account '{self.username}': {response.text}")
+            print(f"Error in the elimination of the account '{self.username}': {response.text}")
+            if response.status_code == 401:
+                # chiamata alla route newToken passando refresh token
+                headers = {
+                    'Authorization': f"Bearer {self.refresh_token}"  # Passa l'attuale JWT come Authorization header
+                }
+                refresh_response = self.client.post("/auth_service/newToken", verify=False, headers=headers, name="Refresh Token Endpoint")
+                if refresh_response.status_code == 200:
+                    # Aggiorna il token JWT
+                    self.jwt_token = refresh_response.json().get("access_token")
+                    headers = {
+                        'Authorization': f"Bearer {self.jwt_token}"
+                    }
+                    # nuovo tentativo
+                    response = self.client.delete("/auth_service/delete", data=params, verify=False, headers=headers, name="Delete Account Endpoint")
+                    if response.status_code != 200:
+                        print(f"Error retrying to eliminate the account '{self.username}': {response.text}")
+                else: 
+                    print(f"Error during access_token refresh: {refresh_response.text}")
+                    self.stop()
         else:
             headers = {
                 "Authorization": f"Bearer {self.refresh_token}"
@@ -70,8 +89,6 @@ class GachaUser(HttpUser):
             if response.status_code != 200:
                 print(f"Error during logout: {response.text}")
             self.stop()
-            
-
 
     @task(5)
     def modify_profile_image (self):
@@ -391,6 +408,8 @@ class GachaUser(HttpUser):
                                 print(f"Auction created successfully for gacha '{gacha_name}'")
                             else:
                                 print(f"Failed to create auction: {auction_response.text}")
+                        else:
+                            print("No gacha found in the collection.")
                     else:
                         print(f"Failed retrying to retrieve gacha collection: {response.text}")
                 else:
@@ -441,8 +460,6 @@ class GachaUser(HttpUser):
 
                     # Verifica che la risposta della bid sia positiva
                     if bid_response.status_code != 200:
-                    #     print(f"Bid placed successfully on auction {auction_id} for {bid_amount} coins")
-                    # else:
                         print(f"Failed to place bid on auction {auction_id}: {bid_response.text}")
                         if bid_response.status_code == 401:
                             # chiamata alla route newToken passando refresh token
@@ -507,13 +524,13 @@ class GachaUser(HttpUser):
                                 "auction_id": auction_id,
                                 "newBid": bid_amount
                             }
+                            if self.username != seller_username:
+                                # Chiamata per fare un bid sull'asta selezionata
+                                bid_response = self.client.patch("/auction_service/bid", params=bid_data, verify=False, headers=headers, name="Bid on Auction Endpoint")
 
-                            # Chiamata per fare un bid sull'asta selezionata
-                            bid_response = self.client.patch("/auction_service/bid", params=bid_data, verify=False, headers=headers, name="Bid on Auction Endpoint")
-
-                            # Verifica che la risposta della bid sia positiva
-                            if bid_response.status_code != 200:
-                                print(f"Failed to place bid on auction {auction_id}: {bid_response.text}")
+                                # Verifica che la risposta della bid sia positiva
+                                if bid_response.status_code != 200:
+                                    print(f"Failed to place bid on auction {auction_id}: {bid_response.text}")
                         else:
                             print("No active auctions found.")
                     else:
