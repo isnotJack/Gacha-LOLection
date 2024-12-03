@@ -27,4 +27,4 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Dati di test per users
-INSERT INTO users (username, role) VALUES ('admin_user', 'admin');
+-- INSERT INTO users (username, role) VALUES ('admin_user', 'admin');

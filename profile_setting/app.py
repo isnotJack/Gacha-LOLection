@@ -311,10 +311,10 @@ def retrieve_gacha_collection():
         'Authorization': jwt_token,  # Usa il token JWT ricevuto nell'header della richiesta
         'Content-Type': 'application/json'
     }
-        # Invia la lista di gacha_name come query string
-        #response = requests.get(url, params={'gacha_name': ','.join(gacha_collection)}, timeout=10)
-        # Invia la lista di gacha_name
-    payload = {'gacha_name': ','.join(gacha_collection)}
+    # Invia la lista di gacha_name come query string
+    #response = requests.get(url, params={'gacha_name': ','.join(gacha_collection)}, timeout=10)
+    # Invia la lista di gacha_name
+    payload = {'gacha_name': gacha_collection}
     # headers = {'Content-Type': 'application/json'
     #            ''}
     # response = requests.get(url, json=payload, headers=headers, timeout=10)
@@ -348,7 +348,7 @@ def info_gacha_collection():
         return jsonify({"error": "Invalid token"}), 401
 
     gacha_name = request.args.get('gacha_name')
-    if gacha_name:
+    if gacha_name and gacha_name != "None":
         # Dividi i nomi separati da virgole (opzionale se supporti più valori separati)
         gacha_names = [name.strip() for name in gacha_name.split(',')]
     else:

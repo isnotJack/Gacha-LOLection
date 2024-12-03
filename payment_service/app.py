@@ -71,8 +71,9 @@ def pay():
 
     if not payer_balance:
         return jsonify({'Error': f'Payer user "{payer_us}" not found'}), 404
-    if not receiver_balance:
-        return jsonify({'Error': f'Receiver user "{receiver_us}" not found'}), 404
+
+    if receiver_us != "system" and not receiver_balance:
+            return jsonify({'Error': f'Receiver user "{receiver_us}" not found'}), 404
 
     # Controlla che il saldo del pagatore sia sufficiente
     if payer_balance.balance >= amount:
@@ -88,7 +89,8 @@ def pay():
 
         # Scala i soldi dal saldo del pagatore e aggiungili a quello del ricevente
         payer_balance.balance -= amount
-        receiver_balance.balance += amount
+        if receiver_us != "system":
+            receiver_balance.balance += amount
 
         try:
             db.session.commit()
