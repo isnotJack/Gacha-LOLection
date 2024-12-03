@@ -453,7 +453,7 @@ def bid_for_auction():
     payment_service_url = "https://payment_service:5006/pay"
     payload = {
         "payer_us": bidder_username,
-        "receiver_us": "auction_system",
+        "receiver_us": "system",
         "amount": bid_difference
     }
 
