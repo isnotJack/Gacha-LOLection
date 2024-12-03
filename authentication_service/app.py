@@ -217,7 +217,7 @@ def login():
         payload = {
             "iss": "https://auth_service:5002",      # Emittente
             "sub": user.username,              # Soggetto
-            "aud": ["profile_setting", "gachasystem", "payment_service", "gacha_roll", "auction_service"],         
+            "aud": ["profile_setting", "gachasystem", "payment_service", "gacha_roll", "auction_service", "auth_service"],         
             "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
             "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),  # Expiration
             "scope": scope,                   # Scopi
