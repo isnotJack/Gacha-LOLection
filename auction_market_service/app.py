@@ -99,7 +99,7 @@ def sanitize_input_gacha(input_string):
     if not input_string:
         return input_string
     return re.sub(r"[^\w\s\-.]", "", input_string)
-
+    
 # Modello Auction
 class Auction(db.Model):
     __tablename__ = 'auctions'
@@ -406,10 +406,15 @@ def bid_for_auction():
     bidder_username = sanitize_input(request.args.get('username'))
     auction_id = request.args.get('auction_id')
     new_bid = request.args.get('newBid')
+    
     try:
-        new_bid = float(new_bid)
-    except (TypeError, ValueError) as e:
-        return jsonify({'Error': f"Invalid value for newBid: {new_bid}. It must be a valid number."}), 400
+        auction_id = int(auction_id)  # Prova a convertire auction_id in int
+    except (TypeError, ValueError):
+        return jsonify({"error": "auction_id must be an integer"}), 400
+    try:
+        new_bid = float(new_bid)  # Prova a convertire new_bid in float
+    except (TypeError, ValueError):
+        return jsonify({"error": "newBid must be a float"}), 400
 
     # Controlla che il ruolo dell'utente sia corretto
     if decoded_token.get('sub') != bidder_username:
@@ -498,7 +503,8 @@ def gacha_receive():
     # Verifica che auction_id sia fornito
     if not auction_id:
         return jsonify({"error": "Invalid input: auction_id is required"}), 400
-
+    if not isinstance(auction_id, (int, float)):
+        return jsonify({"error": "auction id must be int or float"}), 400
     # Recupera l'asta dal database usando l'ID
     auction = Auction.query.get(auction_id)
 
@@ -546,6 +552,8 @@ def auction_lost():
 
     if not auction_id:
         return jsonify({"error": "Missing auction_id"}), 400
+    if not isinstance(auction_id, (int, float)):
+        return jsonify({"error": "auction id must be int or float"}), 400
 
     # Trova l'asta corrispondente
     auction = Auction.query.get(auction_id)
@@ -602,7 +610,8 @@ def auction_terminated():
     # Recupera i parametri dal corpo JSON
     data = request.get_json()
     auction_id = data.get('auction_id')
-
+    if not isinstance(auction_id, (int, float)):
+        return jsonify({"error": "auction id must be int or float"}), 400
     if not auction_id:
         return jsonify({"error": "Missing auction_id"}), 400
 
@@ -677,6 +686,8 @@ def close_auction():
         return jsonify({"error": "Auction ID is required"}), 400
     if not username:
         return jsonify({"error": "Username is required"}), 400
+    if not isinstance(auction_id, (int, float)):
+        return jsonify({"error": "auction id must be int or float"}), 400
 
     # Verifica che l'username sia quello del token
     if decoded_token.get('sub') != username:

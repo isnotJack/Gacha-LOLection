@@ -7,6 +7,9 @@ WORKDIR /app
 # Copia il file requirements.txt e installa le dipendenze
 COPY . /app
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade setuptools
+RUN apt-get update && apt-get install -y postgresql-15
+RUN pip install --upgrade pip
 
 # Copia tutto il codice sorgente del servizio
 # COPY . .
