@@ -60,7 +60,7 @@ services:
       - ./RSAkeys:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
     environment:
       - DATABASE_URI=postgresql://user:password@auth_db:5432/auth_db
-      - JWT_SECRET_KEY=super-secret-key
+      #- JWT_SECRET_KEY=super-secret-key
       - PRIVATE_KEY_PATH=/app/RSAkeys/private_key.pem
       - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
     depends_on:
@@ -90,7 +90,7 @@ services:
       - profile_key
     environment:
       - DATABASE_URI=postgresql://user:password@profile_db:5432/profile_db
-      - JWT_SECRET_KEY=super-secret-key
+      #- JWT_SECRET_KEY=super-secret-key
       - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
     depends_on:
       - profile_db
@@ -150,7 +150,7 @@ services:
     environment:
       - DATABASE_URI=postgresql://user:password@db_payment:5432/trans_db
       - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
-      - JWT_SECRET_KEY=super-secret-key
+     # - JWT_SECRET_KEY=super-secret-key
     depends_on:
       - db_payment
 
@@ -195,7 +195,7 @@ services:
     environment:
       - DATABASE_URI=postgresql://user:password@auction_db:5432/auction_db
       - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
-      - JWT_SECRET_KEY=super-secret-key
+      #- JWT_SECRET_KEY=super-secret-key
     depends_on:
       - auction_db
 volumes:
