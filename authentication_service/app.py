@@ -217,7 +217,7 @@ def login():
         payload = {
             "iss": "https://auth_service:5002",      # Emittente
             "sub": user.username,              # Soggetto
-            "aud": ["profile_setting", "gachasystem", "payment_service", "gacha_roll", "auction_service"],         
+            "aud": ["profile_setting", "gachasystem", "payment_service", "gacha_roll", "auction_service", "auth_service"],         
             "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
             "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),  # Expiration
             "scope": scope,                   # Scopi
@@ -303,7 +303,7 @@ def delete_account():
 
     try:
         # Verifica il token con la chiave pubblica
-        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="gacha_roll")  
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auth_service")  
         #print(f"Token verificato! Dati decodificati: {decoded_token}")
         if 'username' in data and decoded_token.get("sub") != data['username']:
             return jsonify({"error": "Username in token does not match the request username"}), 403
@@ -380,7 +380,7 @@ def newToken():
         payload = {
             "iss": "https://auth_service:5002",      # Emittente
             "sub": decoded_token.get("sub"),              # Soggetto
-            "aud": ["profile_setting", "gachasystem", "payment_service", "gacha_roll", "auction_service"],         
+            "aud": ["profile_setting", "gachasystem", "payment_service", "gacha_roll", "auction_service", "auth_service"],         
             "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
             "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),  # Expiration
             "scope": decoded_token.get("scope"),                   # Scopi
