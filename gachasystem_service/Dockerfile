@@ -12,6 +12,9 @@ COPY meme_images /app/static/uploads
 
 # Installa le dipendenze
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade setuptools
+RUN apt-get update && apt-get install -y postgresql-15
+RUN pip install --upgrade pip
 
 # Imposta le variabili d'ambiente
 ENV FLASK_APP=app.py
