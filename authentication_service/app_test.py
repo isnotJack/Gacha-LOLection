@@ -13,7 +13,7 @@ import uuid
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@auth_db:5432/auth_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'super-secret-key'
+#app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 
 private_key_path = os.getenv("PRIVATE_KEY_PATH")
 public_key_path = os.getenv("PUBLIC_KEY_PATH")

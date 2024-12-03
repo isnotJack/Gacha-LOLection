@@ -14,7 +14,7 @@ import re
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@profile_db:5432/profile_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'super-secret-key'
+#app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 
 public_key_path = os.getenv("PUBLIC_KEY_PATH")
 
