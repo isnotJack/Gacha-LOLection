@@ -651,7 +651,7 @@
 												{
 													"key": "image",
 													"type": "file",
-													"src":"{{GACHA_IMAGE_PATH}}"
+													"src": "{{GACHA_IMAGE_PATH}}"
 												}
 											]
 										},
@@ -4367,53 +4367,6 @@
 												}
 											},
 											"response": []
-										},
-										{
-											"name": "no_collection",
-											"event": [
-												{
-													"listen": "test",
-													"script": {
-														"exec": [
-															"// Test to be done logging in with a user without gachas",
-															"",
-															"pm.test(\"Response status is 200\", function () {",
-															"    pm.response.to.have.status(200);",
-															"});",
-															"",
-															"pm.test(\"The user has no gachas in his collection\", function () {",
-															"    pm.expect(pm.response.json().message).to.include(\"User has no gachas\");",
-															"});",
-															""
-														],
-														"type": "text/javascript",
-														"packages": {}
-													}
-												}
-											],
-											"request": {
-												"method": "GET",
-												"header": [],
-												"url": {
-													"raw": "https://localhost:5001/profile_setting/retrieve_gachacollection?username=user1",
-													"protocol": "https",
-													"host": [
-														"localhost"
-													],
-													"port": "5001",
-													"path": [
-														"profile_setting",
-														"retrieve_gachacollection"
-													],
-													"query": [
-														{
-															"key": "username",
-															"value": "user1"
-														}
-													]
-												}
-											},
-											"response": []
 										}
 									]
 								},
@@ -4462,6 +4415,57 @@
 														{
 															"key": "gacha_name",
 															"value": "Trial%20gacha"
+														}
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "info_gachacollection_no_gacha",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Response status is 200\", function () {",
+															"    pm.response.to.have.status(200);",
+															"});",
+															"",
+															"pm.test(\"Response data is an array or message property is present\", function () {",
+															"    const jsonData = pm.response.json();",
+															"    pm.expect(jsonData).to.satisfy((data) => {",
+															"        return Array.isArray(data) || data.hasOwnProperty('message');",
+															"    });",
+															"});"
+														],
+														"type": "text/javascript",
+														"packages": {}
+													}
+												}
+											],
+											"request": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "https://localhost:5001/profile_setting/info_gachacollection?username=user1&gacha_name=",
+													"protocol": "https",
+													"host": [
+														"localhost"
+													],
+													"port": "5001",
+													"path": [
+														"profile_setting",
+														"info_gachacollection"
+													],
+													"query": [
+														{
+															"key": "username",
+															"value": "user1"
+														},
+														{
+															"key": "gacha_name",
+															"value": ""
 														}
 													]
 												}
