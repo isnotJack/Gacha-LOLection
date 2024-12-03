@@ -407,10 +407,14 @@ def bid_for_auction():
     auction_id = request.args.get('auction_id')
     new_bid = request.args.get('newBid')
     
-    if not isinstance(auction_id, (int, float)):
-        return jsonify({"error": "auction id must be int"}), 400
-    if not isinstance(new_bid, (int, float)):
-        return jsonify({"error": "new bid must be int or float"}), 400
+    try:
+        auction_id = int(auction_id)  # Prova a convertire auction_id in int
+    except (TypeError, ValueError):
+        return jsonify({"error": "auction_id must be an integer"}), 400
+    try:
+        new_bid = float(new_bid)  # Prova a convertire new_bid in float
+    except (TypeError, ValueError):
+        return jsonify({"error": "newBid must be a float"}), 400
 
     # Controlla che il ruolo dell'utente sia corretto
     if decoded_token.get('sub') != bidder_username:
