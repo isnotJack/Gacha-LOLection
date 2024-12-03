@@ -66,54 +66,43 @@ def pay():
     except ValueError:
         return jsonify({'Error': 'Invalid amount'}), 400
 
-    payer_balance = Balance.query.filter_by(username=payer_us).first()
-    receiver_balance = Balance.query.filter_by(username=receiver_us).first()
 
-    if not payer_balance:
-        return jsonify({'Error': f'Payer user "{payer_us}" not found'}), 404
-
-    if receiver_us != "system" and not receiver_balance:
+    if payer_us != 'system':
+        payer_balance = Balance.query.filter_by(username=payer_us).first()
+        if not payer_balance:
+            return jsonify({'Error': f'Payer user "{payer_us}" not found'}), 404
+    if receiver_us != 'system':
+        receiver_balance = Balance.query.filter_by(username=receiver_us).first()
+        if not receiver_balance:
             return jsonify({'Error': f'Receiver user "{receiver_us}" not found'}), 404
 
+
     # Controlla che il saldo del pagatore sia sufficiente
-    if payer_balance.balance >= amount:
-        # Inserisci una nuova transazione nel database
-        new_transaction = Transaction(
-            payer_us=payer_us,
-            receiver_us=receiver_us,
-            amount=amount,
-            currency='Memecoins',
-            date=datetime.now()
-        )
-        db.session.add(new_transaction)
-
-        # Scala i soldi dal saldo del pagatore e aggiungili a quello del ricevente
-        payer_balance.balance -= amount
-        if receiver_us != "system":
-            receiver_balance.balance += amount
-
-        try:
-            db.session.commit()
-            return jsonify({'msg': 'Payment successfully executed'}), 200
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            return jsonify({'Error': 'Transaction failed', 'details': str(e)}), 500
-    else:
+    if payer_us!= 'system' and payer_balance.balance < amount:
         return jsonify({'Error': 'Balance not sufficient to carry out the operation'}), 422
+    # Inserisci una nuova transazione nel database
+    new_transaction = Transaction(
+        payer_us=payer_us,
+        receiver_us=receiver_us,
+        amount=amount,
+        currency='Memecoins',
+        date=datetime.now()
+    )
+    db.session.add(new_transaction)
 
-#  # Commit with 3 re-try before failure
-#         for attempt in range(3):
-#             try:
-#                 db.session.commit()
-#                 return jsonify({'msg': 'Payment successfully executed'}), 200
-#             except SQLAlchemyError as e:
-#                 db.session.rollback()
-#                 if attempt < 3 - 1:  # Se non è l'ultimo tentativo
-#                     time.sleep(1)   # Aspetta prima di riprovare
-#                 else:  # Dopo l'ultimo tentativo, ritorna un errore
-#                     return jsonify({'Error': 'Transaction failed after retries', 'details': str(e)}), 500
-#         return jsonify({'msg': 'Payment successfully executed'}), 200
+    # Scala i soldi dal saldo del pagatore e aggiungili a quello del ricevente
+    if payer_us != "system":
+        payer_balance.balance -= amount
+    if receiver_us != "system":
+        receiver_balance.balance += amount
 
+    try:
+        db.session.commit()
+        return jsonify({'msg': 'Payment successfully executed'}), 200
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({'Error': 'Transaction failed', 'details': str(e)}), 500
+ 
 
 @app.route('/buycurrency', methods = ['POST'])
 def buycurrency():
