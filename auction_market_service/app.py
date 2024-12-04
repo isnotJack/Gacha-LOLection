@@ -216,12 +216,12 @@ def see_auctions():
     # Token valido, procedi con la logica originale
     auction_id = request.args.get('auction_id')
     status = request.args.get('status', 'active')
-    try:
-        auction_id = int(auction_id)  # Prova a convertire auction_id in int
-    except (TypeError, ValueError):
-        return jsonify({"error": "auction_id must be an integer"}), 400
     
     if auction_id:
+        try:
+            auction_id = int(auction_id)  # Prova a convertire auction_id in int
+        except (TypeError, ValueError):
+            return jsonify({"error": "auction_id must be an integer"}), 400
         auction = Auction.query.get(auction_id)
         if auction:
             return jsonify(auction.to_dict()), 200
