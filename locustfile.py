@@ -47,27 +47,50 @@ class GachaUser(HttpUser):
             self.jwt_token = login_response.json().get("access_token")
             self.refresh_token = login_response.json().get("refresh_token")
 
-    # @task(1)
-    # def delete_account(self):
-    #     headers = {
-    #         'Authorization': f"Bearer {self.jwt_token}"  # Autenticazione tramite il token
-    #     }
-    #     params = {
-    #         'username': self.username,  # Passa il nome utente come parametro
-    #         'password': self.password
-    #     }
+    @task(2)
+    def delete_account(self):
+        headers = {
+            'Authorization': f"Bearer {self.jwt_token}"  # Autenticazione tramite il token
+        }
+        params = {
+            'username': self.username,  # Passa il nome utente come parametro
+            'password': self.password
+        }
 
-    #     # Effettua la chiamata al gateway per eliminare l'account
-    #     response = self.client.delete("/auth_service/delete", params=params, verify=False, headers=headers, name="Delete Account Endpoint")
+        # Effettua la chiamata al gateway per eliminare l'account
+        response = self.client.delete("/auth_service/delete", data=params, verify=False, headers=headers, name="Delete Account Endpoint")
 
-    #     if response.status_code != 200:
-    #         print(f"Errore durante l'eliminazione dell'account '{self.username}': {response.text}")
-    #     else:
-    #         self.stop()
-            
+        if response.status_code != 200:
+            print(f"Error in the elimination of the account '{self.username}': {response.text}")
+            if response.status_code == 401:
+                # chiamata alla route newToken passando refresh token
+                headers = {
+                    'Authorization': f"Bearer {self.refresh_token}"  # Passa l'attuale JWT come Authorization header
+                }
+                refresh_response = self.client.post("/auth_service/newToken", verify=False, headers=headers, name="Refresh Token Endpoint")
+                if refresh_response.status_code == 200:
+                    # Aggiorna il token JWT
+                    self.jwt_token = refresh_response.json().get("access_token")
+                    headers = {
+                        'Authorization': f"Bearer {self.jwt_token}"
+                    }
+                    # nuovo tentativo
+                    response = self.client.delete("/auth_service/delete", data=params, verify=False, headers=headers, name="Delete Account Endpoint")
+                    if response.status_code != 200:
+                        print(f"Error retrying to eliminate the account '{self.username}': {response.text}")
+                else: 
+                    print(f"Error during access_token refresh: {refresh_response.text}")
+                    self.stop()
+        else:
+            headers = {
+                "Authorization": f"Bearer {self.refresh_token}"
+            }
+            response = self.client.delete("/auth_service/logout", verify=False, headers=headers, name="Logout Endpoint")
+            if response.status_code != 200:
+                print(f"Error during logout: {response.text}")
+            self.stop()
 
-
-    @task(1)
+    @task(5)
     def modify_profile_image (self):
         # task che permette di modificare l'immagine del profilo dell'utente
         # Percorso dell'immagine da caricare
@@ -97,7 +120,7 @@ class GachaUser(HttpUser):
                         headers = {
                             'Authorization': f"Bearer {self.refresh_token}"  # Passa l'attuale JWT come Authorization header
                         }
-                        refresh_response = self.client.post("/auth_service/newToken", headers=headers, name="Refresh Token Endpoint")
+                        refresh_response = self.client.post("/auth_service/newToken", verify=False, headers=headers, name="Refresh Token Endpoint")
                         if refresh_response.status_code == 200:
                             # Aggiorna il token JWT
                             self.jwt_token = refresh_response.json().get("access_token")
@@ -114,7 +137,7 @@ class GachaUser(HttpUser):
         else:
             print(f"error: file {image_path} not found.")
 
-    @task(1)
+    @task(5)
     def modify_profile_email(self):
         # Task per modificare l'email dell'utente
         random_number = random.randint(0,99)
@@ -142,7 +165,7 @@ class GachaUser(HttpUser):
                 headers = {
                     'Authorization': f"Bearer {self.refresh_token}"  # Passa l'attuale JWT come Authorization header
                 }
-                refresh_response = self.client.post("/auth_service/newToken", headers=headers, name="Refresh Token Endpoint")
+                refresh_response = self.client.post("/auth_service/newToken", verify=False, headers=headers, name="Refresh Token Endpoint")
                 if refresh_response.status_code == 200:
                     # Aggiorna il token JWT
                     self.jwt_token = refresh_response.json().get("access_token")
@@ -157,7 +180,7 @@ class GachaUser(HttpUser):
                     print(f"Error during access_token refresh: {refresh_response.text}")
                     self.stop()
 
-    @task(1)
+    @task(5)
     def check_profile(self):
         params = {
             "username": self.username
@@ -173,7 +196,7 @@ class GachaUser(HttpUser):
                 headers = {
                     'Authorization': f"Bearer {self.refresh_token}"  # Passa l'attuale JWT come Authorization header
                 }
-                refresh_response = self.client.post("/auth_service/newToken", headers=headers, name="Refresh Token Endpoint")
+                refresh_response = self.client.post("/auth_service/newToken", verify=False, headers=headers, name="Refresh Token Endpoint")
                 if refresh_response.status_code == 200:
                     # Aggiorna il token JWT
                     self.jwt_token = refresh_response.json().get("access_token")
@@ -188,7 +211,7 @@ class GachaUser(HttpUser):
                     print(f"Error during access_token refresh: {refresh_response.text}")
                     self.stop()
 
-    @task(1)
+    @task(5)
     def info_gachacollection(self):
         headers = {
             'Authorization': f"Bearer {self.jwt_token}"  # Autenticazione tramite il token
@@ -205,7 +228,7 @@ class GachaUser(HttpUser):
                 headers = {
                     'Authorization': f"Bearer {self.refresh_token}"  # Passa l'attuale JWT come Authorization header
                 }
-                refresh_response = self.client.post("/auth_service/newToken", headers=headers, name="Refresh Token Endpoint")
+                refresh_response = self.client.post("/auth_service/newToken", verify=False, headers=headers, name="Refresh Token Endpoint")
                 if refresh_response.status_code == 200:
                     # Aggiorna il token JWT
                     self.jwt_token = refresh_response.json().get("access_token")
@@ -220,7 +243,7 @@ class GachaUser(HttpUser):
                     self.stop()
 
 
-    @task(1)
+    @task(5)
     def buy_currency(self):
         """
         This task simulates the purchase of currency
@@ -242,7 +265,7 @@ class GachaUser(HttpUser):
                 headers = {
                     'Authorization': f"Bearer {self.refresh_token}"  # Passa l'attuale JWT come Authorization header
                 }
-                refresh_response = self.client.post("/auth_service/newToken", headers=headers, name="Refresh Token Endpoint")
+                refresh_response = self.client.post("/auth_service/newToken", verify=False, headers=headers, name="Refresh Token Endpoint")
                 if refresh_response.status_code == 200:
                     # Aggiorna il token JWT
                     self.jwt_token = refresh_response.json().get("access_token")
@@ -257,7 +280,7 @@ class GachaUser(HttpUser):
                     print(f"Error during access_token refresh: {refresh_response.text}")
                     self.stop()
 
-    @task(1)
+    @task(5)
     def roll(self):
         """
         This task simulates performing a roll in the game.
@@ -278,7 +301,7 @@ class GachaUser(HttpUser):
                 headers = {
                     'Authorization': f"Bearer {self.refresh_token}"  # Passa l'attuale JWT come Authorization header
                 }
-                refresh_response = self.client.post("/auth_service/newToken", headers=headers, name="Refresh Token Endpoint")
+                refresh_response = self.client.post("/auth_service/newToken", verify=False, headers=headers, name="Refresh Token Endpoint")
                 if refresh_response.status_code == 200:
                     # Aggiorna il token JWT
                     self.jwt_token = refresh_response.json().get("access_token")
@@ -293,7 +316,7 @@ class GachaUser(HttpUser):
                     print(f"Error during access_token refresh: {refresh_response.text}")
                     self.stop()
 
-    @task(1)
+    @task(5)
     def create_auction(self):
         # 1. Recupera la lista dei gacha posseduti dall'utente
         headers = {
@@ -330,7 +353,7 @@ class GachaUser(HttpUser):
                         headers = {
                             'Authorization': f"Bearer {self.refresh_token}"  # Passa l'attuale JWT come Authorization header
                         }
-                        refresh_response = self.client.post("/auth_service/newToken", headers=headers, name="Refresh Token Endpoint")
+                        refresh_response = self.client.post("/auth_service/newToken", verify=False, headers=headers, name="Refresh Token Endpoint")
                         if refresh_response.status_code == 200:
                             # Aggiorna il token JWT
                             self.jwt_token = refresh_response.json().get("access_token")
@@ -355,7 +378,7 @@ class GachaUser(HttpUser):
                 headers = {
                     'Authorization': f"Bearer {self.refresh_token}"  # Passa l'attuale JWT come Authorization header
                 }
-                refresh_response = self.client.post("/auth_service/newToken", headers=headers, name="Refresh Token Endpoint")
+                refresh_response = self.client.post("/auth_service/newToken", verify=False, headers=headers, name="Refresh Token Endpoint")
                 if refresh_response.status_code == 200:
                     # Aggiorna il token JWT
                     self.jwt_token = refresh_response.json().get("access_token")
@@ -385,13 +408,15 @@ class GachaUser(HttpUser):
                                 print(f"Auction created successfully for gacha '{gacha_name}'")
                             else:
                                 print(f"Failed to create auction: {auction_response.text}")
+                        else:
+                            print("No gacha found in the collection.")
                     else:
                         print(f"Failed retrying to retrieve gacha collection: {response.text}")
                 else:
                     print(f"Error during access_token refresh: {refresh_response.text}")
                     self.stop()
         
-    @task(1)
+    @task(5)
     def bid_auction(self):
         # Prima otteniamo la lista di tutte le aste attive
         headers = {
@@ -406,11 +431,11 @@ class GachaUser(HttpUser):
             if active_auctions:
                 # Scegliamo un'asta casuale dalla lista
                 selected_auction = random.choice(active_auctions)
-                auction_id = selected_auction.get('auction_id')
+                auction_id = selected_auction.get('id')
                 seller_username = selected_auction.get('seller_username')
                 gacha_name = selected_auction.get('gacha_name')
-                base_price = float(selected_auction.get('basePrice'))
-                current_bid = float(selected_auction.get('current_bid'))
+                base_price = selected_auction.get('base_price')
+                current_bid = selected_auction.get('current_bid')
 
                 # Print per debug
                 print(f"Selected auction ID: {auction_id}, Gacha Name: {gacha_name}, Current Bid: {current_bid}")
@@ -435,15 +460,13 @@ class GachaUser(HttpUser):
 
                     # Verifica che la risposta della bid sia positiva
                     if bid_response.status_code != 200:
-                    #     print(f"Bid placed successfully on auction {auction_id} for {bid_amount} coins")
-                    # else:
                         print(f"Failed to place bid on auction {auction_id}: {bid_response.text}")
                         if bid_response.status_code == 401:
                             # chiamata alla route newToken passando refresh token
                             headers = {
                                 'Authorization': f"Bearer {self.refresh_token}"  # Passa l'attuale JWT come Authorization header
                             }
-                            refresh_response = self.client.post("/auth_service/newToken", headers=headers, name="Refresh Token Endpoint")
+                            refresh_response = self.client.post("/auth_service/newToken", verify=False, headers=headers, name="Refresh Token Endpoint")
                             if refresh_response.status_code == 200:
                                 # Aggiorna il token JWT
                                 self.jwt_token = refresh_response.json().get("access_token")
@@ -467,7 +490,7 @@ class GachaUser(HttpUser):
                 headers = {
                     'Authorization': f"Bearer {self.refresh_token}"  # Passa l'attuale JWT come Authorization header
                 }
-                refresh_response = self.client.post("/auth_service/newToken", headers=headers, name="Refresh Token Endpoint")
+                refresh_response = self.client.post("/auth_service/newToken", verify=False, headers=headers, name="Refresh Token Endpoint")
                 if refresh_response.status_code == 200:
                     # Aggiorna il token JWT
                     self.jwt_token = refresh_response.json().get("access_token")
@@ -501,13 +524,13 @@ class GachaUser(HttpUser):
                                 "auction_id": auction_id,
                                 "newBid": bid_amount
                             }
+                            if self.username != seller_username:
+                                # Chiamata per fare un bid sull'asta selezionata
+                                bid_response = self.client.patch("/auction_service/bid", params=bid_data, verify=False, headers=headers, name="Bid on Auction Endpoint")
 
-                            # Chiamata per fare un bid sull'asta selezionata
-                            bid_response = self.client.patch("/auction_service/bid", params=bid_data, verify=False, headers=headers, name="Bid on Auction Endpoint")
-
-                            # Verifica che la risposta della bid sia positiva
-                            if bid_response.status_code != 200:
-                                print(f"Failed to place bid on auction {auction_id}: {bid_response.text}")
+                                # Verifica che la risposta della bid sia positiva
+                                if bid_response.status_code != 200:
+                                    print(f"Failed to place bid on auction {auction_id}: {bid_response.text}")
                         else:
                             print("No active auctions found.")
                     else:
@@ -516,12 +539,12 @@ class GachaUser(HttpUser):
                     print(f"Error during access_token refresh: {refresh_response.text}")
                     self.stop()
 
-
-    def on_stop(self):
-        # logout
+    @task(3)
+    def logout(self):
         headers = {
                 "Authorization": f"Bearer {self.refresh_token}"
         }
         response = self.client.delete("/auth_service/logout", verify=False, headers=headers, name="Logout Endpoint")
         if response.status_code != 200:
             print(f"Error during logout: {response.text}")
+        self.stop()
