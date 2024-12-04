@@ -386,6 +386,11 @@ def buycurrency():
     username = request.form.get('username')
     amount = request.form.get('amount')
     method = request.form.get('payment_method')
+    try:
+            amount = int(amount)  # Prova a convertire 
+    except (TypeError, ValueError):
+            return jsonify({"error": "amount must be an integer"}), 400
+
     jwt_token = request.headers.get('Authorization')
     headers = {
         'Authorization' : jwt_token

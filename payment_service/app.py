@@ -111,8 +111,8 @@ def buycurrency():
     amount = data.get('amount')
     method = sanitize_input(data.get('payment_method'))
 
-    # if not isinstance(amount, (int, float)):
-    #     return jsonify({"error": "amount must be int or float"}), 400
+    if not isinstance(amount, (int, float)):
+         return jsonify({"error": "amount must be int or float"}), 400
 
     # Recupera l'header Authorization
     auth_header = request.headers.get('Authorization')
