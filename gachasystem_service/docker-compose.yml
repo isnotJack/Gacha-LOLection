@@ -1,0 +1,24 @@
+services:
+  gachasystem:
+    build: 
+      context: . 
+      dockerfile: Dockerfile_test
+    volumes:
+      - ./meme_images:/app/static/uploads  # Monta il volume nella cartella del server per contenere le immagini dei memes
+      - ../RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
+    ports:
+      - "5004:5004" # mappa la porta del container 5001 (destra) sulla stessa porta dell'host
+    secrets:
+      - gachasystem_cert
+      - gachasystem_key
+    environment:
+      - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
+
+
+volumes:
+  gachasystem_data:
+secrets:
+  gachasystem_cert:
+    file: ./gachasystem_cert.pem
+  gachasystem_key:
+    file: ./gachasystem_key.pem
