@@ -265,6 +265,14 @@ def create_auction():
     base_price = data.get('basePrice')
     end_date = data.get('endDate')
 
+      # Controlla che tutti i parametri siano forniti
+    if not all([seller_username, gacha_name, base_price, end_date]):
+        return jsonify({"error": "Missing required parameters"}), 400
+    
+         # Controlla che base_price sia un numero valido
+    if not isinstance(base_price, (int, float)) or base_price <= 0:
+        return jsonify({"error": "Base price must be a positive number"}), 400
+    
     sanitized_value = float(base_price)
     if sanitized_value <= 0:
         return jsonify({"error": "base price must be higher than"}), 400
@@ -276,14 +284,6 @@ def create_auction():
     if existing_auction:
         return jsonify({"error": "An active auction already exists for this gatcha"}), 400
 
-
-    # Controlla che tutti i parametri siano forniti
-    if not all([seller_username, gacha_name, base_price, end_date]):
-        return jsonify({"error": "Missing required parameters"}), 400
-    
-        # Controlla che base_price sia un numero valido
-    if not isinstance(base_price, (int, float)) or base_price <= 0:
-        return jsonify({"error": "Base price must be a positive number"}), 400
 
     # Controlla che end_date sia una data valida e futura
     try:
@@ -410,6 +410,10 @@ def bid_for_auction():
     bidder_username = sanitize_input(request.args.get('username'))
     auction_id = request.args.get('auction_id')
     new_bid = request.args.get('newBid')
+
+        # Controlla che tutti i parametri siano presenti
+    if not all([bidder_username, auction_id, new_bid]):
+        return jsonify({"error": "Missing required parameters"}), 400
     
     try:
         auction_id = int(auction_id)  # Prova a convertire auction_id in int
@@ -424,9 +428,6 @@ def bid_for_auction():
     if decoded_token.get('sub') != bidder_username:
         return jsonify({"error": "Unauthorized access, only the bidder can create a bid for the auction"}), 403
 
-    # Controlla che tutti i parametri siano presenti
-    if not all([bidder_username, auction_id, new_bid]):
-        return jsonify({"error": "Missing required parameters"}), 400
 
     # Trova l'asta corrispondente
     auction = Auction.query.get(auction_id)
@@ -443,12 +444,14 @@ def bid_for_auction():
     if auction.winner_username == bidder_username:
         return jsonify({"error": "You are already the highest bidder"}), 400
 
+    
+    if new_bid <= auction.base_price:
+        return jsonify({"error": "Bid must be higher than the base_price"}), 400
+    
     # Controlla che l'offerta sia valida
     if new_bid <= auction.current_bid:
         return jsonify({"error": "Bid must be higher than the current bid"}), 400
     
-    if new_bid <= auction.base_price:
-        return jsonify({"error": "Bid must be higher than the base_price"}), 400
 
     # Trova l'offerta precedente dell'utente per questa asta
     previous_bid = Bid.query.filter_by(auction_id=auction_id, username=bidder_username).first()
@@ -614,10 +617,11 @@ def auction_terminated():
     # Recupera i parametri dal corpo JSON
     data = request.get_json()
     auction_id = data.get('auction_id')
-    if not isinstance(auction_id, (int, float)):
-        return jsonify({"error": "auction id must be int or float"}), 400
     if not auction_id:
         return jsonify({"error": "Missing auction_id"}), 400
+    if not isinstance(auction_id, (int, float)):
+        return jsonify({"error": "auction id must be int or float"}), 400
+    
 
     # Trova l'asta corrispondente
     auction = Auction.query.get(auction_id)
