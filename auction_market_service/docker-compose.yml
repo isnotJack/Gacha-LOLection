@@ -1,0 +1,25 @@
+
+
+services:
+  auction_service:
+    build:
+      context: . 
+      dockerfile: Dockerfile_test
+    ports:
+      - "5008:5008"
+    secrets:
+      - auction_cert
+      - auction_key
+    volumes:
+      - ../RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
+    environment:
+      - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
+
+volumes:
+  auction_data:
+secrets:
+  auction_cert:
+    file: ./auction_cert.pem
+  auction_key:
+    file: ./auction_key.pem
+  
