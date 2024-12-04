@@ -404,6 +404,9 @@ def create_profile():
     if not email:
         return jsonify({"error": "Missing 'email' parameter"}), 400 
     
+    if not isinstance(currency_balance, (int, float)):
+        return jsonify({"error": "currency_balance must be int or float"}), 400
+    
     # Percorso immagine predefinita
     default_image_path = os.path.join(app.config['UPLOAD_FOLDER'], 'DefaultProfileIcon.jpg')
 
