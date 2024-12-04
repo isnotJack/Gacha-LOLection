@@ -1,0 +1,22 @@
+services:
+  payment_service:
+    build:
+      context: . 
+      dockerfile: Dockerfile_test
+    ports:
+      - "5006:5006"
+    volumes:
+      - ../RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
+    secrets:
+      - payment_cert
+      - payment_key
+    environment:
+      - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
+
+volumes:
+  payment_data:
+secrets:
+  payment_cert:
+    file: ./payment_cert.pem
+  payment_key:
+    file: ./payment_key.pem
