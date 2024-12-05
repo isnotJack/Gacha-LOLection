@@ -52,12 +52,14 @@ jobs:
       - name: Run unit tests for service
         run: |
           export filePath=${{ github.workspace }}/meme_images/meme2.jpg
+          export filePathW=${{ github.workspace }}/meme_images/meme2.svg
           cd ${{ matrix.service }}
 
           # Esegui i test specifici per il microservizio
           newman run ./${{ matrix.service }}.postman_collection.json \
             --environment ./environment.postman_environment.json \
             --env-var "GACHA_IMAGE_PATH=$filePath" \
+            --env-var "GACHA_IMAGE_PATH_WRONG=$filePathW" \
             --insecure \
             --reporters cli,html \
             --reporter-html-export unit-test-${{ matrix.service }}.html

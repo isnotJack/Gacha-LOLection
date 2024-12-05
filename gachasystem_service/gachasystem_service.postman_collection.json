@@ -370,7 +370,7 @@
 										{
 											"key": "image",
 											"type": "file",
-											"src": "gacha.svg"
+											"src": "{{GACHA_IMAGE_PATH_WRONG}}"
 										}
 									]
 								},
