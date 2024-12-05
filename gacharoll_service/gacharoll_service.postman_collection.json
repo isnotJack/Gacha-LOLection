@@ -1,0 +1,228 @@
+{
+	"info": {
+		"_postman_id": "689b9837-3826-4c6d-8b2a-faa701ef3fb9",
+		"name": "Gacha_roll",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39572565",
+		"_collection_link": "https://sse888.postman.co/workspace/SSE-Workspace~ba3287da-3f46-4d53-b9ae-99dcb913c461/collection/39572565-689b9837-3826-4c6d-8b2a-faa701ef3fb9?action=share&source=collection_link&creator=39572565"
+	},
+	"item": [
+		{
+			"name": "gacha_roll",
+			"item": [
+				{
+					"name": "gacharoll_ok",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Gacha details include name, description, rarity, image, and collected date\", function () {",
+									"    var gachaDetails = pm.response.json();",
+									"    pm.expect(gachaDetails).to.have.property('gacha_name');",
+									"    pm.expect(gachaDetails).to.have.property('description');",
+									"    pm.expect(gachaDetails).to.have.property('rarity');",
+									"    pm.expect(gachaDetails).to.have.property('img');",
+									"    pm.expect(gachaDetails).to.have.property('collected_date');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"user1\",\n    \"level\": \"standard!!!!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:5007/gacharoll",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "5007",
+							"path": [
+								"gacharoll"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "gacharoll_MissingParam",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code 400 for parameter missing\", function () {",
+									"  pm.response.to.have.status(400);",
+									"  pm.expect(pm.response.json().error).to.include(\"Missing 'username' or 'level' parameter\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"level\": \"standard\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:5007/gacharoll",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "5007",
+							"path": [
+								"gacharoll"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "gacharoll_InvalidPacketLevel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code 400 for invalid packet level\", function () {",
+									"  pm.response.to.have.status(400);",
+									"  pm.expect(pm.response.json().error).to.include(\"Invalid level parameter\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"user1\",\n    \"level\": \"aaa\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:5007/gacharoll",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "5007",
+							"path": [
+								"gacharoll"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "gacharoll_BadUser",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code 403 for bad user\", function () {",
+									"  pm.response.to.have.status(403);",
+									"  pm.expect(pm.response.json()).to.have.property(\"error\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"aaaa\",\n    \"level\": \"standard\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:5007/gacharoll",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "5007",
+							"path": [
+								"gacharoll"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "valid_token",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	]
+}

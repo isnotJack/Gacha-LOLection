@@ -1,0 +1,1224 @@
+{
+	"info": {
+		"_postman_id": "4f44b2b3-4a41-43ef-92d4-789ef2b0ae90",
+		"name": "Payment",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39572565",
+		"_collection_link": "https://sse888.postman.co/workspace/SSE-Workspace~ba3287da-3f46-4d53-b9ae-99dcb913c461/collection/39572565-4f44b2b3-4a41-43ef-92d4-789ef2b0ae90?action=share&source=collection_link&creator=39572565"
+	},
+	"item": [
+		{
+			"name": "payment",
+			"item": [
+				{
+					"name": "buycurrency",
+					"item": [
+						{
+							"name": "buycur_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify buycurrency\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('msg');\r",
+											"    pm.expect(pm.response.to.have.status(200));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\" : \"user1\",\r\n    \"amount\" : 100,\r\n    \"payment_method\" : \"card\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5006/buycurrency",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"buycurrency"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "buycur_not_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify buycurrency\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\" : \"\",\r\n    \"amount\" : 100,\r\n    \"payment_method\" : \"card\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5006/buycurrency",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"buycurrency"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "buycur_not_amount",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify buycurrency\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\" : \"user1\",\r\n    \"payment_method\" : \"card\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5006/buycurrency",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"buycurrency"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "buycur_not_method",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify buycurrency\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\":\"user1\",\r\n    \"amount\" : 100,\r\n    \"payment_method\" : \"\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5006/buycurrency",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"buycurrency"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "buycur_bad_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify buycurrency\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('error');\r",
+											"    pm.expect(pm.response.to.have.status(403));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\" : \"player\",\r\n    \"amount\": 100,\r\n    \"payment_method\" : \"card\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5006/buycurrency",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"buycurrency"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Pay",
+					"item": [
+						{
+							"name": "payOk",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify payment using payer_us, receiver_us and amount\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('msg');\r",
+											"    pm.expect(pm.response.to.have.status(200));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "payer_us",
+											"value": "player2",
+											"type": "text"
+										},
+										{
+											"key": "receiver_us",
+											"value": "player1",
+											"type": "text"
+										},
+										{
+											"key": "amount",
+											"value": "20",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5006/pay",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"pay"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pay_no_payer",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify payment using payer_us, receiver_us and amount\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "payer_us",
+											"value": "",
+											"type": "text"
+										},
+										{
+											"key": "receiver_us",
+											"value": "user2",
+											"type": "text"
+										},
+										{
+											"key": "amount",
+											"value": "20",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5006/pay",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"pay"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pay_no_receiver",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify payment using payer_us, receiver_us and amount\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "payer_us",
+											"value": "user1",
+											"type": "text"
+										},
+										{
+											"key": "receiver_us",
+											"value": "",
+											"type": "text"
+										},
+										{
+											"key": "amount",
+											"value": "20",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5006/pay",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"pay"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pay_no_amount",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify payment using payer_us, receiver_us and amount\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "payer_us",
+											"value": "user1",
+											"type": "text"
+										},
+										{
+											"key": "receiver_us",
+											"value": "user2",
+											"type": "text"
+										},
+										{
+											"key": "amount",
+											"value": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5006/pay",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"pay"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pay_bad_payer",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify payment using payer_us, receiver_us and amount\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(404));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "payer_us",
+											"value": "not_found",
+											"type": "text"
+										},
+										{
+											"key": "receiver_us",
+											"value": "user2",
+											"type": "text"
+										},
+										{
+											"key": "amount",
+											"value": "20",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5006/pay",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"pay"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pay_bad_receiver",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify payment using payer_us, receiver_us and amount\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(404));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "payer_us",
+											"value": "user1",
+											"type": "text"
+										},
+										{
+											"key": "receiver_us",
+											"value": "not_found",
+											"type": "text"
+										},
+										{
+											"key": "amount",
+											"value": "20",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5006/pay",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"pay"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pay_not_sufficient_amount",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify payment using payer_us, receiver_us and amount\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(422));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "payer_us",
+											"value": "user1",
+											"type": "text"
+										},
+										{
+											"key": "receiver_us",
+											"value": "user2",
+											"type": "text"
+										},
+										{
+											"key": "amount",
+											"value": "1000000",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5006/pay",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"pay"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "viewTrans",
+					"item": [
+						{
+							"name": "view_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify viewTrans with username\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.be.an('array');\r",
+											"    pm.expect(pm.response.to.have.status(200));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5006/viewTrans?username=user1",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"viewTrans"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "user1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "view_no_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify viewTrans with username\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property(\"Error\")\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5006/viewTrans?username=",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"viewTrans"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "view_bad_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify viewTrans with username\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('error');\r",
+											"    pm.expect(pm.response.to.have.status(403));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5006/viewTrans?username=player",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"viewTrans"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "player"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "getBalance",
+					"item": [
+						{
+							"name": "getBalance_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Trying to get the balance\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('username');\r",
+											"    pm.expect(pm.response.to.have.status(200));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5006/getBalance?username=user1",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"getBalance"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "user1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getBalance_not_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Trying to get the balance\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5006/getBalance?username=",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"getBalance"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "newBalance",
+					"item": [
+						{
+							"name": "newBalance_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify new balance\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('msg');\r",
+											"    pm.expect(pm.response.to.have.status(200));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "\r\n{\r\n    \"username\" : \"not_found\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5006/newBalance",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"newBalance"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "newBalance_not_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify new balance\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "\r\n{\r\n    \"username\" : \"\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5006/newBalance",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"newBalance"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "newBalance_bad_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify new balance\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(422));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "\r\n{\r\n    \"username\" : \"user2\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5006/newBalance",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"newBalance"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "deleteBalance",
+					"item": [
+						{
+							"name": "deleteBalance_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify delete balance\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('msg');\r",
+											"    pm.expect(pm.response.to.have.status(200));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\" : \"user1\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5006/deleteBalance",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"deleteBalance"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "deleteBalance_not_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify delete balance\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5006/deleteBalance",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"deleteBalance"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "deleteBalance_bad_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify delete balance\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(404));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\" : \"not_found\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5006/deleteBalance",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5006",
+									"path": [
+										"deleteBalance"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "valid_token",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	]
+}
