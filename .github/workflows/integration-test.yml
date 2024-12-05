@@ -47,6 +47,8 @@ jobs:
       # 5. Esegui i test unitari usando Newman
       - name: Run unit tests for service
         run: |
+          ls -l ./${{ matrix.service }} # Controlla i file nella directory
+          ls -l ./environment.postman_environment.json # Assicurati che esista
           export filePath=${{ github.workspace }}/meme_images/meme2.jpg
 
           # Esegui i test specifici per il microservizio
