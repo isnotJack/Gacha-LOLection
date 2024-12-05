@@ -3,6 +3,7 @@ const BASE_URL_PAYMENT = "https://localhost:5001/payment_service";
 const BASE_URL_AUCTION = "https://localhost:5001/auction_service";
 const BASE_URL_GACHA = "https://localhost:5001/gacha_roll";
 const BASE_URL_GACHA_SYSTEM = "https://localhost:5001/gachasystem_service";
+const BASE_URL_PROFILE_SETTING = "https://localhost:5001/profile_setting";
 
 const CERT_OPTIONS = { rejectUnauthorized: false }; // Gestione certificati autofirmati
 
@@ -461,5 +462,197 @@ document.getElementById("view-gacha-collection-button").addEventListener("click"
     }
   } catch (error) {
     alert("Error: " + error.message);
+  }
+});
+
+document.getElementById("check-profile-button").addEventListener("click", async () => {
+  const accessToken = localStorage.getItem("access_token");
+  const username = localStorage.getItem("logged_username");
+
+  if (!username) {
+    alert("Error: Username not found. Please log in again.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL_PROFILE_SETTING}/checkprofile?username=${encodeURIComponent(username)}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const data = await response.json();
+    const resultContainer = document.getElementById("profile-result");
+
+    if (response.ok) {
+      resultContainer.innerHTML = `
+        <p><strong>Username:</strong> ${data.username}</p>
+        <p><strong>Email:</strong> ${data.email}</p>
+        <p><strong>Currency Balance:</strong> ${data.currency_balance}</p>
+        <img src="${data.profile_image}" alt="Profile Image">
+      `;
+    } else {
+      resultContainer.innerHTML = `<p>${data.error || "Failed to fetch profile"}</p>`;
+    }
+  } catch (error) {
+    alert("Error: " + error.message);
+  }
+});
+
+document.getElementById("retrieve-gacha-collection-button").addEventListener("click", async () => {
+  const accessToken = localStorage.getItem("access_token");
+  const username = localStorage.getItem("logged_username");
+
+  if (!username) {
+    alert("Error: Username not found. Please log in again.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL_PROFILE_SETTING}/retrieve_gachacollection?username=${encodeURIComponent(username)}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const data = await response.json();
+    const resultContainer = document.getElementById("profile-result");
+
+    if (response.ok) {
+      if (Array.isArray(data) && data.length > 0) {
+        resultContainer.innerHTML = data
+          .map(
+            (gacha) => `
+              <div class="gacha-item">
+                <img src="${gacha.img}" alt="${gacha.gacha_name}">
+                <p><strong>Name:</strong> ${gacha.gacha_name}</p>
+                <p><strong>Rarity:</strong> ${gacha.rarity}</p>
+                <p><strong>Description:</strong> ${gacha.description}</p>
+              </div>
+            `
+          )
+          .join("");
+      } else {
+        resultContainer.innerHTML = `<p>No gacha items found for this user.</p>`;
+      }
+    } else {
+      resultContainer.innerHTML = `<p>${data.error || "Failed to fetch gacha collection"}</p>`;
+    }
+  } catch (error) {
+    alert("Error: " + error.message);
+  }
+});
+
+document.getElementById("info-gacha-collection-button").addEventListener("click", async () => {
+  const accessToken = localStorage.getItem("access_token");
+  const username = localStorage.getItem("logged_username");
+
+  const gachaName = prompt("Enter Gacha Name:");
+
+  if (!username || !gachaName) {
+    alert("Error: Missing username or gacha name.");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${BASE_URL_PROFILE_SETTING}/info_gachacollection?username=${encodeURIComponent(
+        username
+      )}&gacha_name=${encodeURIComponent(gachaName)}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+    const resultContainer = document.getElementById("profile-result");
+
+    if (response.ok) {
+      // Verifica se è una lista e itera
+      if (Array.isArray(data)) {
+        resultContainer.innerHTML = data
+          .map(
+            (gacha) => `
+            <div class="gacha-item">
+              <img src="${gacha.img}" alt="${gacha.gacha_name}">
+              <p><strong>Name:</strong> ${gacha.gacha_name}</p>
+              <p><strong>Rarity:</strong> ${gacha.rarity}</p>
+              <p><strong>Description:</strong> ${gacha.description}</p>
+            </div>
+          `
+          )
+          .join("");
+      } else {
+        // Gestione singolo oggetto (fallback)
+        resultContainer.innerHTML = `
+          <div class="gacha-item">
+            <img src="${data.img}" alt="${data.gacha_name}">
+            <p><strong>Name:</strong> ${data.gacha_name}</p>
+            <p><strong>Rarity:</strong> ${data.rarity}</p>
+            <p><strong>Description:</strong> ${data.description}</p>
+          </div>
+        `;
+      }
+    } else {
+      resultContainer.innerHTML = `<p>${data.error || "Failed to fetch gacha info"}</p>`;
+    }
+  } catch (error) {
+    alert("Error: " + error.message);
+  }
+});
+document.getElementById("modify-profile-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const accessToken = localStorage.getItem("access_token");
+  const username = localStorage.getItem("logged_username");
+  const field = document.getElementById("modify-field").value;
+  const value = document.getElementById("modify-value").value;
+  const imageFile = document.getElementById("modify-image").files[0];
+  const resultContainer = document.getElementById("modify-profile-result");
+
+  if (!username) {
+    alert("Error: Username is required.");
+    return;
+  }
+
+  // Create FormData to handle both text fields and image uploads
+  const formData = new FormData();
+  formData.append("username", username);
+  formData.append("field", field);
+  if (field !== "profile_image") {
+    formData.append("value", value);
+  }
+  if (imageFile) {
+    formData.append("image", imageFile);
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL_PROFILE_SETTING}/modify_profile`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      resultContainer.innerHTML = `
+        <p><strong>Profile updated successfully!</strong></p>
+        <p><strong>Username:</strong> ${data.profile.username}</p>
+        <p><strong>Email:</strong> ${data.profile.email}</p>
+        <img src="${data.profile.profile_image}" alt="Profile Image" style="max-width: 100px; border-radius: 50%; margin-top: 10px;">
+      `;
+    } else {
+      resultContainer.innerHTML = `<p>Error: ${data.error || "Failed to update profile."}</p>`;
+    }
+  } catch (error) {
+    resultContainer.innerHTML = `<p>Error: ${error.message}</p>`;
   }
 });

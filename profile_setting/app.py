@@ -155,7 +155,7 @@ def modify_profile():
         return jsonify({"error": "Invalid token"}), 401
 
     field = sanitize_input(updated_data.get('field'))           # specify the text fields to be modified
-    value = sanitize_input(updated_data.get('value'))           # for text fields
+    value = sanitize_email(updated_data.get('value'))           # for text fields
 
     # Controlla che il campo username sia fornito
     if not username:

@@ -65,6 +65,33 @@
         <div id="account-service-result"></div> <!-- Results for Account Management -->
       </div>
       
+      <!-- Profile Settings -->
+      <div class="service-group">
+        <h3>Profile Setting Service</h3>
+        <button id="check-profile-button">Check Profile</button>
+        <button id="retrieve-gacha-collection-button">Retrieve Gacha Collection</button>
+        <button id="info-gacha-collection-button">Info Gacha Collection</button>
+        <form id="modify-profile-form">
+          <label for="modify-field">Field to Modify:</label>
+          <select id="modify-field" name="field" required>
+            <option value="email">Email</option>
+            <option value="profile_image">Profile Image</option>
+          </select>
+      
+          <label for="modify-value">New Value (for text fields):</label>
+          <input type="text" id="modify-value" name="value" placeholder="Enter the new value">
+      
+          <label for="modify-image">Upload Profile Image:</label>
+          <input type="file" id="modify-image" name="image" accept="image/png, image/jpeg, image/jpg">
+      
+          <button type="submit">Modify Profile</button>
+        </form>
+
+        <div id="modify-profile-result" class="service-result"></div>
+        <div id="profile-result" class="service-result"></div>
+      </div>
+      
+      
       <!-- Gacha Roll Service -->
       <!-- Gacha Roll Service -->
       <div class="service-group">
