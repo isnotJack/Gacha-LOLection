@@ -42,8 +42,12 @@ jobs:
           cd ${{ matrix.service }}
 
           # Costruisci l'immagine Docker e avvia il servizio
-          docker compose up --build
+          docker compose up -d
       
+        # 5. Attendi che i servizi siano attivi
+      - name: Wait for services to start
+        run: |
+          sleep 5  # Attendi 30 secondi per assicurarti che tutti i servizi siano attivi
       # 5. Esegui i test unitari usando Newman
       - name: Run unit tests for service
         run: |
