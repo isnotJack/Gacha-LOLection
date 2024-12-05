@@ -48,7 +48,7 @@
 										{
 											"key": "image",
 											"type": "file",
-											"src": "postman-cloud:///1efa8e6b-e099-4c20-bcf3-e6c6bb8866d7"
+											"src": "{{GACHA_IMAGE_PATH}}"
 										}
 									]
 								},
