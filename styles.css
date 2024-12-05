@@ -150,3 +150,33 @@ p {
   font-size: 1.2rem;
   color: #333;
 }
+/* Specific result sections */
+#payment-service-result,
+#account-service-result,
+#auction-service-result {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  color: #333;
+  font-size: 0.9rem;
+}
+/* Gacha System Result Styling */
+#gacha-system-result {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  color: #333;
+  font-size: 0.9rem;
+}
+.gacha-item img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: 8px; /* Optional, per un look più morbido */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional, per un effetto migliore */
+}

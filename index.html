@@ -47,6 +47,7 @@
         <h3>Payment Service</h3>
         <button id="buy-currency-button">Buy Currency</button>
         <button id="view-transactions-button">View Transactions</button>
+        <div id="payment-service-result"></div> <!-- Results for Payment Service -->
       </div>
 
       <!-- Other Services Placeholder -->
@@ -56,12 +57,12 @@
         <p>More services coming soon...</p>
       </div>
 
-        <!-- Logout -->
+       <!-- Account Management -->
       <div class="service-group">
         <h3>Account</h3>
         <button id="logout-button">Logout</button>
         <button id="delete-account-button">Delete Account</button>
-        <div id="logout-result"></div> <!-- Logout Result -->
+        <div id="account-service-result"></div> <!-- Results for Account Management -->
       </div>
       
       <!-- Gacha Roll Service -->
@@ -69,9 +70,9 @@
       <div class="service-group">
         <h3>Gacha Roll Service</h3>
         <div class="gacha-packages">
-          <button class="gacha-package" data-level="standard">Standard Roll (10memecoin)</button>
-          <button class="gacha-package" data-level="medium">Medium Roll (20memecoin)</button>
-          <button class="gacha-package" data-level="premium">Premium Roll (40memecoin)</button>
+          <button class="gacha-package" data-level="standard">Standard Roll (10)</button>
+          <button class="gacha-package" data-level="medium">Medium Roll (20)</button>
+          <button class="gacha-package" data-level="premium">Premium Roll (40)</button>
         </div>
         <div id="gacha-roll-animation" style="display: none;">
           <h3>Rolling...</h3>
@@ -84,6 +85,14 @@
         </div>
       </div>
 
+      <!-- Gacha System Service -->
+      <div class="service-group">
+        <h3>Gacha System Service</h3>
+        <button id="view-gacha-collection-button">View Gacha Collection</button>
+        <div id="gacha-system-result"></div> <!-- Results for Gacha System -->
+      </div>
+
+
 
       <!-- Auction Service -->
       <div class="service-group">
@@ -91,6 +100,7 @@
         <button id="see-auctions-button">See Auctions</button>
         <button id="create-auction-button">Create Auction</button>
         <button id="bid-auction-button">Place a Bid</button>
+        <div id="auction-service-result"></div> <!-- Results for Auction Service -->
       </div>
 
 
