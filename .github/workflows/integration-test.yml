@@ -50,7 +50,7 @@ jobs:
           export filePath=${{ github.workspace }}/meme_images/meme2.jpg
 
           # Esegui i test specifici per il microservizio
-          newman run ${{ matrix.service }}.postman_collection.json \
+          newman run ./${{ matrix.service }}.postman_collection.json \
             --environment ./environment.postman_environment.json \
             --env-var "GACHA_IMAGE_PATH=$filePath" \
             --insecure \
