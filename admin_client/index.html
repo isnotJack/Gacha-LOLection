@@ -65,6 +65,23 @@
         <button id="modify-auction-button">Modify Auction</button>
       </div>
 
+        <!-- Gacha System Service -->
+      <div class="service-group">
+        <h3>Gacha System</h3>
+        <form id="addGachaForm" enctype="multipart/form-data">
+            <input type="text" name="gacha_name" id="gacha_name" placeholder="Gacha Name" required>
+            <input type="text" name="rarity" id="rarity" placeholder="Rarity" required>
+            <input type="text" name="description" id="description" placeholder="Description">
+            <input type="file" name="image" id="image" accept="image/*" required>
+            <button type="submit">Add Gacha</button>
+        </form>
+        <br><br>
+        <button id="delete-gacha-button">Delete Gacha</button>
+        <button id="update-gacha-button">Update Gacha</button>
+        <button id="get-collection-button">Get Gacha Collection</button>
+
+      </div>
+
       <div id="service-result"></div>
     </div>
   </div>

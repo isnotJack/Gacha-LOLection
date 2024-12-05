@@ -1163,7 +1163,7 @@
 											"    const jsonData = pm.response.json();",
 											"    pm.expect(jsonData).to.have.property(\"message\", \"Money correctly transferred to seller\");",
 											"    pm.expect(jsonData).to.have.property(\"transaction_details\");",
-											"    pm.expect(jsonData.transaction_details).to.have.property(\"payer_us\", \"auction_system\");",
+											"    pm.expect(jsonData.transaction_details).to.have.property(\"payer_us\", \"system\");",
 											"    pm.expect(jsonData.transaction_details).to.have.property(\"receiver_us\");",
 											"    pm.expect(jsonData.transaction_details).to.have.property(\"amount\").that.is.a('number').and.is.above(0);",
 											"});",
