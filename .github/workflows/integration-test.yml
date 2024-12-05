@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main  # Esegui i test solo sui push al branch principale
+concurrency:
+  group: unit-tests-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
 
@@ -52,7 +55,7 @@ jobs:
       - name: Run unit tests for service
         run: |
           export filePath=${{ github.workspace }}/meme_images/meme2.jpg
-          export filePathW=${{ github.workspace }}/meme_images/meme2.svg
+          export filePathW=${{ github.workspace }}/meme_images/wrongtypememe.svg
           cd ${{ matrix.service }}
 
           # Esegui i test specifici per il microservizio
@@ -67,14 +70,15 @@ jobs:
       # 6. Ferma e rimuovi il container del microservizio
       - name: Stop and remove service container
         run: |
-          docker compose down -v
+          docker compose down 
+          
 
       # 7. Carica il report HTML dei test unitari
       - name: Upload unit test report
         uses: actions/upload-artifact@v3
         with:
           name: unit-test-${{ matrix.service }}-report
-          path: ${{ matrix.service }}/unit-test-${{ matrix.service }}.html
+          path: ./${{ matrix.service }}/unit-test-${{ matrix.service }}.html
     
   integration-test:
     runs-on: ubuntu-latest
