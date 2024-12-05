@@ -1,7 +1,7 @@
 const BASE_URL = "https://localhost:5001/auth_service";
 const BASE_URL_PAYMENT = "https://localhost:5001/payment_service";
 const BASE_URL_AUCTION = "https://localhost:5001/auction_service";
-
+const BASE_URL_GACHA = "https://localhost:5001/gacha_roll";
 
 const CERT_OPTIONS = { rejectUnauthorized: false }; // Gestione certificati autofirmati
 
@@ -340,4 +340,67 @@ document.getElementById("bid-auction-button").addEventListener("click", async ()
   } catch (error) {
     alert("Error: " + error.message);
   }
+});
+
+
+// Gacha Roll
+document.querySelectorAll(".gacha-package").forEach((button) => {
+  button.addEventListener("click", async () => {
+    const accessToken = localStorage.getItem("access_token");
+    const username = localStorage.getItem("logged_username");
+    const level = button.getAttribute("data-level");
+
+    if (!username || !level) {
+      alert("Error: Missing username or roll level!");
+      return;
+    }
+
+    const animationSection = document.getElementById("gacha-roll-animation");
+    const resultSection = document.getElementById("gacha-roll-result");
+    const gachaImage = document.getElementById("gacha-roll-image");
+    const gachaDetails = document.getElementById("gacha-roll-details");
+
+    // Hide result and show animation
+    resultSection.style.display = "none";
+    animationSection.style.display = "block";
+
+    // Simulate rolling animation
+    await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for 3 seconds
+
+    try {
+      const response = await fetch(`${BASE_URL_GACHA}/gacharoll`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ username, level }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Hide animation and show result
+        animationSection.style.display = "none";
+        gachaImage.src = data.img;
+        gachaDetails.innerHTML = `
+          <strong>Name:</strong> ${data.gacha_name}<br>
+          <strong>Rarity:</strong> ${data.rarity}<br>
+          <strong>Description:</strong> ${data.description}
+        `;
+        resultSection.style.display = "block";
+
+        // Hide result section after 20 seconds
+        setTimeout(() => {
+          resultSection.style.display = "none";
+        }, 20000); // 20 seconds in milliseconds
+      } else {
+        alert(data.Error || "Gacha Roll Failed");
+        animationSection.style.display = "none";
+      }
+    } catch (error) {
+      alert("Error: " + error.message);
+      animationSection.style.display = "none";
+    }
+  });
 });

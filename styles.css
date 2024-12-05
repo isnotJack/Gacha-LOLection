@@ -88,3 +88,65 @@ p {
   font-size: 0.9rem;
   color: #666;
 }
+#gacha-roll-result {
+  text-align: center;
+  margin-top: 20px;
+}
+
+
+.gacha-packages {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.gacha-package {
+  padding: 10px 20px;
+  font-size: 1rem;
+  color: #fff;
+  background-color: #6c757d;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.3s;
+}
+
+.gacha-package:hover {
+  background-color: #5a6268;
+  transform: scale(1.1);
+}
+
+#gacha-roll-animation {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.spinner {
+  border: 8px solid #f3f3f3;
+  border-top: 8px solid #007bff;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#gacha-roll-image {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  margin: 10px auto;
+  display: block;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+}
+
+#gacha-roll-details {
+  font-size: 1.2rem;
+  color: #333;
+}
