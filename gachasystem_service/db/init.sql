@@ -13,7 +13,7 @@ INSERT INTO memes (meme_name, image_path, rarity, description) VALUES
 ('Messi', '/app/static/uploads/Messi.jpg', 'common', 'Lionel Messi in iconic or funny moments.'),
 ('Woman vs Cat', '/app/static/uploads/WomanCat.jpg', 'rare', 'A woman yelling at a confused cat at a table.'),
 ('Disaster Girl', '/app/static/uploads/DisasterGirl.jpg', 'legendary', 'A little girl smiling evilly in front of a burning house.'),
-('Pablo Escobar', '/app/static/uploads/Pablo.jpg', 'common', 'Pablo in melancholic or bored moods.'),
+('Pablo Escobar', '/app/static/uploads/Pablo.jpeg', 'common', 'Pablo in melancholic or bored moods.'),
 ('Chloe Confused', '/app/static/uploads/Chloe.jpg', 'rare', 'A little blonde girl with buck teeth and a confused face.'),
 ('Distracted Boyfriend', '/app/static/uploads/DistractedBoyfriend.jpg', 'common', 'A man turning away from his girlfriend to another woman.'),
 ('Doge meme', '/app/static/uploads/Doge-meme.jpg', 'legendary', 'The original Doge.');

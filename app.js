@@ -2,6 +2,7 @@ const BASE_URL = "https://localhost:5001/auth_service";
 const BASE_URL_PAYMENT = "https://localhost:5001/payment_service";
 const BASE_URL_AUCTION = "https://localhost:5001/auction_service";
 const BASE_URL_GACHA = "https://localhost:5001/gacha_roll";
+const BASE_URL_GACHA_SYSTEM = "https://localhost:5001/gachasystem_service";
 
 const CERT_OPTIONS = { rejectUnauthorized: false }; // Gestione certificati autofirmati
 
@@ -100,7 +101,7 @@ document.getElementById("logout-button").addEventListener("click", async () => {
     });
 
     if (response.ok) {
-      document.getElementById("logout-result").textContent = "Logout successful!";
+      document.getElementById("account-service-result").textContent = "Logout successful!";
       localStorage.clear();
       hideMenuSection();
     } else {
@@ -180,7 +181,7 @@ document.getElementById("buy-currency-button").addEventListener("click", async (
 
     const data = await response.json();
     if (response.ok) {
-      document.getElementById("service-result").textContent = `Currency purchased! Balance: ${data.balance}`;
+      document.getElementById("payment-service-result").textContent = `Currency purchased! Balance: ${data.balance}`;
     } else {
       document.getElementById("service-result").textContent = data.Error || "Failed to purchase currency";
     }
@@ -215,7 +216,7 @@ document.getElementById("view-transactions-button").addEventListener("click", as
             t.date
           ).toLocaleString()}`
       );
-      document.getElementById("service-result").innerHTML = transactions.join("<br>");
+      document.getElementById("payment-service-result").innerHTML = transactions.join("<br>");
     } else {
       document.getElementById("service-result").textContent = data.Error || "Failed to fetch transactions";
     }
@@ -252,8 +253,8 @@ document.getElementById("see-auctions-button").addEventListener("click", async (
               ).toLocaleString()}`
           )
         : [`Auction: ${JSON.stringify(data)}`];
-      document.getElementById("service-result").innerHTML = auctions.join("<br>");
-    } else {
+        document.getElementById("auction-service-result").innerHTML = auctions.join("<br>");
+      } else {
       document.getElementById("service-result").textContent =
         data.error || "Failed to fetch auctions";
     }
@@ -298,7 +299,7 @@ document.getElementById("create-auction-button").addEventListener("click", async
     const data = await response.json();
     if (response.ok) {
       alert("Auction created successfully!");
-      document.getElementById("service-result").textContent = JSON.stringify(data);
+      document.getElementById("auction-service-result").textContent = JSON.stringify(data);
     } else {
       alert(data.error || "Failed to create auction");
     }
@@ -333,7 +334,7 @@ document.getElementById("bid-auction-button").addEventListener("click", async ()
     const data = await response.json();
     if (response.ok) {
       alert("Bid placed successfully!");
-      document.getElementById("service-result").textContent = JSON.stringify(data);
+      document.getElementById("auction-service-result").textContent = JSON.stringify(data);
     } else {
       alert(data.error || "Failed to place bid");
     }
@@ -341,6 +342,8 @@ document.getElementById("bid-auction-button").addEventListener("click", async ()
     alert("Error: " + error.message);
   }
 });
+
+let resultTimeout = null; // To store the current timeout reference
 
 
 // Gacha Roll
@@ -390,10 +393,17 @@ document.querySelectorAll(".gacha-package").forEach((button) => {
         `;
         resultSection.style.display = "block";
 
-        // Hide result section after 20 seconds
-        setTimeout(() => {
-          resultSection.style.display = "none";
-        }, 20000); // 20 seconds in milliseconds
+      // Clear any existing timeout
+      if (resultTimeout) {
+        clearTimeout(resultTimeout);
+      }
+
+      // Set a new timeout
+      resultTimeout = setTimeout(() => {
+        resultSection.style.display = "none";
+        resultTimeout = null; // Clear the reference after timeout
+      }, 20000); // 20 seconds
+      
       } else {
         alert(data.Error || "Gacha Roll Failed");
         animationSection.style.display = "none";
@@ -403,4 +413,53 @@ document.querySelectorAll(".gacha-package").forEach((button) => {
       animationSection.style.display = "none";
     }
   });
+});
+
+
+
+// View Gacha Collection
+document.getElementById("view-gacha-collection-button").addEventListener("click", async () => {
+  const accessToken = localStorage.getItem("access_token");
+
+  const gachaName = prompt("Enter Gacha Names (comma-separated) or leave blank for full collection:");
+
+  try {
+    // Prepara il body della richiesta come application/x-www-form-urlencoded
+    const body = new URLSearchParams();
+    if (gachaName) {
+      gachaName.split(",").forEach((name) => body.append("gacha_name", name.trim()));
+    }
+
+    const response = await fetch(`${BASE_URL_GACHA_SYSTEM}/get_gacha_collection`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded", // Cambiato il Content-Type
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: body.toString(), // Invia i dati codificati
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Mostra i risultati (già funzionante)
+      const gachaContainer = document.getElementById("gacha-system-result");
+      gachaContainer.innerHTML = ""; // Resetta il contenuto precedente
+      data.forEach((gacha) => {
+        const gachaElement = document.createElement("div");
+        gachaElement.className = "gacha-item";
+        gachaElement.innerHTML = `
+          <img src="${gacha.img}" alt="${gacha.gacha_name}">
+          <p><strong>Name:</strong> ${gacha.gacha_name}</p>
+          <p><strong>Rarity:</strong> ${gacha.rarity}</p>
+          <p><strong>Description:</strong> ${gacha.description}</p>
+        `;
+        gachaContainer.appendChild(gachaElement);
+      });
+    } else {
+      alert(data.Error || "Failed to fetch Gacha Collection");
+    }
+  } catch (error) {
+    alert("Error: " + error.message);
+  }
 });

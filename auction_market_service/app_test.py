@@ -512,7 +512,7 @@ def auction_lost():
 
     for bid in bids:
         if bid['username'] != auction['winner_username']:
-            payment_response , status = mock_payment("auction_system", bid['username'], bid['bid_amount'])
+            payment_response , status = mock_payment("system", bid['username'], bid['bid_amount'])
             if status != 200:
                 failed_refunds.append({"username": bid['username'], "error": f"Payment failed: {payment_response}"})
             else:
@@ -560,7 +560,7 @@ def auction_terminated():
     return jsonify({
         "message": "Money correctly transferred to seller",
         "transaction_details": {
-            "payer_us": "auction_system",
+            "payer_us": "system",
             "receiver_us": auction['seller_username'],
             "amount": auction['current_bid']
         }
