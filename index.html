@@ -65,9 +65,18 @@
       </div>
       
       <!-- Gacha Roll Service -->
+      <!-- Gacha Roll Service -->
       <div class="service-group">
         <h3>Gacha Roll Service</h3>
-        <button id="gacha-roll-button">Roll a Gacha</button>
+        <div class="gacha-packages">
+          <button class="gacha-package" data-level="standard">Standard Roll (10memecoin)</button>
+          <button class="gacha-package" data-level="medium">Medium Roll (20memecoin)</button>
+          <button class="gacha-package" data-level="premium">Premium Roll (40memecoin)</button>
+        </div>
+        <div id="gacha-roll-animation" style="display: none;">
+          <h3>Rolling...</h3>
+          <div class="spinner"></div>
+        </div>
         <div id="gacha-roll-result" style="display:none;">
           <h3>Congratulations!</h3>
           <img id="gacha-roll-image" alt="Gacha Image">
