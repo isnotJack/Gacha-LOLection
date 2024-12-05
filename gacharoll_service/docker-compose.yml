@@ -1,5 +1,5 @@
 services:
-  auth_service_test:
+  gacharoll_service_test:
     build:
       context: . 
       dockerfile: Dockerfile_test

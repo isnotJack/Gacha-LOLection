@@ -1,0 +1,1010 @@
+{
+	"info": {
+		"_postman_id": "415363f8-3b66-4dcd-b351-76148e301ccf",
+		"name": "Gacha_system",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39572565",
+		"_collection_link": "https://sse888.postman.co/workspace/SSE-Workspace~ba3287da-3f46-4d53-b9ae-99dcb913c461/collection/39572565-415363f8-3b66-4dcd-b351-76148e301ccf?action=share&source=collection_link&creator=39572565"
+	},
+	"item": [
+		{
+			"name": "gacha_system",
+			"item": [
+				{
+					"name": "add_gacha",
+					"item": [
+						{
+							"name": "add_gacha_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the response message",
+											"pm.test(\"Response message is 'Gacha added successfully'\", function () {",
+											"    pm.expect(pm.response.json().message).to.equal('Gacha added successfully');",
+											"});",
+											"",
+											"// Test to verify the gacha details include the required properties",
+											"pm.test(\"Gacha details include name, image path, rarity, and description\", function () {",
+											"    var gachaDetails = pm.response.json().gacha;",
+											"    pm.expect(gachaDetails).to.have.property('name');",
+											"    pm.expect(gachaDetails).to.have.property('image_path');",
+											"    pm.expect(gachaDetails).to.have.property('rarity');",
+											"    pm.expect(gachaDetails).to.have.property('description');",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "gacha_name",
+											"value": "Trial gacha",
+											"type": "text"
+										},
+										{
+											"key": "rarity",
+											"value": "common",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "This is a trial gacha",
+											"type": "text"
+										},
+										{
+											"key": "image",
+											"type": "file",
+											"src": "postman-cloud:///1efa8252-c07c-4de0-9114-3368d46f4848"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5004/add_gacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"add_gacha"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "UnauthorizedRequest",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 403\", function () {",
+											"    pm.response.to.have.status(403);",
+											"});",
+											"",
+											"pm.test(\"Error message for unauthorized action\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"error\", \"Unauthorized action for the user\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "valid_token1",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "gacha_name",
+											"value": "Trial gacha",
+											"type": "text"
+										},
+										{
+											"key": "rarity",
+											"value": "common",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "This is a trial gacha",
+											"type": "text"
+										},
+										{
+											"key": "image",
+											"type": "file",
+											"src": "postman-cloud:///1efa8252-c07c-4de0-9114-3368d46f4848"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5004/add_gacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"add_gacha"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "add_gacha_AlreadyExists",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"",
+											"pm.test(\"Response status code is 400 when gacha is already present\", function () {",
+											"  pm.response.to.have.status(400);",
+											"  pm.expect(pm.response.json().error).to.not.be.empty;",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "gacha_name",
+											"value": "existed",
+											"type": "text"
+										},
+										{
+											"key": "rarity",
+											"value": "common",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "This is a trial gacha",
+											"type": "text"
+										},
+										{
+											"key": "image",
+											"type": "file",
+											"src": "postman-cloud:///1efa8252-c07c-4de0-9114-3368d46f4848"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5004/add_gacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"add_gacha"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "add_gacha_MissingParam",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Error code 400 with message 'Missing required fields (image, gacha_name, or rarity)' is returned when parameters gacha_name, rarity, or image are missing\", function () {",
+											"    pm.response.to.have.status(400);",
+											"    pm.expect(pm.response.json().error).to.include('Missing required fields (image, gacha_name, or rarity)');",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "gacha_name",
+											"value": "Trial2 gacha",
+											"type": "text"
+										},
+										{
+											"key": "rarity",
+											"value": "common",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "This is a trial gacha",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5004/add_gacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"add_gacha"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "add_gacha_VoidImage",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Error code 400 with message 'No selected file' is returned when image has not been selected\", function () {",
+											"    pm.response.to.have.status(400);",
+											"    pm.expect(pm.response.json().error).to.include('No selected file');",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "gacha_name",
+											"value": "Trial2 gacha",
+											"type": "text"
+										},
+										{
+											"key": "rarity",
+											"value": "common",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "This is a trial gacha",
+											"type": "text"
+										},
+										{
+											"key": "image",
+											"type": "file",
+											"src": []
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5004/add_gacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"add_gacha"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "add_gacha_InvalidImageType",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Error code 400 for file type not allowed\", function () {",
+											"    pm.response.to.have.status(400);",
+											"    pm.expect(pm.response.json().error).to.include('File type not allowed');",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "gacha_name",
+											"value": "Trial2 gacha",
+											"type": "text"
+										},
+										{
+											"key": "rarity",
+											"value": "common",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "This is a trial gacha",
+											"type": "text"
+										},
+										{
+											"key": "image",
+											"type": "file",
+											"src": "postman-cloud:///1efa82bd-d1e5-4f30-abda-93bf7ad8bc5f"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5004/add_gacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"add_gacha"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "delete_gacha",
+					"item": [
+						{
+							"name": "delete_gacha_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test for response status code and specific message in the response",
+											"pm.test(\"Gacha successfully deleted\", function () {",
+											"    pm.response.to.have.status(200);",
+											"    pm.expect(pm.response.json().message).to.not.be.empty;",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"gacha_name\": \"existed\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5004/delete_gacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"delete_gacha"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete_gacha_MissingGachaName",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Error code 400 for missing gacha_name in request\", function () {",
+											"    pm.response.to.have.status(400);",
+											"    pm.expect(pm.response.json().error).to.include(\"Missing 'gacha_name' in query string.\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5004/delete_gacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"delete_gacha"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete_gacha_GachaNameNotExists",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Error code 404 for gacha_name not existing\", function () {",
+											"    pm.response.to.have.status(404);",
+											"    pm.expect(pm.response.json().error).to.not.be.empty;",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"gacha_name\": \"aaaaa\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5004/delete_gacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"delete_gacha"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "update_gacha",
+					"item": [
+						{
+							"name": "update_gacha_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the response code",
+											"pm.test(\"Response code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"// Test to verify the response message",
+											"pm.test(\"Response message is 'Gacha updated successfully'\", function () {",
+											"    pm.expect(pm.response.json().message).to.equal('Gacha updated successfully');",
+											"});",
+											"",
+											"// Test to verify the gacha details include the required properties",
+											"pm.test(\"Gacha details include name, rarity, and description\", function () {",
+											"    var gachaDetails = pm.response.json().gacha;",
+											"    pm.expect(gachaDetails).to.have.property('name');",
+											"    pm.expect(gachaDetails).to.have.property('rarity');",
+											"    pm.expect(gachaDetails).to.have.property('description');",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"gacha_name\": \"existed\",\n    \"rarity\": \"legendary\",\n    \"description\": \"This gacha has become legendary\" \n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5004/update_gacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"update_gacha"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update_gacha_MissingGachaName",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Error code 400 for missing gacha_name in request\", function () {",
+											"    pm.response.to.have.status(400);",
+											"    pm.expect(pm.response.json().error).to.include(\"Missing required field: 'name'\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"rarity\": \"rare\",\n    \"description\": \"This gacha has become rare\" \n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5004/update_gacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"update_gacha"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update_gacha_GachaNameNotExists",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Error code 404 for gacha_name not existing\", function () {",
+											"    pm.response.to.have.status(404);",
+											"    pm.expect(pm.response.json().error).to.not.be.empty;",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"gacha_name\": \"aaaa\",\n    \"rarity\": \"rare\",\n    \"description\": \"This gacha has become rare\" \n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5004/update_gacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"update_gacha"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "get_gacha_collection",
+					"item": [
+						{
+							"name": "getOneGacha",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"// Modified test to verify that the length of the gacha details list is equal to 1",
+											"pm.test(\"Gacha details include one gacha item\", function () {",
+											"    pm.expect(pm.response.json().length).to.equal(1);",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"gacha_name\": \"Rare Gacha 1\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5004/get_gacha_collection",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"get_gacha_collection"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getListOfGachas",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the response code",
+											"pm.test(\"Response code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"// verify that the gacha details include a list with 2 items",
+											"pm.test(\"Gacha details include a list of 2 gachas\", function () {",
+											"       pm.expect(pm.response.json().length).to.equal(2);",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"gacha_name\": [\"Rare Gacha 1\", \"Common Gacha 2\"]\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5004/get_gacha_collection",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"get_gacha_collection"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getAllGachas",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the response code",
+											"pm.test(\"Response code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"// verify that the gacha details include a list with 2 items",
+											"pm.test(\"Gacha details include a list of gachas\", function () {",
+											"       pm.expect(pm.response.json()).to.be.an('array').that.is.not.empty;",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"gacha_name\": \"\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5004/get_gacha_collection",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"get_gacha_collection"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GachaNotFound",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the response code",
+											"pm.test(\"Response code is 404 for gacha not found\", function () {",
+											"    pm.response.to.have.status(404);",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"gacha_name\": \"aaaaa\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5004/get_gacha_collection",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"get_gacha_collection"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "get_gacha_roll",
+					"item": [
+						{
+							"name": "get_gacha_roll_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status code is 200\", function () {",
+											"  pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Gacha details include id, name, description, rarity, and image\", function () {",
+											"    var gachaDetails = pm.response.json();",
+											"    pm.expect(gachaDetails).to.have.property('gacha_id');",
+											"    pm.expect(gachaDetails).to.have.property('gacha_name');",
+											"    pm.expect(gachaDetails).to.have.property('description');",
+											"    pm.expect(gachaDetails).to.have.property('rarity');",
+											"    pm.expect(gachaDetails).to.have.property('img');",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5004/get_gacha_roll?level=premium",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"get_gacha_roll"
+									],
+									"query": [
+										{
+											"key": "level",
+											"value": "premium"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get_gacha_roll_InvalidPacketLevel",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status code is 400 for packet level not allowed\", function () {",
+											"    pm.response.to.have.status(400);",
+											"    pm.expect(pm.response.json().error).to.include(\"Invalid level. Valid levels are 'standard', 'medium', and 'premium'.\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5004/get_gacha_roll?level=",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5004",
+									"path": [
+										"get_gacha_roll"
+									],
+									"query": [
+										{
+											"key": "level",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "valid_token",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	]
+}

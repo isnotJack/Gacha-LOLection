@@ -8,4 +8,3 @@ SQLAlchemy==1.4.46
 requests
 cryptography
 bcrypt
-pytest
