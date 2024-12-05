@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Authentication Service Client</title>
+  <title>Gacha LOLection</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
-    <h1>Authentication Client</h1>
+    <h1>Gacha LOLection</h1>
     
     <!-- Login Form -->
     <div id="login-section">
@@ -38,11 +38,32 @@
       <div id="signup-result"></div>
     </div>
 
-    <!-- Logout -->
-    <div id="logout-section" style="display: none;">
-      <h2>Logout</h2>
-      <button id="logout-button">Logout</button>
-      <div id="logout-result"></div>
+    <!-- Service Menu -->
+    <div id="menu-section" style="display:none;">
+      <h2>Service Menu</h2>
+
+      <!-- Payment Service -->
+      <div class="service-group">
+        <h3>Payment Service</h3>
+        <button id="buy-currency-button">Buy Currency</button>
+        <button id="view-transactions-button">View Transactions</button>
+      </div>
+
+      <!-- Other Services Placeholder -->
+      <div class="service-group">
+        <h3>Other Services</h3>
+        <!-- Add buttons for other microservices here -->
+        <p>More services coming soon...</p>
+      </div>
+
+        <!-- Logout -->
+      <div class="service-group">
+        <h3>Account</h3>
+        <button id="logout-button">Logout</button>
+        <div id="logout-result"></div> <!-- Added logout-result here -->
+      </div>
+
+      <div id="service-result"></div>
     </div>
   </div>
 
