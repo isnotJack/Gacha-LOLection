@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gacha LOLection</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Gacha LOLection for ADMIN</h1>
+    
+    <!-- Login Form -->
+    <div id="login-section">
+      <h2>Login</h2>
+      <form id="login-form">
+        <label for="login-username">Username:</label>
+        <input type="text" id="login-username" name="username" required>
+        <label for="login-password">Password:</label>
+        <input type="password" id="login-password" name="password" required>
+        <button type="submit">Login</button>
+      </form>
+      <div id="login-result"></div>
+    </div>
+
+    <!-- Signup Form -->
+    <div id="signup-section">
+      <h2>Signup</h2>
+      <form id="signup-form">
+        <label for="signup-username">Username:</label>
+        <input type="text" id="signup-username" name="username" required>
+        <label for="signup-password">Password:</label>
+        <input type="password" id="signup-password" name="password" required>
+        <label for="signup-email">Email:</label>
+        <input type="email" id="signup-email" name="email" required>
+        <button type="submit">Signup</button>
+      </form>
+      <div id="signup-result"></div>
+    </div>
+
+    <!-- Service Menu -->
+    <div id="menu-section" style="display:none;">
+      <h2>Service Menu</h2>
+
+
+      <!-- Other Services Placeholder -->
+      <div class="service-group">
+        <h3>Other Services</h3>
+        <!-- Add buttons for other microservices here -->
+        <p>More services coming soon...</p>
+      </div>
+
+        <!-- Logout -->
+      <div class="service-group">
+        <h3>Account</h3>
+        <button id="logout-button">Logout</button>
+        <button id="delete-account-button">Delete Account</button>
+        <div id="logout-result"></div> <!-- Logout Result -->
+      </div>
+
+      <!-- Auction Service -->
+      <div class="service-group">
+        <h3>Auction Service</h3>
+        <button id="see-auctions-button">See Auctions</button>
+        <button id="modify-auction-button">Modify Auction</button>
+      </div>
+
+      <div id="service-result"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

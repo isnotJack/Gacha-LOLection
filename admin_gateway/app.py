@@ -25,17 +25,11 @@ NEWTOKEN_URL = 'https://auth_service:5002/newToken'
 ALLOWED_AUCTION_OP = {'see', 'create', 'modify', 'bid','gacha_receive', 'auction_lost', 'auction_terminated'} 
 AUCTION_BASE_URL = 'https://auction_service:5008'
 SEE_AUCTION_URL = f'{AUCTION_BASE_URL}/see'
-# CREATE_AUCTION_URL = f'{AUCTION_BASE_URL}/create'
 MODIFY_AUCTION_URL = f'{AUCTION_BASE_URL}/modify'
-# BID_AUCTION_URL = f'{AUCTION_BASE_URL}/bid'
-# GACHA_RECEIVE_URL = f'{AUCTION_BASE_URL}/gacha_receive'
-# AUCTION_LOST_URL = f'{AUCTION_BASE_URL}/auction_lost'
-
-# GACHAROLL_URL = 'http://gacha_roll:5007/gacharoll'
 
 PROFILE_IMAGE_URL = 'https://profile_setting:5003/uploads/'
 
-# BUYCURRENCY_URL = 'http://payment_service:5006/buycurrency'
+
 
 
 import time

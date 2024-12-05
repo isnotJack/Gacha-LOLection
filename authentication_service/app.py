@@ -173,9 +173,6 @@ def signup():
     }
     url = 'https://payment_service:5006/newBalance'
     
-        # y = requests.post(url, json=params, timeout=10)
-        # y.raise_for_status()
-        # res = x.json()
     x , status = payment_circuit_breaker.call('post', url, params, {},{},True)
     if status != 200:
         # Ritorna un errore se la chiamata al `profile_setting` fallisce
@@ -190,7 +187,7 @@ def signup():
     } 
     payload = {
         "iss": "https://auth_service:5002",      # Emittente
-        "sub": user.username,              # Soggetto
+        "sub": username,              # Soggetto
         "aud": ["auth_service"],         
         "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
         "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),  # Expiration
