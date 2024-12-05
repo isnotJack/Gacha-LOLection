@@ -1,0 +1,26 @@
+
+services:
+  profile_service:
+    build:
+      context: . 
+      dockerfile: Dockerfile_test
+    ports:
+      - "5003:5003"
+    volumes:
+      - ./ProfileImages:/app/static/uploads  # Monta il volume nella cartella del server per contenere le immagini dei memes
+      - ../RSApublickey:/app/RSAkeys:ro  # Monta la directory delle chiavi in sola lettura
+    environment:
+      - PUBLIC_KEY_PATH=/app/RSAkeys/public_key.pem
+    secrets:
+      - profile_cert
+      - profile_key
+
+volumes:
+  profile_data:
+  profile_image:
+
+secrets:
+  profile_cert:
+    file: ./profile_cert.pem
+  profile_key:
+    file: ./profile_key.pem
