@@ -303,7 +303,7 @@ def delete_account():
 
     try:
         # Verifica il token con la chiave pubblica
-        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="auth_service")  
+        decoded_token = jwt.decode(access_token, public_key, algitgorithms=["RS256"], audience="auth_service")  
         #print(f"Token verificato! Dati decodificati: {decoded_token}")
         if 'username' in data and decoded_token.get("sub") != data['username']:
             return jsonify({"error": "Username in token does not match the request username"}), 403

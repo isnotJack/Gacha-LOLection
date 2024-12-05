@@ -110,6 +110,44 @@ document.getElementById("logout-button").addEventListener("click", async () => {
   }
 });
 
+// Delete Account
+document.getElementById("delete-account-button").addEventListener("click", async () => {
+  const accessToken = localStorage.getItem("access_token");
+  const username = localStorage.getItem("logged_username"); // Assume username is stored at login
+  const password = prompt("Enter your password to confirm deletion:");
+
+  if (!password) {
+    alert("Password is required to delete your account.");
+    return;
+  }
+
+  try {
+    const body = new URLSearchParams();
+    body.append("username", username);
+    body.append("password", password);
+
+    const response = await fetch(`${BASE_URL}/delete`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded", // Gateway requires form data
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: body.toString(),
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      alert("Account deleted successfully. Redirecting to the main menu.");
+      localStorage.clear(); // Clear storage
+      hideMenuSection(); // Redirect to login/signup
+    } else {
+      alert(data.Error || "Failed to delete account");
+    }
+  } catch (error) {
+    alert("Error: " + error.message);
+  }
+});
+
 // Buy Currency
 document.getElementById("buy-currency-button").addEventListener("click", async () => {
   const accessToken = localStorage.getItem("access_token");
