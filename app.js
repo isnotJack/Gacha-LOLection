@@ -605,3 +605,54 @@ document.getElementById("info-gacha-collection-button").addEventListener("click"
     alert("Error: " + error.message);
   }
 });
+document.getElementById("modify-profile-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const accessToken = localStorage.getItem("access_token");
+  const username = localStorage.getItem("logged_username");
+  const field = document.getElementById("modify-field").value;
+  const value = document.getElementById("modify-value").value;
+  const imageFile = document.getElementById("modify-image").files[0];
+  const resultContainer = document.getElementById("modify-profile-result");
+
+  if (!username) {
+    alert("Error: Username is required.");
+    return;
+  }
+
+  // Create FormData to handle both text fields and image uploads
+  const formData = new FormData();
+  formData.append("username", username);
+  formData.append("field", field);
+  if (field !== "profile_image") {
+    formData.append("value", value);
+  }
+  if (imageFile) {
+    formData.append("image", imageFile);
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL_PROFILE_SETTING}/modify_profile`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      resultContainer.innerHTML = `
+        <p><strong>Profile updated successfully!</strong></p>
+        <p><strong>Username:</strong> ${data.profile.username}</p>
+        <p><strong>Email:</strong> ${data.profile.email}</p>
+        <img src="${data.profile.profile_image}" alt="Profile Image" style="max-width: 100px; border-radius: 50%; margin-top: 10px;">
+      `;
+    } else {
+      resultContainer.innerHTML = `<p>Error: ${data.error || "Failed to update profile."}</p>`;
+    }
+  } catch (error) {
+    resultContainer.innerHTML = `<p>Error: ${error.message}</p>`;
+  }
+});
