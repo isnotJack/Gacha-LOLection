@@ -51,7 +51,7 @@ jobs:
 
           # Esegui i test specifici per il microservizio
           newman run ${{ matrix.service }}.postman_collection.json \
-            # --environment ./SSE-project environment.postman_environment.json \
+            --environment ./environment.postman_environment.json \
             --env-var "GACHA_IMAGE_PATH=$filePath" \
             --insecure \
             --reporters cli,html \
