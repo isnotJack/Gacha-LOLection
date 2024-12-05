@@ -5,6 +5,33 @@ from requests.exceptions import ConnectionError, HTTPError
 from werkzeug.exceptions import NotFound
 from io import BytesIO
 
+# from flask import Flask
+# from flask_cors import CORS
+
+# app = Flask(__name__)
+
+# # Configurazione di CORS
+# CORS(app, resources={r"/*": {"origins": "http://localhost:8000"}}, supports_credentials=True)
+
+# @app.after_request
+# def add_cors_headers(response):
+#     response.headers.add("Access-Control-Allow-Origin", "http://localhost:8000")
+#     response.headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+#     response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+#     response.headers.add("Access-Control-Allow-Credentials", "true")
+#     return response
+
+# @app.route('/', defaults={'path': ''}, methods=['OPTIONS'])
+# @app.route('/<path:path>', methods=['OPTIONS'])
+# def handle_options(path):
+#     response = make_response()
+#     response.headers.add("Access-Control-Allow-Origin", "http://localhost:8000")
+#     response.headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+#     response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+#     response.headers.add("Access-Control-Allow-Credentials", "true")
+#     return response
+
+
 
 ALLOWED_GACHA_SYS_OP ={'add_gacha', 'delete_gacha', 'update_gacha', 'get_gacha_collection'}
 ADD_URL = 'https://gachasystem:5004/add_gacha'
