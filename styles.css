@@ -88,3 +88,22 @@ p {
   font-size: 0.9rem;
   color: #666;
 }
+#gacha-roll-result {
+  text-align: center;
+  margin-top: 20px;
+}
+
+#gacha-roll-image {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  margin: 10px auto;
+  display: block;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+}
+
+#gacha-roll-details {
+  font-size: 1.2rem;
+  color: #333;
+}
