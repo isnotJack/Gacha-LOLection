@@ -1,5 +1,7 @@
 const BASE_URL = "https://localhost:5001/auth_service";
 const BASE_URL_PAYMENT = "https://localhost:5001/payment_service";
+const BASE_URL_AUCTION = "https://localhost:5001/auction_service";
+
 
 const CERT_OPTIONS = { rejectUnauthorized: false }; // Gestione certificati autofirmati
 
@@ -222,3 +224,120 @@ document.getElementById("view-transactions-button").addEventListener("click", as
   }
 });
 
+// See Auctions
+document.getElementById("see-auctions-button").addEventListener("click", async () => {
+  const accessToken = localStorage.getItem("access_token");
+
+  try {
+    const auctionId = prompt("Enter Auction ID (optional):");
+    const status = prompt("Enter Auction Status (default: active):") || "active";
+    const query = auctionId
+      ? `?auction_id=${auctionId}&status=${status}`
+      : `?status=${status}`;
+
+    const response = await fetch(`${BASE_URL_AUCTION}/see${query}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      const auctions = Array.isArray(data)
+        ? data.map(
+            (a) =>
+              `ID: ${a.id}, Gacha: ${a.gacha_name}, Seller: ${a.seller_username}, Current Bid: ${a.current_bid}, Status: ${a.status}, End Date: ${new Date(
+                a.end_date
+              ).toLocaleString()}`
+          )
+        : [`Auction: ${JSON.stringify(data)}`];
+      document.getElementById("service-result").innerHTML = auctions.join("<br>");
+    } else {
+      document.getElementById("service-result").textContent =
+        data.error || "Failed to fetch auctions";
+    }
+  } catch (error) {
+    document.getElementById("service-result").textContent = "Error: " + error.message;
+  }
+});
+
+// Create Auction
+document.getElementById("create-auction-button").addEventListener("click", async () => {
+  const accessToken = localStorage.getItem("access_token");
+  const username = localStorage.getItem("logged_username");
+
+  const gachaName = prompt("Enter Gacha Name:");
+  const basePrice = prompt("Enter Base Price:");
+  const endDate = prompt(
+    "Enter End Date (ISO format, e.g., 2024-12-31T23:59:59):"
+  );
+
+  if (!gachaName || !basePrice || !endDate) {
+    alert("All fields are required!");
+    return;
+  }
+
+  try {
+    const body = {
+      seller_username: username,
+      gacha_name: gachaName,
+      basePrice: parseFloat(basePrice),
+      endDate,
+    };
+
+    const response = await fetch(`${BASE_URL_AUCTION}/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      alert("Auction created successfully!");
+      document.getElementById("service-result").textContent = JSON.stringify(data);
+    } else {
+      alert(data.error || "Failed to create auction");
+    }
+  } catch (error) {
+    alert("Error: " + error.message);
+  }
+});
+
+// Place a Bid
+document.getElementById("bid-auction-button").addEventListener("click", async () => {
+  const accessToken = localStorage.getItem("access_token");
+  const username = localStorage.getItem("logged_username");
+
+  const auctionId = prompt("Enter Auction ID:");
+  const newBid = prompt("Enter Your Bid:");
+
+  if (!auctionId || !newBid) {
+    alert("Auction ID and bid amount are required!");
+    return;
+  }
+
+  try {
+    const query = `?username=${username}&auction_id=${auctionId}&newBid=${newBid}`;
+
+    const response = await fetch(`${BASE_URL_AUCTION}/bid${query}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      alert("Bid placed successfully!");
+      document.getElementById("service-result").textContent = JSON.stringify(data);
+    } else {
+      alert(data.error || "Failed to place bid");
+    }
+  } catch (error) {
+    alert("Error: " + error.message);
+  }
+});

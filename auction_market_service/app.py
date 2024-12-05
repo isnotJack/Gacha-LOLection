@@ -586,7 +586,7 @@ def auction_lost():
         if bid.username != auction.winner_username:
             # Calcola il refund per ogni non vincitore
             refund_payload = {
-                "payer_us": "auction_system",  # Sistema come pagatore
+                "payer_us": "system",  # Sistema come pagatore
                 "receiver_us": bid.username,  # Utente come destinatario
                 "amount": bid.bid_amount      # Refund del totale offerto
             }
@@ -639,7 +639,7 @@ def auction_terminated():
     # Recupera i dettagli per la transazione
     payment_service_url = "https://payment_service:5006/pay"
     transfer_payload = {
-        "payer_us": "auction_system",  # Il sistema paga il seller
+        "payer_us": "system",  # Il sistema paga il seller
         "receiver_us": auction.seller_username,  # Il creatore dell'asta riceve
         "amount": auction.current_bid  # L'importo totale offerto dal vincitore
     }
@@ -658,7 +658,7 @@ def auction_terminated():
     return jsonify({
         "message": "Money correctly transferred to seller",
         "transaction_details": {
-            "payer_us": "auction_system",
+            "payer_us": "system",
             "receiver_us": auction.seller_username,
             "amount": auction.current_bid
         }
