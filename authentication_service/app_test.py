@@ -188,10 +188,27 @@ def signup():
     x, status = mock_call_payment_service(username)
     if status != 200:
         return jsonify({'Error': f'Failed to create user balance: {x}'}), 500
+    with open(private_key_path, "r") as key_file:
+        private_key = key_file.read()
+    jti = str(uuid.uuid4())  # Genera un UUID univoco per il jti
 
-    # Ritorna la risposta finale con il successo
-    return jsonify({"msg": "Account created successfully", "profile_message": res.get('message')}), 200
+    header = { 
+        "alg": "RS256",
+        "typ": "JWT"
+    } 
+    payload = {
+        "iss": "https://auth_service:5002",      # Emittente
+        "sub": username,              # Soggetto
+        "aud": ["auth_service"],         
+        "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
+        "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),  # Expiration
+        "scope": role,                   # Scopi
+        "jti": jti              # JWT ID
+    }
 
+    id_token = jwt.encode(payload, private_key, algorithm="RS256", headers=header)
+    return jsonify({"msg": "Account created successfully", "profile_message": res.get('message'), "id_token" : id_token}), 200
+   
 # Funzione mock per simulare la ricerca dell'utente nel database
 def mock_get_user(username):
     # Simula un utente trovato nel database
