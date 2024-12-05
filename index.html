@@ -5,6 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gacha LOLection</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      background-image: url('sfondo.webp');
+      background-size: cover; /* Adatta l'immagine per coprire l'intero schermo */
+      background-attachment: fixed; /* Mantiene l'immagine in posizione durante lo scrolling */
+      background-position: center; /* Centra l'immagine */
+      background-repeat: no-repeat; /* Evita la ripetizione dell'immagine */
+      margin: 0;
+      padding: 0;
+      height: 100vh; /* Assicura che il corpo occupi tutta l'altezza */
+      width: 100vw; /* Assicura che il corpo occupi tutta la larghezza */
+      overflow: hidden; /* Evita lo scrolling indesiderato */
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.9); /* Leggera trasparenza */
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    h1, h2, h3, label {
+      color: #000; /* Contrasto con lo sfondo trasparente */
+    }
+
+    button {
+      background-color: #007bff;
+      color: #fff;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -41,29 +75,6 @@
     <!-- Service Menu -->
     <div id="menu-section" style="display:none;">
       <h2>Service Menu</h2>
-
-      <!-- Payment Service -->
-      <div class="service-group">
-        <h3>Payment Service</h3>
-        <button id="buy-currency-button">Buy Currency</button>
-        <button id="view-transactions-button">View Transactions</button>
-        <div id="payment-service-result"></div> <!-- Results for Payment Service -->
-      </div>
-
-      <!-- Other Services Placeholder -->
-      <div class="service-group">
-        <h3>Other Services</h3>
-        <!-- Add buttons for other microservices here -->
-        <p>More services coming soon...</p>
-      </div>
-
-       <!-- Account Management -->
-      <div class="service-group">
-        <h3>Account</h3>
-        <button id="logout-button">Logout</button>
-        <button id="delete-account-button">Delete Account</button>
-        <div id="account-service-result"></div> <!-- Results for Account Management -->
-      </div>
       
       <!-- Profile Settings -->
       <div class="service-group">
@@ -71,6 +82,7 @@
         <button id="check-profile-button">Check Profile</button>
         <button id="retrieve-gacha-collection-button">Retrieve Gacha Collection</button>
         <button id="info-gacha-collection-button">Info Gacha Collection</button>
+        <hr>
         <form id="modify-profile-form">
           <label for="modify-field">Field to Modify:</label>
           <select id="modify-field" name="field" required>
@@ -91,8 +103,14 @@
         <div id="profile-result" class="service-result"></div>
       </div>
       
-      
-      <!-- Gacha Roll Service -->
+      <!-- Payment Service -->
+      <div class="service-group">
+        <h3>Payment Service</h3>
+        <button id="buy-currency-button">Buy Currency</button>
+        <button id="view-transactions-button">View Transactions</button>
+        <div id="payment-service-result"></div> <!-- Results for Payment Service -->
+      </div>
+
       <!-- Gacha Roll Service -->
       <div class="service-group">
         <h3>Gacha Roll Service</h3>
@@ -128,6 +146,15 @@
         <button id="create-auction-button">Create Auction</button>
         <button id="bid-auction-button">Place a Bid</button>
         <div id="auction-service-result"></div> <!-- Results for Auction Service -->
+      </div>
+
+
+       <!-- Account Management -->
+       <div class="service-group">
+        <h3>Account</h3>
+        <button id="logout-button">Logout</button>
+        <button id="delete-account-button">Delete Account</button>
+        <div id="account-service-result"></div> <!-- Results for Account Management -->
       </div>
 
 
