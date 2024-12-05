@@ -180,3 +180,20 @@ p {
   border-radius: 8px; /* Optional, per un look più morbido */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional, per un effetto migliore */
 }
+/* Profile Setting Service Results */
+.service-result {
+  margin-top: 15px;
+  font-size: 0.9rem;
+  color: #333;
+  background: #f9f9f9;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.service-result img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
