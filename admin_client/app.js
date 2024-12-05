@@ -5,7 +5,7 @@ const BASE_URL_GACHASYS = "https://localhost:5009/gachasystem_service";
 
 
 const CERT_OPTIONS = { rejectUnauthorized: false }; // Gestione certificati autofirmati
-async function get_newToken() {
+async function get_newToken(url,payload) {
   const refreshToken = localStorage.getItem("refresh_token");
   try {
     const response = await fetch(`${BASE_URL}/newToken`, {
@@ -14,16 +14,23 @@ async function get_newToken() {
         Authorization: `Bearer ${refreshToken}`,
       },
     });
-
     const data = await response.json();
     if (response.ok) {
+      console.log("response_OK");
       localStorage.setItem("access_token", data.access_token);
-      return ; // Ritorna il nuovo token 
-      }
-    else
-      throw new Error("Failed to refresh token");}
-  catch (error) {
-    throw new Error("Failed to refresh token");
+      payload.headers["Authorization"] = "Bearer "+data.access_token; // Sovrascrive il valore
+      const res= await fetch(url,payload);
+      const resData = await res.json();
+      return { success: true, data: resData };
+    }else {
+      // Se la risposta per ottenere il token non è OK
+      console.log("response token non_OK");
+      const errorData = await response.json();
+      return { success: false, message: errorData.message || "Errore durante la richiesta di un nuovo token" };
+    }
+  } catch (error) {
+    // Gestione degli errori, ad esempio problemi di rete
+    return { success: false, message: error.message || "Errore sconosciuto" };
   }
 };
 
@@ -200,13 +207,13 @@ document.getElementById("see-auctions-button").addEventListener("click", async (
               ).toLocaleString()}`
           )
         : [`Auction: ${JSON.stringify(data)}`];
-      document.getElementById("service-result").innerHTML = auctions.join("<br>");
+      document.getElementById("auction-service-result").innerHTML = auctions.join("<br>");
     } else {
-      document.getElementById("service-result").textContent =
+      document.getElementById("auction-service-result").textContent =
         data.error || "Failed to fetch auctions";
     }
   } catch (error) {
-    document.getElementById("service-result").textContent = "Error: " + error.message;
+    document.getElementById("auction-service-result").textContent = "Error: " + error.message;
   }
 });
 
@@ -241,13 +248,13 @@ document.getElementById("modify-auction-button").addEventListener("click", async
 
     const data = await response.json();
     if (response.ok) {
-      document.getElementById("service-result").textContent = "You have successfully update auction" + auctionId
+      document.getElementById("auction-service-result").textContent = "You have successfully update auction" + auctionId
     } else {
-      document.getElementById("service-result").textContent =
+      document.getElementById("auction-service-result").textContent =
         data.error || "Failed to update auction";
     }
   } catch (error) {
-    document.getElementById("service-result").textContent = "Error: " + error.message;
+    document.getElementById("auction-service-result").textContent = "Error: " + error.message;
   }
 });
 
@@ -275,13 +282,13 @@ document.getElementById("addGachaForm").addEventListener("submit", async functio
 
       if (response.ok) {
           const data = await response.json();
-          document.getElementById("service-result").textContent = "Gacha correctly added to the system!"
+          document.getElementById("gacha-system-result").textContent = "Gacha correctly added to the system!"
       }else {
             const data = await response.json();
-            document.getElementById("service-result").textContent = data.Error || "Adding failed";
+            document.getElementById("gacha-system-result").textContent = data.Error || "Adding failed";
           }
     } catch (error) {
-      document.getElementById("service-result").textContent = "Error: " + error.message;
+      document.getElementById("gacha-system-result").textContent = "Error: " + error.message;
     }
 });
 
@@ -305,13 +312,13 @@ document.getElementById("delete-gacha-button").addEventListener("click", async (
 
     if (response.ok) {
       const data = await response.json();
-      document.getElementById("service-result").textContent = "Gacha correctly removed from the system!";
+      document.getElementById("gacha-system-result").textContent = "Gacha correctly removed from the system!";
     } else {
       const data = await response.json();
-      document.getElementById("service-result").textContent = data.Error || "Deletion failed";
+      document.getElementById("gacha-system-result").textContent = data.Error || "Deletion failed";
     }
   } catch (error) {
-    document.getElementById("service-result").textContent = "Error: " + error.message;
+    document.getElementById("gacha-system-result").textContent = "Error: " + error.message;
   }
 });
 
@@ -320,8 +327,8 @@ document.getElementById("delete-gacha-button").addEventListener("click", async (
 document.getElementById("update-gacha-button").addEventListener("click", async () => {
   const accessToken = localStorage.getItem("access_token");
   const gacha_name = prompt("Enter gacha_name:");
-  const rarity = prompt("Enter base price:");
-  const description = prompt("Enter end date:");
+  const rarity = prompt("Enter rarity:");
+  const description = prompt("Enter description:");
 
   try {
     const gachaData = new URLSearchParams();
@@ -347,47 +354,75 @@ document.getElementById("update-gacha-button").addEventListener("click", async (
 
     const data = await response.json();
     if (response.ok) {
-      document.getElementById("service-result").textContent = "You have successfully update the gacha" + gacha_name
+      document.getElementById("gacha-system-result").textContent = "You have successfully update the gacha " + gacha_name
     } else {
-      document.getElementById("service-result").textContent =
+      document.getElementById("gacha-system-result").textContent =
         data.error || "Failed to update gacha";
     }
   } catch (error) {
-    document.getElementById("service-result").textContent = "Error: " + error.message;
+    document.getElementById("gacha-system-result").textContent = "Error: " + error.message;
   }
 });
 
-
 document.getElementById("get-collection-button").addEventListener("click", async () => {
   const accessToken = localStorage.getItem("access_token");
-
-  // Prompt per ottenere i nomi di gacha
-  const gachaNames = prompt("Enter the names of the gachas, separated by commas: (optional)").split(",");
+  const gachaName = prompt("Enter Gacha Names (comma-separated) or leave blank for full collection:");
 
   try {
-    // Prepara i parametri come application/x-www-form-urlencoded
-    const params = new URLSearchParams();
-    gachaNames.forEach(name => params.append("gacha_name", name.trim())); // Aggiungi ogni valore
+    // Prepara il body della richiesta come application/x-www-form-urlencoded
+    const body = new URLSearchParams();
+    if (gachaName) {
+      gachaName.split(",").forEach((name) => body.append("gacha_name", name.trim()));
+    }
 
-    // Esegui la richiesta
-    const response = await fetch(BASE_URL_GACHASYS + "/get_gacha_collection", {
-      method: "POST", // Usa POST o GET a seconda delle esigenze del server
+    const response = await fetch(`${BASE_URL_GACHASYS}/get_gacha_collection`, {
+      method: "POST",
       headers: {
+        "Content-Type": "application/x-www-form-urlencoded", // Cambiato il Content-Type
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: params.toString(), // Invia i parametri come form-urlencoded
+      body: body.toString(), // Invia i dati codificati
     });
+    token_valid=false;
+    data = await response.json();
 
-    if (response.ok) {
-      const data = await response.json();
-      console.log("Gacha collection:", data);
-      document.getElementById("service-result").textContent = JSON.stringify(data, null, 2);
+    if (response.ok)
+      token_valid=true;
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL_GACHASYS}/get_gacha_collection`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded", // Cambiato il Content-Type
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: body.toString(), // Invia i dati codificati
+        })
+        console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          data=tokenRes.data;
+        }
+    }
+    if (token_valid) {
+      // Mostra i risultati (già funzionante)
+      const gachaContainer = document.getElementById("gacha-system-result");
+      gachaContainer.innerHTML = ""; // Resetta il contenuto precedente
+      data.forEach((gacha) => {
+        const gachaElement = document.createElement("div");
+        gachaElement.className = "gacha-item";
+        gachaElement.innerHTML = `
+          <img src="${gacha.img}" alt="${gacha.gacha_name}">
+          <p><strong>Name:</strong> ${gacha.gacha_name}</p>
+          <p><strong>Rarity:</strong> ${gacha.rarity}</p>
+          <p><strong>Description:</strong> ${gacha.description}</p>
+        `;
+        gachaContainer.appendChild(gachaElement);
+      });
     } else {
-      const data = await response.json();
-      document.getElementById("service-result").textContent = data.Error || "Failed to fetch gacha collection";
+      alert(data.Error || "Failed to fetch Gacha Collection");
     }
   } catch (error) {
-    document.getElementById("service-result").textContent = "Error: " + error.message;
+    alert("Error: " + error.message);
   }
 });
