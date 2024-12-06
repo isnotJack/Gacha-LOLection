@@ -215,11 +215,10 @@ document.getElementById("see-auctions-button").addEventListener("click", async (
         Authorization: `Bearer ${accessToken}`,
       },
     });
-
+    data = await response.json();
     token_valid=false;      
     if (response.ok){
       token_valid=true;
-      const data = await response.json();
     }
     else if(response.status == 401){
       console.log("Trying");
@@ -232,10 +231,10 @@ document.getElementById("see-auctions-button").addEventListener("click", async (
       console.log(tokenRes.success, tokenRes.data);
       if (tokenRes.success){
           token_valid=true;
-          const data = tokenRes.data;
+          data = tokenRes.data;
         }
     }
-    if (token_valid) {
+      if (token_valid) {
       const auctions = Array.isArray(data)
         ? data.map(
             (a) =>
@@ -244,16 +243,15 @@ document.getElementById("see-auctions-button").addEventListener("click", async (
               ).toLocaleString()}`
           )
         : [`Auction: ${JSON.stringify(data)}`];
-      document.getElementById("auction-service-result").innerHTML = auctions.join("<br>");
-    } else {
-      document.getElementById("auction-service-result").textContent =
+        document.getElementById("auction-service-result").innerHTML = auctions.join("<br>");
+      } else {
+      document.getElementById("service-result").textContent =
         data.error || "Failed to fetch auctions";
     }
   } catch (error) {
-    document.getElementById("auction-service-result").textContent = "Error: " + error.message;
+    document.getElementById("service-result").textContent = "Error: " + error.message;
   }
 });
-
 
 // Modify Auctions
 document.getElementById("modify-auction-button").addEventListener("click", async () => {
