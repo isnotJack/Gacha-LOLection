@@ -6,6 +6,36 @@ const BASE_URL_GACHA_SYSTEM = "https://localhost:5001/gachasystem_service";
 const BASE_URL_PROFILE_SETTING = "https://localhost:5001/profile_setting";
 
 const CERT_OPTIONS = { rejectUnauthorized: false }; // Gestione certificati autofirmati
+async function get_newToken(url,payload) {
+  const refreshToken = localStorage.getItem("refresh_token");
+  try {
+    const response = await fetch(`${BASE_URL}/newToken`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${refreshToken}`,
+      },
+    });
+    const data = await response.json();
+    if (response.ok) {
+      console.log("response_OK");
+      localStorage.setItem("access_token", data.access_token);
+      payload.headers["Authorization"] = "Bearer "+data.access_token; // Sovrascrive il valore
+      const res= await fetch(url,payload);
+      const resData = await res.json();
+      return { success: true, data: resData };
+    }else {
+      // Se la risposta per ottenere il token non è OK
+      console.log("response token non_OK");
+      const errorData = await response.json();
+      return { success: false, message: errorData.message || "Errore durante la richiesta di un nuovo token" };
+    }
+  } catch (error) {
+    // Gestione degli errori, ad esempio problemi di rete
+    return { success: false, message: error.message || "Errore sconosciuto" };
+  }
+};
+
+
 
 // Login
 document.getElementById("login-form").addEventListener("submit", async (e) => {
@@ -138,9 +168,28 @@ document.getElementById("delete-account-button").addEventListener("click", async
       },
       body: body.toString(),
     });
-
-    const data = await response.json();
-    if (response.ok) {
+    data = await response.json();
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL}/delete`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded", // Gateway requires form data
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: body.toString(),
+    });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          data = tokenRes.data;
+        }
+    }
+      if (token_valid) {
       alert("Account deleted successfully. Redirecting to the main menu.");
       localStorage.clear(); // Clear storage
       hideMenuSection(); // Redirect to login/signup
@@ -179,9 +228,28 @@ document.getElementById("buy-currency-button").addEventListener("click", async (
       },
       body: body.toString(), // Invia i dati codificati
     });
-
-    const data = await response.json();
-    if (response.ok) {
+    data = await response.json();
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL_PAYMENT}/buycurrency`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded", // Cambia il Content-Type
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: body.toString(), // Invia i dati codificati
+    });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          data = tokenRes.data;
+        }
+    }
+      if (token_valid) {
       document.getElementById("payment-service-result").textContent = `Currency purchased! Balance: ${data.balance}`;
     } else {
       document.getElementById("service-result").textContent = data.Error || "Failed to purchase currency";
@@ -208,9 +276,27 @@ document.getElementById("view-transactions-button").addEventListener("click", as
         Authorization: `Bearer ${accessToken}`,
       },
     });
+    data = await response.json();
 
-    const data = await response.json();
-    if (response.ok) {
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL_PAYMENT}/viewTrans?username=${encodeURIComponent(username)}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          data = tokenRes.data;
+        }
+    }
+      if (token_valid) {
       const transactions = data.map(
         (t) =>
           `ID: ${t.id}, Payer: ${t.payer_us}, Receiver: ${t.receiver_us}, Amount: ${t.amount}, Date: ${new Date(
@@ -243,9 +329,26 @@ document.getElementById("see-auctions-button").addEventListener("click", async (
         Authorization: `Bearer ${accessToken}`,
       },
     });
-
-    const data = await response.json();
-    if (response.ok) {
+    data = await response.json();
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL_AUCTION}/see${query}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          data = tokenRes.data;
+        }
+    }
+      if (token_valid) {
       const auctions = Array.isArray(data)
         ? data.map(
             (a) =>
@@ -296,9 +399,28 @@ document.getElementById("create-auction-button").addEventListener("click", async
       },
       body: JSON.stringify(body),
     });
-
-    const data = await response.json();
-    if (response.ok) {
+    data = await response.json();
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL_AUCTION}/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(body),
+    });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          data = tokenRes.data;
+        }
+    }
+      if (token_valid) {
       alert("Auction created successfully!");
       document.getElementById("auction-service-result").textContent = JSON.stringify(data);
     } else {
@@ -331,9 +453,26 @@ document.getElementById("bid-auction-button").addEventListener("click", async ()
         Authorization: `Bearer ${accessToken}`,
       },
     });
-
-    const data = await response.json();
-    if (response.ok) {
+    data = await response.json();
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL_AUCTION}/bid${query}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          data = tokenRes.data;
+        }
+    }
+      if (token_valid) {
       alert("Bid placed successfully!");
       document.getElementById("auction-service-result").textContent = JSON.stringify(data);
     } else {
@@ -380,10 +519,29 @@ document.querySelectorAll(".gacha-package").forEach((button) => {
         },
         body: JSON.stringify({ username, level }),
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
+      data = await response.json();
+      token_valid=false;      
+      if (response.ok){
+        token_valid=true;
+        
+      }
+      else if(response.status == 401){
+        console.log("Trying");
+        const tokenRes= await get_newToken(`${BASE_URL_GACHA}/gacharoll`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ username, level }),
+      });
+        console.log(tokenRes.success, tokenRes.data);
+        if (tokenRes.success){
+            token_valid=true;
+            data = tokenRes.data;
+          }
+      }
+        if (token_valid) {
         // Hide animation and show result
         animationSection.style.display = "none";
         gachaImage.src = data.img;
@@ -439,10 +597,28 @@ document.getElementById("view-gacha-collection-button").addEventListener("click"
       },
       body: body.toString(), // Invia i dati codificati
     });
-
-    const data = await response.json();
-
-    if (response.ok) {
+    data = await response.json();
+    token_valid=false;      
+      if (response.ok){
+        token_valid=true;
+      }
+      else if(response.status == 401){
+        console.log("Trying");
+        const tokenRes= await get_newToken(`${BASE_URL_GACHA_SYSTEM}/get_gacha_collection`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded", // Cambiato il Content-Type
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: body.toString(), // Invia i dati codificati
+    });
+        console.log(tokenRes.success, tokenRes.data);
+        if (tokenRes.success){
+            token_valid=true;
+            data = tokenRes.data;
+          }
+      }
+        if (token_valid) {
       // Mostra i risultati (già funzionante)
       const gachaContainer = document.getElementById("gacha-system-result");
       gachaContainer.innerHTML = ""; // Resetta il contenuto precedente
@@ -482,10 +658,27 @@ document.getElementById("check-profile-button").addEventListener("click", async 
       },
     });
 
-    const data = await response.json();
     const resultContainer = document.getElementById("profile-result");
-
-    if (response.ok) {
+    data = await response.json();
+    token_valid=false;      
+      if (response.ok){
+        token_valid=true;
+      }
+      else if(response.status == 401){
+        console.log("Trying");
+        const tokenRes= await get_newToken(`${BASE_URL_PROFILE_SETTING}/checkprofile?username=${encodeURIComponent(username)}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+        console.log(tokenRes.success, tokenRes.data);
+        if (tokenRes.success){
+            token_valid=true;
+            data = tokenRes.data;
+          }
+      }
+        if (token_valid) {
       resultContainer.innerHTML = `
         <p><strong>Username:</strong> ${data.username}</p>
         <p><strong>Email:</strong> ${data.email}</p>
@@ -517,10 +710,28 @@ document.getElementById("retrieve-gacha-collection-button").addEventListener("cl
       },
     });
 
-    const data = await response.json();
     const resultContainer = document.getElementById("profile-result");
-
-    if (response.ok) {
+    data = await response.json();
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
+      
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL_PROFILE_SETTING}/retrieve_gachacollection?username=${encodeURIComponent(username)}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          data = tokenRes.data;
+        }
+    }
+    if (token_valid) {
       if (Array.isArray(data) && data.length > 0) {
         resultContainer.innerHTML = data
           .map(
@@ -569,10 +780,31 @@ document.getElementById("info-gacha-collection-button").addEventListener("click"
       }
     );
 
-    const data = await response.json();
     const resultContainer = document.getElementById("profile-result");
-
-    if (response.ok) {
+    data = await response.json();
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
+      
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL_PROFILE_SETTING}/info_gachacollection?username=${encodeURIComponent(
+        username
+      )}&gacha_name=${encodeURIComponent(gachaName)}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          data = tokenRes.data;
+        }
+    }
+    if (token_valid) {
       // Verifica se è una lista e itera
       if (Array.isArray(data)) {
         resultContainer.innerHTML = data
@@ -639,10 +871,27 @@ document.getElementById("modify-profile-form").addEventListener("submit", async 
       },
       body: formData,
     });
-
-    const data = await response.json();
-
-    if (response.ok) {
+    data = await response.json();
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL_PROFILE_SETTING}/modify_profile`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: formData,
+    });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          data = tokenRes.data;
+        }
+    }
+    if (token_valid) {
       resultContainer.innerHTML = `
         <p><strong>Profile updated successfully!</strong></p>
         <p><strong>Username:</strong> ${data.profile.username}</p>

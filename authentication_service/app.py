@@ -235,7 +235,7 @@ def login():
             "sub": user.username,              # Soggetto
             "aud": ["profile_setting", "gachasystem", "payment_service", "gacha_roll", "auction_service", "auth_service"],         
             "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
-            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),  # Expiration
+            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=15),  # Expiration
             "scope": scope,                   # Scopi
             "jti": jti              # JWT ID
         }
@@ -398,7 +398,7 @@ def newToken():
             "sub": decoded_token.get("sub"),              # Soggetto
             "aud": ["profile_setting", "gachasystem", "payment_service", "gacha_roll", "auction_service", "auth_service"],         
             "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
-            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),  # Expiration
+            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=15),  # Expiration
             "scope": decoded_token.get("scope"),                   # Scopi
             "jti": jti              # JWT ID
         }
