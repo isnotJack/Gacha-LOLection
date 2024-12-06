@@ -1,7 +1,7 @@
 # Gacha LOLection
 
 ## Introduction
-Gacha LOLection is a platform that integrates the thrill of meme-based gacha rolls with auctions for trading gacha items. The backend architecture consists of microservices exposed with REST API for authentication, profile management, gacha operations, auctions, and payment. 
+Gacha LOLection is a platform that integrates the thrill of meme-based gacha rolls with auctions for trading gacha items. The backend architecture consists of microservices exposed with REST API for: authentication, profile management, gacha operations, auctions, and payment. 
 This README provides instructions for setting up the backend, testing its functionality, and ensuring its security.
 ![Gacha LOLection Banner](./sfondo.webp)
 
