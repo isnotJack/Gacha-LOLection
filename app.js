@@ -506,6 +506,51 @@ document.getElementById("bid-auction-button").addEventListener("click", async ()
   }
 });
 
+document.getElementById("close-auction-button").addEventListener("click", async () => {
+  const accessToken = localStorage.getItem("access_token");
+  const username = localStorage.getItem("logged_username");
+
+  if (!username || !accessToken) {
+    alert("Error: Missing username or access token. Please log in again.");
+    return;
+  }
+
+  const auctionId = parseInt(prompt("Enter the Auction ID to close:"), 10);
+
+  if (!auctionId) {
+    alert("Error: Auction ID is required to close the auction.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL_AUCTION}/close_auction`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        auction_id: auctionId,
+        username: username,
+      }),
+    });
+
+    const resultContainer = document.getElementById("auction-service-result");
+    const data = await response.json();
+
+    if (response.ok) {
+      resultContainer.innerHTML = `
+        <p><strong>Success:</strong> Auction closed successfully!</p>
+        <p><strong>Auction ID:</strong> ${data.auction_id}</p>
+      `;
+    } else {
+      resultContainer.innerHTML = `<p><strong>Error:</strong> ${data.error || "Failed to close the auction."}</p>`;
+    }
+  } catch (error) {
+    alert("Error: " + error.message);
+  }
+});
+
 let resultTimeout = null; // To store the current timeout reference
 
 

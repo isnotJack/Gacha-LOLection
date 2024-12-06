@@ -53,7 +53,7 @@ CHECK_URL = 'https://profile_setting:5003/checkprofile'
 RETRIEVE_URL = 'https://profile_setting:5003/retrieve_gachacollection'
 INFO_URL = 'https://profile_setting:5003/info_gachacollection'
 
-ALLOWED_AUCTION_OP = {'see', 'create', 'modify', 'bid','gacha_receive', 'auction_lost', 'auction_terminated'} 
+ALLOWED_AUCTION_OP = {'see', 'create', 'modify', 'bid','gacha_receive', 'auction_lost', 'auction_terminated', 'close_auction'} 
 AUCTION_BASE_URL = 'https://auction_service:5008'
 SEE_AUCTION_URL = f'{AUCTION_BASE_URL}/see'
 CREATE_AUCTION_URL = f'{AUCTION_BASE_URL}/create'
@@ -341,6 +341,30 @@ def auction_service(op):
         response, status_code = auction_circuit_breaker.call('patch', url, {}, headers, {}, False)
         if status_code != 200:
             return jsonify({'Error' : f'Error during bid op {response}'}), status_code
+        return make_response(jsonify(response), status_code)
+    # Operazione "close_auction"
+    elif op == 'close_auction':
+        data = request.get_json()  # Recupera i parametri dal corpo JSON
+        auction_id = data.get('auction_id')
+        username = data.get('username')
+
+        if not auction_id or not username:
+            return jsonify({"error": "Missing required parameters"}), 400
+
+        jwt_token = request.headers.get('Authorization')
+        headers = {
+            'Authorization': jwt_token
+        }
+        url = f'{AUCTION_BASE_URL}/close_auction'  # URL per il servizio di chiusura asta
+        payload = {
+            'auction_id': auction_id,
+            'username': username
+        }
+
+        response, status_code = auction_circuit_breaker.call('post', url, payload, headers, {}, True)
+        if status_code != 200:
+            return jsonify({'Error': f'Error during close_auction op {response}'}), status_code
+
         return make_response(jsonify(response), status_code)
     else:
         return jsonify({"error": f"Unknown operation '{op}'"}), 400
