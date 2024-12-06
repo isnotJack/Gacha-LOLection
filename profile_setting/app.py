@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 import jwt
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 import re 
+from collections import Counter
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@profile_db:5432/profile_db'
@@ -272,8 +273,7 @@ def check_profile():
     return jsonify(profile_data), 200
 
 # Endpoint per visualizzare la collezione gacha di un utente
-@app.route('/retrieve_gachacollection', methods=['GET']) #--> Sistemare GACHA SYSTEM PER RICEVERE COLLEZIONI
-#@jwt_required()
+@app.route('/retrieve_gachacollection', methods=['GET'])
 def retrieve_gacha_collection():
     username = sanitize_input(request.args.get('username'))
     auth_header = request.headers.get('Authorization')
@@ -285,8 +285,8 @@ def retrieve_gacha_collection():
         public_key = key_file.read()
 
     try:
-        # Verifica il token con la chiave pubblica
-        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="profile_setting")  
+        # Verify the token with the public key
+        decoded_token = jwt.decode(access_token, public_key, algorithms=["RS256"], audience="profile_setting")
         if username and decoded_token.get("sub") != username:
             return jsonify({"error": "Username in token does not match the request username"}), 403
     except ExpiredSignatureError:
@@ -295,35 +295,40 @@ def retrieve_gacha_collection():
         return jsonify({"error": "Invalid token"}), 401
 
     profile = Profile.query.filter_by(username=username).first()
-    
     if not profile:
         return jsonify({"error": "User not found"}), 401
 
-    # Estrai la collezione di gachas dell'utente
+    # Extract the user's gacha collection
     gacha_collection = [item.gacha_name for item in profile.gacha_collection]
 
     if not gacha_collection:
         return jsonify({"message": "User has no gachas"}), 200
 
-    url="https://gachasystem:5004/get_gacha_collection" #AGGIUSTARE NUMERI PORTA
-     # Se l'utente ha dei gachas nella collezione, li inviamo al servizio come parametro
-    jwt_token = request.headers.get('Authorization')  # Supponiamo che il token JWT sia passato nei headers come 'Authorization'
+    # Count occurrences of each gacha
+    gacha_counts = Counter(gacha_collection)
+    gacha_and_numbers = [{"gacha_name": name, "count": count} for name, count in gacha_counts.items()]
+    gacha_counts_map = {item["gacha_name"]: item["count"] for item in gacha_and_numbers}
+
+    url = "https://gachasystem:5004/get_gacha_collection"
+    jwt_token = request.headers.get('Authorization')
     headers = {
-        'Authorization': jwt_token,  # Usa il token JWT ricevuto nell'header della richiesta
+        'Authorization': jwt_token,
         'Content-Type': 'application/json'
     }
-    # Invia la lista di gacha_name come query string
-    #response = requests.get(url, params={'gacha_name': ','.join(gacha_collection)}, timeout=10)
-    # Invia la lista di gacha_name
+
+    # Send the gacha names to the gacha system service
     payload = {'gacha_name': gacha_collection}
-    # headers = {'Content-Type': 'application/json'
-    #            ''}
-    # response = requests.get(url, json=payload, headers=headers, timeout=10)
-    res, status = gacha_sys_circuit_breaker.call('get', url , payload, headers, {}, True)
+    res, status = gacha_sys_circuit_breaker.call('get', url, payload, headers, {}, True)
     if status != 200:
         return jsonify({'Error': 'Gacha service is down', 'details': res}), 500
+
+    # Attach count to each gacha in the response
+    for gacha in res:
+        gacha_name = gacha.get("gacha_name")
+        gacha["count"] = gacha_counts_map.get(gacha_name, 0)
+
     return jsonify(res), 200
- 
+
 # Endpoint per visualizzare i dettagli di un oggetto gacha specifico
 @app.route('/info_gachacollection', methods=['GET'])
 #@jwt_required()

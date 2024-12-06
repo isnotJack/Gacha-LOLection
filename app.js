@@ -43,11 +43,18 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
 
   const username = document.getElementById("login-username").value;
   const password = document.getElementById("login-password").value;
+  const hashedPassword = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(password)
+  );
+  const hashArray = Array.from(new Uint8Array(hashedPassword));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  console.log(hashHex);
 
   try {
     const body = new URLSearchParams();
     body.append("username", username);
-    body.append("password", password);
+    body.append("password", hashedPassword);
 
     const response = await fetch(`${BASE_URL}/login`, {
       method: "POST",
@@ -79,12 +86,20 @@ document.getElementById("signup-form").addEventListener("submit", async (e) => {
 
   const username = document.getElementById("signup-username").value;
   const password = document.getElementById("signup-password").value;
+  const hashedPassword = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(password)
+  );
+  const hashArray = Array.from(new Uint8Array(hashedPassword));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  console.log(hashHex);
+
   const email = document.getElementById("signup-email").value;
 
   try {
     const body = new URLSearchParams();
     body.append("username", username);
-    body.append("password", password);
+    body.append("password", hashedPassword);
     body.append("email", email);
 
     const response = await fetch(`${BASE_URL}/signup`, {
@@ -149,6 +164,13 @@ document.getElementById("delete-account-button").addEventListener("click", async
   const accessToken = localStorage.getItem("access_token");
   const username = localStorage.getItem("logged_username"); // Assume username is stored at login
   const password = prompt("Enter your password to confirm deletion:");
+  const hashedPassword = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(password)
+  );
+  const hashArray = Array.from(new Uint8Array(hashedPassword));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  console.log(hashHex);
 
   if (!password) {
     alert("Password is required to delete your account.");
@@ -158,7 +180,7 @@ document.getElementById("delete-account-button").addEventListener("click", async
   try {
     const body = new URLSearchParams();
     body.append("username", username);
-    body.append("password", password);
+    body.append("password", hashedPassword);
 
     const response = await fetch(`${BASE_URL}/delete`, {
       method: "DELETE",
@@ -741,6 +763,7 @@ document.getElementById("retrieve-gacha-collection-button").addEventListener("cl
                 <p><strong>Name:</strong> ${gacha.gacha_name}</p>
                 <p><strong>Rarity:</strong> ${gacha.rarity}</p>
                 <p><strong>Description:</strong> ${gacha.description}</p>
+                <p><strong>Count number:</strong> ${gacha.count}</p>
               </div>
             `
           )
@@ -856,7 +879,7 @@ document.getElementById("modify-profile-form").addEventListener("submit", async 
   const formData = new FormData();
   formData.append("username", username);
   formData.append("field", field);
-  if (field !== "profile_image") {
+  if (field == "email") {
     formData.append("value", value);
   }
   if (imageFile) {
