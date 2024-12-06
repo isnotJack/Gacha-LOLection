@@ -25,8 +25,9 @@ async function get_newToken(url,payload) {
     }else {
       // Se la risposta per ottenere il token non è OK
       console.log("response token non_OK");
-      const errorData = await response.json();
-      return { success: false, message: errorData.message || "Errore durante la richiesta di un nuovo token" };
+      alert("Failing in refreshing token. Logging out...");
+      localStorage.clear(); // Clear storage
+      hideMenuSection(); // Redirect to login/signup
     }
   } catch (error) {
     // Gestione degli errori, ad esempio problemi di rete
