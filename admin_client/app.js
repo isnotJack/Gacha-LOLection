@@ -40,11 +40,17 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
 
   const username = document.getElementById("login-username").value;
   const password = document.getElementById("login-password").value;
-
+  const hashedPassword = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(password)
+  );
+  const hashArray = Array.from(new Uint8Array(hashedPassword));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  console.log(hashHex);
   try {
     const body = new URLSearchParams();
     body.append("username", username);
-    body.append("password", password);
+    body.append("password", hashedPassword);
 
     const response = await fetch(`${BASE_URL}/login`, {
       method: "POST",
@@ -77,11 +83,17 @@ document.getElementById("signup-form").addEventListener("submit", async (e) => {
   const username = document.getElementById("signup-username").value;
   const password = document.getElementById("signup-password").value;
   const email = document.getElementById("signup-email").value;
-
+  const hashedPassword = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(password)
+  );
+  const hashArray = Array.from(new Uint8Array(hashedPassword));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  console.log(hashHex);
   try {
     const body = new URLSearchParams();
     body.append("username", username);
-    body.append("password", password);
+    body.append("password", hashedPassword);
     body.append("email", email);
 
     const response = await fetch(`${BASE_URL}/signup`, {
@@ -146,16 +158,24 @@ document.getElementById("delete-account-button").addEventListener("click", async
   const accessToken = localStorage.getItem("access_token");
   const username = localStorage.getItem("logged_username"); // Assume username is stored at login
   const password = prompt("Enter your password to confirm deletion:");
-
+  
   if (!password) {
     alert("Password is required to delete your account.");
     return;
   }
 
+  const hashedPassword = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(password)
+  );
+  const hashArray = Array.from(new Uint8Array(hashedPassword));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  console.log(hashHex);
+
   try {
     const body = new URLSearchParams();
     body.append("username", username);
-    body.append("password", password);
+    body.append("password", hashedPassword);
 
     const response = await fetch(`${BASE_URL}/delete`, {
       method: "DELETE",
@@ -265,11 +285,11 @@ document.getElementById("modify-auction-button").addEventListener("click", async
     const end_date = prompt("Enter end date:");
     
     const auctionData = {
-      auctionId: auctionId,
+      auction_id: auctionId,
       seller_username: seller_username,
       gacha_name: gacha_name,
-      base_price: parseFloat(base_price), // Converte il prezzo in numero
-      end_date: end_date
+      basePrice: parseFloat(base_price), // Converte il prezzo in numero
+      endDate: end_date
   };
 
     const response = await fetch(`${BASE_URL_AUCTION}/modify`, {
