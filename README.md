@@ -1,4 +1,3 @@
-# SSE-project
 # Gacha LOLection
 
 ## Introduction
@@ -16,7 +15,7 @@ Gacha LOLection is a platform that integrates the thrill of meme-based gacha rol
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone da rendere publica
+   git clone https://github.com/username/gacha-lollection.git
    cd gacha-lollection
    ```
 
@@ -33,17 +32,17 @@ Gacha LOLection is a platform that integrates the thrill of meme-based gacha rol
 ## MicroFreshener Analysis
 To analyze the microservices architecture:
 
-1. Install MicroFreshener:
+1. Download MicroFreshener:
    ```bash
-   npm install -g microfreshener
+   docker pull microfreshener/microfreshener
    ```
 
-2. Generate the architecture visualization:
+2. Start MicroFreshener:
    ```bash
-   microfreshener-cli analyze -f architecture.yaml -o output.json
+   docker compose up --build
    ```
 
-3. Open the output JSON file with the MicroFreshener web interface to review architectural smells and dependencies.
+3. Access it at `http://127.0.0.1:8080`.
 
 ---
 
@@ -54,53 +53,32 @@ The project includes comprehensive CI/CD pipelines for automated testing:
 
 1. **Unit Testing:**
    - Each microservice contains a `tests` folder with unit tests.
-   - Run locally using:
-     ```bash
-     pytest tests/
-     ```
-   - Run in CI using GitHub Actions. The workflow automatically executes unit tests with mocked dependencies.
+   - Unit tests mock interactions with other services.
+   - Postman collections for unit tests are available in every microservice folder.
 
 2. **Integration Testing:**
-   - Postman collections are provided for end-to-end testing of service interactions.
-   - Run integration tests:
-     ```bash
-     newman run tests/integration.postman_collection.json -e tests/environment.json
-     ```
+   - Integration tests are defined in `.github/workflows`.
+   - Postman collections for integration tests are exported and stored in this directory.
+   - Both types of tests are defined as separate jobs in GitHub Actions and trigger on each push.
 
 3. **Performance Testing:**
-   - Locust simulates multiple users interacting with the system:
+   - Install Locust:
      ```bash
-     locust -f locustfile.py --host=http://localhost
+     pip install locust
      ```
-   - Configure user tasks and weights in `locustfile.py`.
+   - Ensure backend services are running.
+   - Start Locust:
+     ```bash
+     locust
+     ```
+   - Access results at `http://localhost:8089`.
 
 ---
 
 ## Security Enhancements
 
 ### HTTPS Configuration
-To enable secure communication between microservices:
-
-1. Generate TLS certificates:
-   ```bash
-   openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 365
-   ```
-
-2. Update `docker-compose.yml`:
-   ```yaml
-   secrets:
-     service_cert:
-       file: ./cert.pem
-     service_key:
-       file: ./key.pem
-   ```
-
-3. Configure Flask services to use certificates:
-   ```bash
-   CMD ["flask", "run", "--host=0.0.0.0", "--port=5000", "--cert=cert.pem", "--key=key.pem"]
-   ```
-
-4. Set `verify=False` in service calls during local testing to avoid certificate errors.
+To enable secure communication between microservices we used https and set `verify=False` in service calls during local testing to avoid certificate errors.
 
 ### Data Sanitization
 Sanitization ensures secure handling of user input:
@@ -121,7 +99,7 @@ Sanitization ensures secure handling of user input:
      ```bash
      pip-audit
      ```
-   - Enable Dependabot in GitHub to automatically flag dependency vulnerabilities.
+   - Integrated with Dependabot to automatically flag dependency vulnerabilities in GitHub.
 
 3. Docker Image Scanning:
    - Use Docker Scout to scan for vulnerabilities in images:
@@ -138,12 +116,22 @@ The frontend client provides an interactive user interface for Gacha LOLection. 
 - Manage their profiles.
 
 Ensure the backend services are running before starting the demo:
+
+Install the CORS Unblock extension in your browser to bypass cross-origin restrictions. This is necessary because the client and backend services are served from different origins, and the extension allows communication between them. Download link `[https://webextension.org/listing/access-control.html](https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino)`
+
+Access `https://localhost:5001`, navigate to advanced settings, and accept the self-signed certificate to ensure secure communication.
+
+Start the local server for the client (run it in the root directory):
 ```bash
 python3 -m http.server 8000
 ```
 Access the demo at `http://localhost:8000`.
 
+A demonstration video:
+
+
 ---
 
 For further details, refer to the uploaded documentation or reach out to the authors.
+
 
