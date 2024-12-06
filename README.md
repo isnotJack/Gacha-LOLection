@@ -55,7 +55,7 @@ To analyze the microservices architecture:
 The project includes comprehensive CI/CD pipelines for automated testing:
 
 1. **Unit Testing:**
-   - Each microservice contains a its unit tests.
+   - Each microservice contains its unit tests.
    - Unit tests mock interactions with other services.
    - Postman collections for unit tests are available in every microservice folder.
 
@@ -72,7 +72,7 @@ The project includes comprehensive CI/CD pipelines for automated testing:
    - Ensure backend services are running.
    - Start Locust:
      ```bash
-     locust
+     locust -f locustfile.py
      ```
    - Access results at `http://localhost:8089`.
 
