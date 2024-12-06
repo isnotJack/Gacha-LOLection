@@ -5,6 +5,7 @@ Gacha LOLection is a platform that integrates the thrill of meme-based gacha rol
 This README provides instructions for setting up the backend, testing its functionality, and ensuring its security.
 ![Gacha LOLection Banner](./sfondo.webp)
 
+https://github.com/user-attachments/assets/80846b2a-2239-47db-957a-4d4821d314a1
 ---
 
 ## Get Started
