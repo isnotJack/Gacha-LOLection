@@ -54,7 +54,7 @@ To analyze the microservices architecture:
 The project includes comprehensive CI/CD pipelines for automated testing:
 
 1. **Unit Testing:**
-   - Each microservice contains a `tests` folder with unit tests.
+   - Each microservice contains a its unit tests.
    - Unit tests mock interactions with other services.
    - Postman collections for unit tests are available in every microservice folder.
 
