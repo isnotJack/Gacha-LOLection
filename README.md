@@ -72,7 +72,7 @@ The project includes comprehensive CI/CD pipelines for automated testing:
    - Ensure backend services are running.
    - Start Locust:
      ```bash
-     locust locustfile.py
+     locust -f locustfile.py
      ```
    - Access results at `http://localhost:8089`.
 
