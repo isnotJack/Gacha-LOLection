@@ -1,0 +1,1139 @@
+{
+	"info": {
+		"_postman_id": "9d48637d-331d-4065-8258-422ba34ab7b8",
+		"name": "Authentication",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39572565",
+		"_collection_link": "https://sse888.postman.co/workspace/SSE-Workspace~ba3287da-3f46-4d53-b9ae-99dcb913c461/collection/39572565-9d48637d-331d-4065-8258-422ba34ab7b8?action=share&source=collection_link&creator=39572565"
+	},
+	"item": [
+		{
+			"name": "authentication",
+			"item": [
+				{
+					"name": "sign_up",
+					"item": [
+						{
+							"name": "signup_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify singup\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('msg');\r",
+											"    pm.expect(pm.response.to.have.status(200));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\" : \"user1\",\r\n    \"password\" : \"1234\",\r\n    \"email\" : \"user1@gmail.com\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/signup",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"signup"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "signup_not _user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify singup\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\" : \"\",\r\n    \"password\" : \"1234\",\r\n    \"email\" : \"user1@gmail.com\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/signup",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"signup"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "signup_not_password",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify singup\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\" : \"user1\",\r\n    \"password\" : \"\",\r\n    \"email\" : \"user1@gmail.com\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/signup",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"signup"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "signup_not_email",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify singup\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\" : \"user1\",\r\n    \"password\" : \"1234\",\r\n    \"email\" : \"\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/signup",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"signup"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "signup_bad_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Verify singup\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(422));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\" : \"existing_user\",\r\n    \"password\" : \"1234\",\r\n    \"email\" : \"user1@gmail.com\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/signup",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"signup"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sign_up_sanitifaction",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response body contains 'Account created successfully'\", function () {",
+											"    pm.expect(pm.response.text()).to.include(\"Account created successfully\");",
+											"});",
+											"",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\" : \"hello!$%^world123\",\n    \"password\" : \"1234\",\n    \"email\" : \"user1@gmail.com\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/signup",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"signup"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sign_up_sanitifaction_email",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"pm.test(\"Response contains error message for invalid email format\", function () {",
+											"    pm.expect(pm.response.json().Error).to.equal(\"Invalid email format\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\" : \"hello!$%^world123\",\n    \"password\" : \"1234\",\n    \"email\" : \"user1gmail.com\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/signup",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"signup"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "login",
+					"item": [
+						{
+							"name": "login_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password",
+											"pm.test(\"Verify login using the provided username and password in JSON format\", ",
+											"function () {",
+											"    var responseData = pm.response.json();",
+											"",
+											"    // Add assertions to validate the response body",
+											"    pm.expect(responseData).to.have.property('access_token');",
+											"    pm.expect(pm.response.to.have.status(200));",
+											"});",
+											"",
+											"pm.test(\"Access Token received\", function () {",
+											"    pm.response.to.have.status(200);",
+											"    var jsonData = pm.response.json();",
+											"    pm.environment.set(\"auth_token\", jsonData.access_token);",
+											"});",
+											"",
+											"",
+											"pm.test(\"Refresh Token received\", function () {",
+											"    pm.response.to.have.status(200);",
+											"    var jsonData = pm.response.json();",
+											"    pm.environment.set(\"refresh_token\", jsonData.refresh_token);",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"user1\",\n    \"password\": \"1234\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/login",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "login_not_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify login using the provided username and password in JSON format\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"\",\r\n    \"password\": \"1234\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/login",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "login_bad_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify login using the provided username and password in JSON format\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(404));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"player\",\r\n    \"password\": \"1234\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/login",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "login_not_password",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify login using the provided username and password in JSON format\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"user1\",\r\n    \"password\": \"\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/login",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"login"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "delete",
+					"item": [
+						{
+							"name": "delete_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify delete\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('msg');\r",
+											"    pm.expect(pm.response.to.have.status(200));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{refresh_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"user1\",\r\n    \"password\" : \"1234\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/delete",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"delete"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete_not_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify delete\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('error');\r",
+											"    pm.expect(pm.response.to.have.status(403));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{refresh_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"\",\r\n    \"password\" : \"1234\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/delete",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"delete"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete_not_password",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify delete\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{refresh_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"user1\",\r\n    \"password\" : \"\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/delete",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"delete"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete_bad_user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify delete\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('error');\r",
+											"    pm.expect(pm.response.to.have.status(403));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{refresh_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"player222\",\r\n    \"password\" : \"1234\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/delete",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"delete"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete_bad_password",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify delete\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('Error');\r",
+											"    pm.expect(pm.response.to.have.status(404));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{refresh_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"user1\",\r\n    \"password\" : \"7890\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5002/delete",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"delete"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "logout",
+					"item": [
+						{
+							"name": "logout_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify logout using token\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('msg');\r",
+											"    pm.expect(pm.response.to.have.status(200));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{refresh_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMjE4MTU4MiwianRpIjoiYzNmZDBlOGUtNjRmNy00ZDU5LWIzNzUtYmQ1ZGViZmMzMTZhIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJ1c2VybmFtZSI6InVzZXIxIiwicm9sZSI6InVzZXIifSwibmJmIjoxNzMyMTgxNTgyLCJleHAiOjE3MzIxODI0ODJ9.XZeBpcQOA-rzdIU0LrQNgWhV4s9AEwdazqr2rS6i6lQ\"",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://localhost:5002/logout",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"logout"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "logout_bad_token",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify logout using token\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer ",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://localhost:5002/logout",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"logout"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "newToken",
+					"item": [
+						{
+							"name": "newToken_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify logout using token\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('access_token');\r",
+											"    pm.expect(pm.response.to.have.status(200));\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Access Token received\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.environment.set(\"user1_auth_token\", jsonData.access_token);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMjE4MTU4MiwianRpIjoiYzNmZDBlOGUtNjRmNy00ZDU5LWIzNzUtYmQ1ZGViZmMzMTZhIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJ1c2VybmFtZSI6InVzZXIxIiwicm9sZSI6InVzZXIifSwibmJmIjoxNzMyMTgxNTgyLCJleHAiOjE3MzIxODI0ODJ9.XZeBpcQOA-rzdIU0LrQNgWhV4s9AEwdazqr2rS6i6lQ\"",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://localhost:5002/newToken",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"newToken"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "newToken_bad_token",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test to verify the login using username and password\r",
+											"pm.test(\"Verify logout using token\", \r",
+											"function () {\r",
+											"    var responseData = pm.response.json();\r",
+											"\r",
+											"    // Add assertions to validate the response body\r",
+											"    pm.expect(responseData).to.have.property('error');\r",
+											"    pm.expect(pm.response.to.have.status(400));\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMjE4MTU4MiwianRpIjoiYzNmZDBlOGUtNjRmNy00ZDU5LWIzNzUtYmQ1ZGViZmMzMTZhIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJ1c2VybmFtZSI6InVzZXIxIiwicm9sZSI6InVzZXIifSwibmJmIjoxNzMyMTgxNTgyLCJleHAiOjE3MzIxODI0ODJ9.XZeBpcQOA-rzdIU0LrQNgWhV4s9AEwdazqr2rS6i6lQ\"",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://localhost:5002/newToken",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"newToken"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{refresh_token}}",
+								"type": "string"
+							}
+						]
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}

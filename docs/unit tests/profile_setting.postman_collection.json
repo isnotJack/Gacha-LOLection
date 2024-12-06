@@ -1,0 +1,1257 @@
+{
+	"info": {
+		"_postman_id": "bdf92b8f-a29b-4570-9bee-6be0b5d1a8b0",
+		"name": "Profile_setting",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39572565",
+		"_collection_link": "https://sse888.postman.co/workspace/SSE-Workspace~ba3287da-3f46-4d53-b9ae-99dcb913c461/collection/39572565-bdf92b8f-a29b-4570-9bee-6be0b5d1a8b0?action=share&source=collection_link&creator=39572565"
+	},
+	"item": [
+		{
+			"name": "profile_setting",
+			"item": [
+				{
+					"name": "modify_profile",
+					"item": [
+						{
+							"name": "modify_profile_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Profile updated successfully\", function () {",
+											"    pm.expect(pm.response.json()).to.have.property(\"message\", \"Profile updated successfully\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "username",
+											"value": "user1",
+											"type": "text"
+										},
+										{
+											"key": "image",
+											"type": "file",
+											"src": "{{GACHA_IMAGE_PATH}}"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5003/modify_profile",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"modify_profile"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "TryToModifycurrency_balance",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"pm.test(\"Error message for currency_balance not modifiable\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"error\", \"Modifying 'currency_balance' field is not allowed\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "username",
+											"value": "user1",
+											"type": "text"
+										},
+										{
+											"key": "field",
+											"value": "currency_balance",
+											"type": "text"
+										},
+										{
+											"key": "value",
+											"value": "4000000",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5003/modify_profile",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"modify_profile"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "NoUsernameParam",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"pm.test(\"Missing username parameter\", function () {",
+											"    pm.expect(pm.response.json().error).to.include(\"Missing required 'username' field\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "field",
+											"value": "currency_balance",
+											"type": "text"
+										},
+										{
+											"key": "value",
+											"value": "4000000",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5003/modify_profile",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"modify_profile"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "UsernameDifferentThanToken",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 403\", function () {",
+											"    pm.response.to.have.status(403);",
+											"});",
+											"",
+											"pm.test(\"Error message for username in token doesn't match username in request\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"error\", \"Username in token does not match the request username\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "username",
+											"value": "aaaa",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5003/modify_profile",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"modify_profile"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "InvalidField(USELESS)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"pm.test(\"Error message for invalid field to modify\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"error\", \"Field 'age' does not exist in profile\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "username",
+											"value": "user1",
+											"type": "text"
+										},
+										{
+											"key": "field",
+											"value": "age",
+											"type": "text"
+										},
+										{
+											"key": "value",
+											"value": "80",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5003/modify_profile",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"modify_profile"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "NothingToModify",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"pm.test(\"Error message for no field to modify\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"error\", \"No valid field or image provided for update\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "username",
+											"value": "user1",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://localhost:5003/modify_profile",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"modify_profile"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "check_profile",
+					"item": [
+						{
+							"name": "profile_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Profile data retrieved successfully\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"username\");",
+											"    pm.expect(jsonData).to.have.property(\"email\");",
+											"    pm.expect(jsonData).to.have.property(\"profile_image\").that.includes(\"/images_profile/uploads/\");",
+											"    pm.expect(jsonData).to.have.property(\"currency_balance\").that.is.a('number');",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5003/checkprofile?username=user1",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"checkprofile"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "user1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "UsernameDifferentThanToken",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 403\", function () {",
+											"    pm.response.to.have.status(403);",
+											"});",
+											"",
+											"pm.test(\"Error message for username in token doesn't match username in request\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"error\", \"Username in token does not match the request username\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5003/checkprofile?username=nonexistent_user",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"checkprofile"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "nonexistent_user"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "missing_param",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"pm.test(\"Error message for missing username\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"error\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5003/checkprofile",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"checkprofile"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "retrieve_gachacollection",
+					"item": [
+						{
+							"name": "retrieve_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"There are gachas in the collection of the user\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.be.an('array'); // Controlla che la risposta sia un array",
+											"    pm.expect(jsonData.length).to.be.greaterThan(0); // Controlla che ci siano oggetti nella collezione",
+											"});",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5003/retrieve_gachacollection?username=user1",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"retrieve_gachacollection"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "user1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "UsernameDifferentThanToken",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 403\", function () {",
+											"    pm.response.to.have.status(403);",
+											"});",
+											"",
+											"pm.test(\"Error message for username in token doesn't match username in request\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"error\", \"Username in token does not match the request username\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5003/retrieve_gachacollection?username=nonexistent_user",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"retrieve_gachacollection"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "nonexistent_user"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "info_gachacollection",
+					"item": [
+						{
+							"name": "info_gachacollection_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Result include one gacha item\", function () {",
+											"    pm.expect(pm.response.json().length).to.equal(1);",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5003/info_gachacollection?username=user1&gacha_name=Trial%20gacha%20dogeGlasses.jpg",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"info_gachacollection"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "user1"
+										},
+										{
+											"key": "gacha_name",
+											"value": "Trial%20gacha%20dogeGlasses.jpg"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "NotExistingGacha",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 404\", function () {",
+											"    pm.response.to.have.status(404);",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://localhost:5003/info_gachacollection?username=user1&gacha_name=no_gacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"info_gachacollection"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "user1"
+										},
+										{
+											"key": "gacha_name",
+											"value": "no_gacha"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "create_profile",
+					"item": [
+						{
+							"name": "create_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"// Test to check for the presence of the 'message' property in the response",
+											"pm.test(\"Response contains the 'message' property\", function () {",
+											"    pm.expect(pm.response.json()).to.have.property('message');",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"user5\",\n    \"email\": \"user5@gmail.com\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5003/create_profile",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"create_profile"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create_NoUserParam",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"// Test to check for the presence of the 'message' property in the response",
+											"pm.test(\"Missing username parameter\", function () {",
+											"    pm.expect(pm.response.json().error).to.include(\"Missing 'username' parameter\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5003/create_profile",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"create_profile"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create_ProfileAlreadyExists",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 500\", function () {",
+											"    pm.response.to.have.status(500);",
+											"});",
+											"",
+											"// Test to check for the presence of the 'message' property in the response",
+											"pm.test(\"Missing username parameter\", function () {",
+											"    pm.expect(pm.response.json().error).to.include(\"Profile already exists\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"user1\",\n    \"email\": \"user1@gmail.com\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5003/create_profile",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"create_profile"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "delete_profile",
+					"item": [
+						{
+							"name": "delete_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Profile deleted successfully\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"message\").that.includes(\"Profile for username 'user1' deleted successfully\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"user1\"\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5003/delete_profile",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"delete_profile"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete_not_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 404\", function () {",
+											"    pm.response.to.have.status(404);",
+											"});",
+											"",
+											"pm.test(\"Error message for user not found\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"Error\", \"User not found\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "valid_token2",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"user5\"\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5003/delete_profile",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"delete_profile"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "missing_param",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"pm.test(\"Error message for missing username\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"error\", \"Missing parameters\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5003/delete_profile",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"delete_profile"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "insertGacha",
+					"item": [
+						{
+							"name": "insert_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Gacha added successfully\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"message\").that.includes(\"Gacha 'Epic Gacha' added to collection\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"user1\",\n    \"gacha_name\": \"Epic Gacha\",\n    \"collected_date\": \"2024-11-22T12:00:00\"\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5003/insertGacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"insertGacha"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "date_not_valid",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"pm.test(\"Error message for invalid date format\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"error\").that.includes(\"Invalid 'collected_date' format\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"user1\",\n    \"gacha_name\": \"Legendary Gacha\",\n    \"collected_date\": \"invalid-date\"\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5003/insertGacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"insertGacha"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "deleteGacha",
+					"item": [
+						{
+							"name": "delete_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Gacha deleted successfully\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"message\").that.includes(\"Gacha 'Trial gacha Doge-meme.jpg' deleted from collection\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"user1\",\n    \"gacha_name\": \"Trial gacha Doge-meme.jpg\"\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5003/deleteGacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"deleteGacha"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "all_true",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"All Gacha items deleted successfully\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"message\").that.includes(\"Gacha items with name Trial gacha Doge-meme.jpg have been deleted for all users\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"gacha_name\": \"Trial gacha Doge-meme.jpg\",\n    \"all\": true\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5003/deleteGacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"deleteGacha"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete_not_ok",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 404\", function () {",
+											"    pm.response.to.have.status(404);",
+											"});",
+											"",
+											"pm.test(\"Error message for non-existent Gacha\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData).to.have.property(\"error\", \"Gacha not found\");",
+											"});",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"user1\",\n    \"gacha_name\": \"no_gacha\"\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:5003/deleteGacha",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "5003",
+									"path": [
+										"deleteGacha"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "valid_token",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	]
+}

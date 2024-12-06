@@ -1,0 +1,137 @@
+name: Integration Test - All Microservices
+
+on:
+  push:
+    branches:
+      - main  # Esegui i test solo sui push al branch principale
+concurrency:
+  group: unit-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  unit-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - auction_market_service  # Nome del primo microservizio
+          - authentication_service  # Nome del secondo microservizio
+          - gacharoll_service  # Aggiungi altri microservizi qui
+          - gachasystem_service
+          - payment_service
+          - profile_setting
+
+    steps:
+      # 1. Checkout del codice
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Configura Node.js per Newman
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      # 3. Installa Newman
+      - name: Install Newman
+        run: npm install -g newman
+
+      # 4. Avvia il microservizio corrente
+      - name: Start service for unit tests
+        run: |
+          # Spostati nella directory del microservizio
+          cd ${{ matrix.service }}
+
+          # Costruisci l'immagine Docker e avvia il servizio
+          docker compose up -d
+      
+        # 5. Attendi che i servizi siano attivi
+      - name: Wait for services to start
+        run: |
+          sleep 5  # Attendi 30 secondi per assicurarti che tutti i servizi siano attivi
+      # 5. Esegui i test unitari usando Newman
+      - name: Run unit tests for service
+        run: |
+          export filePath=${{ github.workspace }}/meme_images/meme2.jpg
+          export filePathW=${{ github.workspace }}/meme_images/wrongtypememe.svg
+          cd ${{ matrix.service }}
+
+          # Esegui i test specifici per il microservizio
+          newman run ./${{ matrix.service }}.postman_collection.json \
+            --environment ./environment.postman_environment.json \
+            --env-var "GACHA_IMAGE_PATH=$filePath" \
+            --env-var "GACHA_IMAGE_PATH_WRONG=$filePathW" \
+            --insecure \
+            --reporters cli,html \
+            --reporter-html-export unit-test-${{ matrix.service }}.html
+
+      # 6. Ferma e rimuovi il container del microservizio
+      - name: Stop and remove service container
+        run: |
+          docker compose down 
+          
+
+      # 7. Carica il report HTML dei test unitari
+      - name: Upload unit test report
+        uses: actions/upload-artifact@v3
+        with:
+          name: unit-test-${{ matrix.service }}-report
+          path: ./${{ matrix.service }}/unit-test-${{ matrix.service }}.html
+    
+  integration-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout del codice
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 2. Configura Node.js per Newman
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    # 3. Installa Newman (CLI di Postman)
+    - name: Install Newman
+      run: npm install -g newman
+
+    # 4. Avvia tutti i microservizi con Docker Compose
+    - name: Start Docker Compose
+      run: |
+        docker compose up -d
+
+    # 5. Attendi che i servizi siano attivi
+    - name: Wait for services to start
+      run: |
+        sleep 10  # Attendi 30 secondi per assicurarti che tutti i servizi siano attivi
+
+   
+    # 6. Esegui i test con Newman
+    - name: Run integration tests with Newman
+      run: |
+        # Definisci la variabile d'ambiente filePath
+        export filePath=${{ github.workspace }}/meme_images/meme2.jpg
+
+        # Esegui Newman con la variabile passata
+        newman run ./tests/integration-test.postman_collection.json \
+          --environment ./tests/environment.postman_environment.json \
+          --env-var "GACHA_IMAGE_PATH=$filePath" \
+          --insecure \
+          --reporters cli,html \
+          --reporter-html-export newman-report.html
+
+
+    # 7. Ferma e rimuovi i container Docker
+    - name: Stop Docker Compose
+      run: |
+        docker compose down -v
+
+    # 8. Carica il report HTML (opzionale)
+    - name: Upload HTML report
+      uses: actions/upload-artifact@v3
+      with:
+        name: newman-report
+        path: newman-report.html
