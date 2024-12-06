@@ -5,6 +5,7 @@ Gacha LOLection is a platform that integrates the thrill of meme-based gacha rol
 This README provides instructions for setting up the backend, testing its functionality, and ensuring its security.
 ![Gacha LOLection Banner](./sfondo.webp)
 
+Video demo:
 https://github.com/user-attachments/assets/80846b2a-2239-47db-957a-4d4821d314a1
 ---
 
@@ -18,7 +19,7 @@ https://github.com/user-attachments/assets/80846b2a-2239-47db-957a-4d4821d314a1
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/username/gacha-lollection.git](https://github.com/isnotJack/SSE-project.git)
+   git clone https://github.com/isnotJack/Gacha-LOLection.git
    cd gacha-lollection
    ```
 
