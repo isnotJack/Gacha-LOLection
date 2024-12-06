@@ -177,26 +177,7 @@ def signup():
     if status != 200:
         # Ritorna un errore se la chiamata al `profile_setting` fallisce
         return jsonify({'Error': f'Failed to create user balance: {x}'}), 500
-    with open(private_key_path, "r") as key_file:
-        private_key = key_file.read()
-    jti = str(uuid.uuid4())  # Genera un UUID univoco per il jti
-
-    header = { 
-        "alg": "RS256",
-        "typ": "JWT"
-    } 
-    payload = {
-        "iss": "https://auth_service:5002",      # Emittente
-        "sub": username,              # Soggetto
-        "aud": ["auth_service"],         
-        "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
-        "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1),  # Expiration
-        "scope": role,                   # Scopi
-        "jti": jti              # JWT ID
-    }
-
-    id_token = jwt.encode(payload, private_key, algorithm="RS256", headers=header)
-    return jsonify({"msg": "Account created successfully", "profile_message": res.get('message'), "id_token" : id_token}), 200
+    return jsonify({"msg": "Account created successfully", "profile_message": res.get('message')}), 200
 
 
 # Endpoint per il login
@@ -263,7 +244,25 @@ def login():
         new_token = RefreshToken(jti_id=refresh_jti, is_revoked = False)
         db.session.add(new_token)
         db.session.commit()
-        return jsonify(access_token=access_token, refresh_token = refresh_token), 200
+        id_jti = str(uuid.uuid4())  # Genera un UUID univoco per il jti
+
+        header = { 
+            "alg": "RS256",
+            "typ": "JWT"
+        } 
+        payload = {
+            "iss": "https://auth_service:5002",      # Emittente
+            "sub": username,              # Soggetto
+            "aud": ["auth_service"],         
+            "iat": datetime.datetime.now(datetime.timezone.utc),  # Issued At
+            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1),  # Expiration
+            "scope": scope,                   # Scopi
+            "jti": id_jti             # JWT ID
+        }
+
+        id_token = jwt.encode(payload, private_key, algorithm="RS256", headers=header)
+
+        return jsonify(access_token=access_token, refresh_token = refresh_token, id_token=id_token), 200
     return jsonify({"Error": "Invalid credentials"}), 422
 
 
