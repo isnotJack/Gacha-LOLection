@@ -130,6 +130,7 @@ python3 -m http.server 8000
 Access the demo at `http://localhost:8000`.
 
 A demonstration video:
+https://github.com/user-attachments/assets/80846b2a-2239-47db-957a-4d4821d314a1
 
 
 ---
