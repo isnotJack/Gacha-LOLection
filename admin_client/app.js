@@ -165,9 +165,28 @@ document.getElementById("delete-account-button").addEventListener("click", async
       },
       body: body.toString(),
     });
-
-    const data = await response.json();
-    if (response.ok) {
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
+      const data = await response.json();
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL}/delete`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded", // Gateway requires form data
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: body.toString(),
+    });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          const data = tokenRes.data;
+        }
+    }
+    if (token_valid) {
       alert("Account deleted successfully. Redirecting to the main menu.");
       localStorage.clear(); // Clear storage
       hideMenuSection(); // Redirect to login/signup
@@ -197,8 +216,26 @@ document.getElementById("see-auctions-button").addEventListener("click", async (
       },
     });
 
-    const data = await response.json();
-    if (response.ok) {
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
+      const data = await response.json();
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL_AUCTION}/see${query}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          const data = tokenRes.data;
+        }
+    }
+    if (token_valid) {
       const auctions = Array.isArray(data)
         ? data.map(
             (a) =>
@@ -246,8 +283,28 @@ document.getElementById("modify-auction-button").addEventListener("click", async
       body: JSON.stringify(auctionData),
     });
 
-    const data = await response.json();
-    if (response.ok) {
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
+      const data = await response.json();
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL_AUCTION}/modify`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(auctionData),
+    });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          const data = tokenRes.data;
+        }
+    }
+    if (token_valid) {
       document.getElementById("auction-service-result").textContent = "You have successfully update auction" + auctionId
     } else {
       document.getElementById("auction-service-result").textContent =
@@ -280,8 +337,27 @@ document.getElementById("addGachaForm").addEventListener("submit", async functio
           body: form, // Il corpo è il FormData
       });
 
-      if (response.ok) {
-          const data = await response.json();
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
+      const data = await response.json();
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(BASE_URL_GACHASYS + "/add_gacha", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: form, // Il corpo è il FormData
+    });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          const data = tokenRes.data;
+        }
+    }
+      if (token_valid) {
           document.getElementById("gacha-system-result").textContent = "Gacha correctly added to the system!"
       }else {
             const data = await response.json();
@@ -310,8 +386,28 @@ document.getElementById("delete-gacha-button").addEventListener("click", async (
       body: params.toString(), // Converte in formato URL encoded
     });
 
-    if (response.ok) {
+    token_valid=false;      
+    if (response.ok){
+      token_valid=true;
       const data = await response.json();
+    }
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(BASE_URL_GACHASYS + "/delete_gacha", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: params.toString(), // Converte in formato URL encoded
+      });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          const data = tokenRes.data;
+        }
+    }
+    if (token_valid) {
       document.getElementById("gacha-system-result").textContent = "Gacha correctly removed from the system!";
     } else {
       const data = await response.json();
@@ -352,8 +448,26 @@ document.getElementById("update-gacha-button").addEventListener("click", async (
       body: gachaData.toString(),
     });
 
-    const data = await response.json();
-    if (response.ok) {
+    token_valid=false;      
+    if (response.ok)
+      token_valid=true;
+    else if(response.status == 401){
+      console.log("Trying");
+      const tokenRes= await get_newToken(`${BASE_URL_GACHASYS}/update_gacha`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/x-www-form-urlencoded",      
+      },
+      body: gachaData.toString(),
+    });
+      console.log(tokenRes.success, tokenRes.data);
+      if (tokenRes.success){
+          token_valid=true;
+          data=tokenRes.data;
+        }
+    }
+    if (token_valid) {
       document.getElementById("gacha-system-result").textContent = "You have successfully update the gacha " + gacha_name
     } else {
       document.getElementById("gacha-system-result").textContent =
@@ -383,9 +497,9 @@ document.getElementById("get-collection-button").addEventListener("click", async
       },
       body: body.toString(), // Invia i dati codificati
     });
-    token_valid=false;
-    data = await response.json();
 
+    data = await response.json();
+    token_valid=false;      
     if (response.ok)
       token_valid=true;
     else if(response.status == 401){
